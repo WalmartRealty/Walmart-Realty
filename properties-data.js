@@ -17,16 +17,16 @@ const properties = [
     "description": "Prime excess land parcel situated along major commercial corridor. 33.38 acres zoned retail with excellent visibility and traffic counts of 44,700 VPD on Peachtree Pkwy. Adjacent to Laurel Springs Golf Club with nearby retailers including Target, Home Depot, Lidl, CVS, and Five Guys.",
     "features": ["High Traffic Location", "Retail Zoning", "Near Major Retailers", "Golf Course Adjacent", "Utilities Available", "Multiple Access Points"],
     "broker": {
-      "name": "Matthew Nguyen",
-      "email": "mnguyencre@mnguyencre.com",
+      "name": "Minh Nguyen",
+      "email": "mnguyen@mnguyencre.com",
       "phone": "(832) 555-0173",
-      "company": "CBRE, Inc."
+      "company": "Commercial Real Estate Broker"
     },
     "marketingMaterials": [
       { "name": "4686 Marketing Materials.pdf", "url": "uploads/4686 Marketing Materials.pdf", "type": "application/pdf" },
       { "name": "Site Aerial Map.png", "url": "uploads/image3.png", "type": "image/png" },
-      { "name": "Demographics Map.png", "url": "uploads/image5.png", "type": "image/png" },
-      { "name": "Property Overview.png", "url": "uploads/image6.png", "type": "image/png" }
+      { "name": "Broker Contact - Minh Nguyen.png", "url": "uploads/image5.png", "type": "image/png" },
+      { "name": "Aerial Site View.png", "url": "uploads/image6.png", "type": "image/png" }
     ],
     "featured": true
   },
