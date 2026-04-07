@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Walmart Real Estate | Commercial Properties for Sale & Lease</title>
+    <meta name="description" content="Browse Walmart commercial real estate properties available for sale and lease. Find retail locations, development land, and more.">
+    
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:title" content="Walmart Real Estate | Commercial Properties">
+    <meta property="og:description" content="Browse Walmart commercial real estate properties available for sale and lease.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://corporate.walmart.com/content/dam/corporate/images/global/spark.svg">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS and JS for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'walmart-blue': '#0071CE',
+                        'walmart-yellow': '#FFC220',
+                        'walmart-dark': '#004C91',
+                        'walmart-white': '#FFFFFF',
+                        'spark-yellow': '#FFC220',
+                        'digital-blue': '#0071DC',
+                        'gray-dark': '#2E2F32',
+                        'gray-medium': '#74767C',
+                        'gray-light': '#F1F1F2',
+                    },
+                    fontFamily: {
+                        'bogle': ['Bogle', 'Arial', 'Helvetica Neue', 'Helvetica', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Walmart Brand Font - Bogle */
+        @font-face {
+            font-family: 'Bogle';
+            src: url('https://i5.walmartimages.com/dfw/63fd9f59-e0d6/636a849e-a3cf-43c3-8464-14b89abef7be/v1/Bogle-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Bogle';
+            src: url('https://i5.walmartimages.com/dfw/63fd9f59-e0d6/636a849e-a3cf-43c3-8464-14b89abef7be/v1/Bogle-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+        body { font-family: 'Bogle', Arial, 'Helvetica Neue', Helvetica, sans-serif; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #0071ce; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #004c91; }
+        
+        /* Property card hover effect */
+        .property-card:hover { transform: translateY(-4px); }
+        .property-card:hover .property-image { transform: scale(1.05); }
+        
+        /* Walmart branded image overlay */
+        .property-image-container::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background: linear-gradient(to top, rgba(0, 113, 206, 0.3), transparent);
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        /* Focus styles for accessibility - WCAG 2.2 AA */
+        .focus-visible:focus,
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible,
+        select:focus-visible {
+            outline: 3px solid #FFC220;
+            outline-offset: 2px;
+        }
+        
+        /* Skip link for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #0071ce;
+            color: white;
+            padding: 8px 16px;
+            z-index: 100;
+            transition: top 0.3s;
+        }
+        .skip-link:focus { top: 0; }
+        
+        /* Map container */
+        #map { height: 400px; width: 100%; }
+        
+        /* List view styles */
+        .list-view .property-card {
+            display: flex;
+            flex-direction: row;
+        }
+        .list-view .property-image-container {
+            width: 300px;
+            min-width: 300px;
+            height: 200px;
+        }
+        .list-view .property-content {
+            flex: 1;
+        }
+        
+        /* Favorite button animation */
+        .favorite-btn.active svg {
+            fill: #ef4444;
+            color: #ef4444;
+        }
+        
+        /* Toast notification */
+        .toast {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Leaflet custom styles */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+        }
+        .property-popup {
+            min-width: 200px;
+        }
+        .property-popup img {
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        /* Fix popup z-index and overflow issues */
+        .leaflet-popup {
+            z-index: 1000 !important;
+        }
+        .leaflet-popup-pane {
+            z-index: 700 !important;
+        }
+        #main-map {
+            overflow: hidden;
+            z-index: 1;
+            position: relative;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="skip-link focus-visible">Skip to main content</a>
+    
+    <!-- Header -->
+    <header class="bg-walmart-blue text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center">
+                        <!-- Official Walmart Spark -->
+                        <img src="spark-logo.png" alt="Walmart Spark" class="h-9 w-9 object-contain" aria-hidden="true">
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">Walmart Real Estate</h1>
+                        <p class="text-xs text-blue-200">Commercial Properties</p>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="hidden md:flex items-center gap-6" aria-label="Main navigation">
+                    <a href="#" class="text-white hover:text-walmart-yellow transition-colors font-medium" aria-current="page">Properties</a>
+                    <a href="#" class="text-blue-200 hover:text-walmart-yellow transition-colors" onclick="filterByType('sale'); return false;">For Sale</a>
+                    <a href="#" class="text-blue-200 hover:text-walmart-yellow transition-colors" onclick="filterByType('lease'); return false;">For Lease</a>
+                    <a href="#contact" class="text-blue-200 hover:text-walmart-yellow transition-colors">Contact</a>
+                    <button onclick="showSavedProperties()" class="relative text-blue-200 hover:text-walmart-yellow transition-colors flex items-center gap-1">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        Saved
+                        <span id="saved-count" class="absolute -top-2 -right-3 bg-walmart-yellow text-walmart-dark text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center" style="display: none;">0</span>
+                    </button>
+                </nav>
+                
+                <!-- Mobile menu button -->
+                <button class="md:hidden p-2 rounded-lg hover:bg-walmart-dark" aria-label="Open menu" onclick="toggleMobileMenu()">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-walmart-dark">
+            <nav class="px-4 py-4 space-y-2" aria-label="Mobile navigation">
+                <a href="#" class="block py-2 px-4 rounded-lg bg-walmart-blue text-white">Properties</a>
+                <a href="#" class="block py-2 px-4 rounded-lg text-blue-200 hover:bg-walmart-blue" onclick="filterByType('sale'); return false;">For Sale</a>
+                <a href="#" class="block py-2 px-4 rounded-lg text-blue-200 hover:bg-walmart-blue" onclick="filterByType('lease'); return false;">For Lease</a>
+                <button onclick="showSavedProperties()" class="block w-full text-left py-2 px-4 rounded-lg text-blue-200 hover:bg-walmart-blue">Saved</button>
+                <a href="#contact" class="block py-2 px-4 rounded-lg text-blue-200 hover:bg-walmart-blue">Contact</a>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- Hero Search Section -->
+    <section class="bg-gradient-to-r from-walmart-dark to-walmart-blue py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-2xl md:text-3xl font-bold text-white text-center mb-2">Find Your Next Commercial Property</h2>
+            <p class="text-blue-200 text-center mb-6">Browse available properties for sale or lease</p>
+            
+            <!-- Search Bar -->
+            <div class="max-w-3xl mx-auto mb-6">
+                <div class="relative">
+                    <input type="text" 
+                           id="search-input" 
+                           placeholder="Search by keyword, city, state, or address..." 
+                           class="w-full px-5 py-4 pr-12 rounded-xl text-lg border-2 border-transparent focus:border-walmart-yellow focus:ring-0 shadow-lg"
+                           aria-label="Search properties">
+                    <button onclick="performSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-walmart-blue hover:text-walmart-dark" aria-label="Search">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Advanced Filters -->
+            <div class="bg-white rounded-xl shadow-xl p-6">
+                <form id="search-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4" role="search">
+                    <!-- Property Type -->
+                    <div>
+                        <label for="property-type" class="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+                        <select id="property-type" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                            <option value="">All Types</option>
+                            <option value="retail">Retail</option>
+                            <option value="land">Land</option>
+                            <option value="warehouse">Warehouse</option>
+                            <option value="office">Office</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Listing Type -->
+                    <div>
+                        <label for="listing-type" class="block text-sm font-medium text-gray-700 mb-1">Listing Type</label>
+                        <select id="listing-type" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                            <option value="">Sale & Lease</option>
+                            <option value="sale">For Sale</option>
+                            <option value="lease">For Lease</option>
+                        </select>
+                    </div>
+                    
+                    <!-- State -->
+                    <div>
+                        <label for="state-filter" class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                        <select id="state-filter" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                            <option value="">All States</option>
+                            <!-- Populated by JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <!-- Price Range -->
+                    <div>
+                        <label for="price-range" class="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+                        <select id="price-range" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                            <option value="">Any Price</option>
+                            <option value="0-500000">Under $500K</option>
+                            <option value="500000-1000000">$500K - $1M</option>
+                            <option value="1000000-5000000">$1M - $5M</option>
+                            <option value="5000000-10000000">$5M - $10M</option>
+                            <option value="10000000+">$10M+</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Size Range -->
+                    <div>
+                        <label for="size-range" class="block text-sm font-medium text-gray-700 mb-1">Size (Acres)</label>
+                        <select id="size-range" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                            <option value="">Any Size</option>
+                            <option value="0-1">Under 1 acre</option>
+                            <option value="1-5">1 - 5 acres</option>
+                            <option value="5-20">5 - 20 acres</option>
+                            <option value="20+">20+ acres</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Search Button -->
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-2.5 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Interactive Map Section -->
+    <section class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <svg class="h-6 w-6 text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    </svg>
+                    Property Map
+                </h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleMapView('map')" id="map-view-btn" class="px-4 py-2 rounded-lg bg-walmart-blue text-white text-sm font-medium">Map</button>
+                    <button onclick="toggleMapView('satellite')" id="satellite-view-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300">Satellite</button>
+                </div>
+            </div>
+            <div id="main-map" class="rounded-xl shadow-lg w-full" style="height: 350px;"></div>
+        </div>
+    </section>
+    
+    <!-- Main Content -->
+    <main id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Results Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+            <div>
+                <h3 class="text-2xl font-bold text-gray-900">Available Properties</h3>
+                <p id="results-count" class="text-gray-600">Showing <span class="font-semibold">0</span> properties</p>
+            </div>
+            
+            <div class="flex items-center gap-4 flex-wrap">
+                <!-- Sort -->
+                <div class="flex items-center gap-2">
+                    <label for="sort" class="text-sm text-gray-600">Sort by:</label>
+                    <select id="sort" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue text-sm">
+                        <option value="newest">Newest</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="size-high">Size: Largest First</option>
+                        <option value="size-low">Size: Smallest First</option>
+                        <option value="state">State (A-Z)</option>
+                    </select>
+                </div>
+                
+                <!-- View Toggle -->
+                <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden" role="group" aria-label="View options">
+                    <button id="grid-view-btn" class="p-2 bg-walmart-blue text-white" aria-pressed="true" onclick="setView('grid')">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        </svg>
+                        <span class="sr-only">Grid view</span>
+                    </button>
+                    <button id="list-view-btn" class="p-2 bg-white text-gray-600 hover:bg-gray-100" aria-pressed="false" onclick="setView('list')">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                        </svg>
+                        <span class="sr-only">List view</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Property Grid/List -->
+        <div id="property-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Properties will be rendered here by JavaScript -->
+        </div>
+        
+        <!-- Pagination -->
+        <nav id="pagination" class="mt-12 flex items-center justify-center gap-2" aria-label="Pagination">
+            <!-- Pagination will be rendered by JavaScript -->
+        </nav>
+    </main>
+    
+    <!-- Contact Section -->
+    <section id="contact" class="bg-gray-100 py-16">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-center text-gray-900 mb-8">Contact Our Team</h2>
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <form id="contact-form" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="contact-name" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                            <input type="text" id="contact-name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                        </div>
+                        <div>
+                            <label for="contact-email" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                            <input type="email" id="contact-email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="contact-phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <input type="tel" id="contact-phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                        </div>
+                        <div>
+                            <label for="contact-company" class="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                            <input type="text" id="contact-company" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="contact-property" class="block text-sm font-medium text-gray-700 mb-1">Property of Interest</label>
+                        <select id="contact-property" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                            <option value="">Select a property (optional)</option>
+                            <!-- Populated by JavaScript -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="contact-message" class="block text-sm font-medium text-gray-700 mb-1">Message *</label>
+                        <textarea id="contact-message" rows="4" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-4 px-6 rounded-lg transition-colors text-lg">
+                        Submit Inquiry
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="h-7 w-7" viewBox="0 0 36 36" fill="none">
+                            <path d="M18 2c1.1 0 2 .9 2 2v8c0 1.1-.9 2-2 2s-2-.9-2-2V4c0-1.1.9-2 2-2z" fill="#FFC220"/>
+                            <path d="M18 22c1.1 0 2 .9 2 2v8c0 1.1-.9 2-2 2s-2-.9-2-2v-8c0-1.1.9-2 2-2z" fill="#FFC220"/>
+                            <path d="M2 16h8c1.1 0 2 .9 2 2s-.9 2-2 2H2c-1.1 0-2-.9-2-2s.9-2 2-2z" fill="#FFC220"/>
+                            <path d="M26 16h8c1.1 0 2 .9 2 2s-.9 2-2 2h-8c-1.1 0-2-.9-2-2s.9-2 2-2z" fill="#FFC220"/>
+                            <path d="M7.8 4.6l5.7 5.7c.8.8.8 2 0 2.8s-2 .8-2.8 0L5 7.4c-.8-.8-.8-2 0-2.8s2-.8 2.8 0z" fill="#FFC220"/>
+                            <path d="M22.5 19.3l5.7 5.7c.8.8.8 2 0 2.8s-2 .8-2.8 0l-5.7-5.7c-.8-.8-.8-2 0-2.8s2-.8 2.8 0z" fill="#FFC220"/>
+                        </svg>
+                        <span class="font-bold">Walmart Real Estate</span>
+                    </div>
+                    <p class="text-gray-400 text-sm">Your trusted partner for commercial real estate opportunities.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Property Types</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#" onclick="filterByPropertyType('retail'); return false;" class="hover:text-walmart-yellow transition-colors">Retail Spaces</a></li>
+                        <li><a href="#" onclick="filterByPropertyType('land'); return false;" class="hover:text-walmart-yellow transition-colors">Development Land</a></li>
+                        <li><a href="#" onclick="filterByPropertyType('warehouse'); return false;" class="hover:text-walmart-yellow transition-colors">Warehouse</a></li>
+                        <li><a href="#" onclick="filterByPropertyType('office'); return false;" class="hover:text-walmart-yellow transition-colors">Office</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-walmart-yellow transition-colors">Property Alerts</a></li>
+                        <li><a href="#" class="hover:text-walmart-yellow transition-colors">Market Reports</a></li>
+                        <li><a href="#" class="hover:text-walmart-yellow transition-colors">FAQ</a></li>
+                        <li><a href="#contact" class="hover:text-walmart-yellow transition-colors">Contact Us</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Contact</h4>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li>702 SW 8th Street</li>
+                        <li>Bentonville, AR 72716</li>
+                        <li class="pt-2"><a href="mailto:realestate@walmart.com" class="hover:text-walmart-yellow transition-colors">realestate@walmart.com</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
+                <p>&copy; 2025 Walmart Inc. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Property Detail Modal -->
+    <div id="property-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div id="modal-content">
+                <!-- Modal content will be inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- LOI Modal -->
+    <div id="loi-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[60] p-4" role="dialog" aria-modal="true" aria-labelledby="loi-modal-title">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div id="loi-modal-content">
+                <!-- LOI content will be inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- LOI Form Modal -->
+    <div id="loi-form-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[70] p-4" role="dialog" aria-modal="true" aria-labelledby="loi-form-title">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div id="loi-form-content">
+                <!-- LOI form will be inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script src="app.js"></script>
+</body>
+</html>

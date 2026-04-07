@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Walmart Real Estate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'walmart-blue': '#0071CE',
+                        'walmart-yellow': '#FFC220',
+                        'walmart-dark': '#004F9A',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .toast { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <img src="spark-logo.png" alt="Walmart" class="h-12 w-12 mx-auto mb-4">
+                <h1 class="text-2xl font-bold text-gray-900">Walmart Real Estate</h1>
+                <p class="text-gray-600">Admin Panel</p>
+            </div>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="admin-username" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
+                           placeholder="Enter username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="admin-password" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
+                           placeholder="Enter password">
+                </div>
+                <div id="login-error" class="hidden text-red-600 text-sm text-center"></div>
+                <button type="submit" id="login-btn"
+                        class="w-full bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    Login
+                </button>
+            </form>
+            
+            <p class="text-center text-sm text-gray-500 mt-6">
+                <a href="index.html" class="text-walmart-blue hover:underline">&larr; Back to Website</a>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="hidden">
+        <!-- Header -->
+        <header class="bg-walmart-blue text-white shadow-lg sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-3">
+                        <img src="spark-logo.png" alt="Walmart" class="h-8 w-8">
+                        <div>
+                            <h1 class="text-lg font-bold">Admin Panel</h1>
+                            <p class="text-xs text-blue-200">Property Management</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <a href="index.html" class="text-blue-200 hover:text-white text-sm">View Site &rarr;</a>
+                        <button onclick="handleLogout()" class="bg-walmart-dark hover:bg-blue-800 px-4 py-2 rounded-lg text-sm font-medium">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <p class="text-gray-500 text-sm">Total Properties</p>
+                    <p class="text-3xl font-bold text-gray-900" id="stat-total">0</p>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <p class="text-gray-500 text-sm">For Sale</p>
+                    <p class="text-3xl font-bold text-green-600" id="stat-sale">0</p>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <p class="text-gray-500 text-sm">For Lease</p>
+                    <p class="text-3xl font-bold text-blue-600" id="stat-lease">0</p>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <p class="text-gray-500 text-sm">States</p>
+                    <p class="text-3xl font-bold text-purple-600" id="stat-states">0</p>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap gap-4 mb-6">
+                <button onclick="openAddModal()" 
+                        class="bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add New Property
+                </button>
+                <button onclick="exportProperties()" 
+                        class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    Export Data
+                </button>
+                <label class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 cursor-pointer">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Import Data
+                    <input type="file" accept=".json" onchange="importProperties(event)" class="hidden">
+                </label>
+            </div>
+            
+            <!-- Search & Filter -->
+            <div class="bg-white rounded-xl p-4 shadow-sm mb-6">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <input type="text" id="admin-search" placeholder="Search by city, state, or type..." 
+                               oninput="filterAdminProperties()"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                    </div>
+                    <select id="admin-filter-state" onchange="filterAdminProperties()"
+                            class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                        <option value="">All States</option>
+                    </select>
+                    <select id="admin-filter-type" onchange="filterAdminProperties()"
+                            class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                        <option value="">All Types</option>
+                        <option value="land">Land</option>
+                        <option value="retail">Retail</option>
+                        <option value="warehouse">Warehouse</option>
+                        <option value="office">Office</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Properties Table -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Property</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Location</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Size</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Price</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Listing</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="properties-table-body" class="divide-y divide-gray-100">
+                            <!-- Properties will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="no-properties" class="hidden p-12 text-center text-gray-500">
+                    <svg class="h-12 w-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <p class="font-medium">No properties found</p>
+                    <p class="text-sm">Add your first property to get started</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Add/Edit Property Modal -->
+    <div id="property-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+                <h2 id="modal-title" class="text-xl font-bold text-gray-900">Add New Property</h2>
+                <button onclick="closePropertyModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <svg class="h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="property-form" onsubmit="saveProperty(event)" class="p-6 space-y-4">
+                <input type="hidden" id="property-id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                        <input type="text" id="property-city" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                        <input type="text" id="property-state" required maxlength="2" placeholder="e.g., TX"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue uppercase">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Property Type *</label>
+                        <select id="property-type" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                            <option value="">Select type...</option>
+                            <option value="land">Land</option>
+                            <option value="retail">Retail</option>
+                            <option value="warehouse">Warehouse</option>
+                            <option value="office">Office</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Listing Type *</label>
+                        <select id="property-listing-type" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                            <option value="">Select listing type...</option>
+                            <option value="sale">For Sale</option>
+                            <option value="lease">For Lease</option>
+                            <option value="both">Sale or Lease</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Size (Acres) *</label>
+                        <input type="number" id="property-size" required step="0.01" min="0"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price ($) *</label>
+                        <input type="number" id="property-price" required min="0"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Latitude *</label>
+                        <input type="number" id="property-lat" required step="any"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
+                               placeholder="e.g., 36.3729">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Longitude *</label>
+                        <input type="number" id="property-lon" required step="any"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
+                               placeholder="e.g., -94.2088">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Image URL (optional)</label>
+                    <input type="url" id="property-image" placeholder="https://..."
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                    <p class="text-xs text-gray-500 mt-1">Leave blank to use auto-generated satellite image</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="property-status"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                        <option value="available">Available</option>
+                        <option value="pending">Under Contract</option>
+                        <option value="sold">Sold</option>
+                    </select>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" 
+                            class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Save Property
+                    </button>
+                    <button type="button" onclick="closePropertyModal()"
+                            class="px-6 py-3 border-2 border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6">
+            <div class="text-center">
+                <div class="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Delete Property?</h3>
+                <p class="text-gray-600 mb-6" id="delete-property-name">Are you sure you want to delete this property?</p>
+                
+                <div class="flex gap-3">
+                    <button onclick="confirmDelete()" 
+                            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Delete
+                    </button>
+                    <button onclick="closeDeleteModal()" 
+                            class="flex-1 border-2 border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // API base URL
+        const API_BASE = window.location.origin;
+        
+        // Auth token storage
+        let authToken = sessionStorage.getItem('authToken');
+        let currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+        
+        // Properties storage key
+        const STORAGE_KEY = 'walmartRealtyProperties';
+        
+        // Current properties
+        let adminProperties = [];
+        let filteredProperties = [];
+        let propertyToDelete = null;
+        
+        // Check if already logged in
+        function checkAuth() {
+            if (authToken && currentUser) {
+                // Verify token is still valid
+                fetch(`${API_BASE}/api/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                })
+                .then(res => {
+                    if (res.ok) {
+                        showDashboard();
+                    } else {
+                        // Token expired, clear it
+                        handleLogout();
+                    }
+                })
+                .catch(() => handleLogout());
+            }
+        }
+        
+        // Handle login
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+            const loginBtn = document.getElementById('login-btn');
+            const errorDiv = document.getElementById('login-error');
+            
+            // Disable button during login
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+            errorDiv.classList.add('hidden');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store token and user info
+                    authToken = data.token;
+                    currentUser = data.user;
+                    sessionStorage.setItem('authToken', authToken);
+                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    showToast(`Welcome back, ${currentUser.name}!`, 'success');
+                    showDashboard();
+                } else {
+                    errorDiv.textContent = data.error || 'Invalid credentials';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.classList.remove('hidden');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
+        }
+        
+        // Handle logout
+        function handleLogout() {
+            authToken = null;
+            currentUser = null;
+            sessionStorage.removeItem('authToken');
+            sessionStorage.removeItem('currentUser');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('admin-dashboard').classList.add('hidden');
+        }
+        
+        // Show dashboard
+        function showDashboard() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('admin-dashboard').classList.remove('hidden');
+            loadProperties();
+        }
+        
+        // Load properties from localStorage
+        function loadProperties() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                adminProperties = JSON.parse(stored);
+            } else {
+                // Load default properties from app.js data
+                adminProperties = getDefaultProperties();
+                savePropertiesToStorage();
+            }
+            
+            filteredProperties = [...adminProperties];
+            updateStats();
+            populateStateFilter();
+            renderPropertiesTable();
+        }
+        
+        // Get default properties (copy from main app)
+        function getDefaultProperties() {
+            return [
+                { id: 1, city: "Sherwood", state: "AR", size_acres: 2.43, type: "land", price: 500000, lat: 34.8151, lon: -92.2243, listingType: "sale", status: "available" },
+                { id: 2, city: "Newport", state: "AR", size_acres: 1.12, type: "land", price: 300000, lat: 35.6045, lon: -91.2818, listingType: "sale", status: "available" },
+                { id: 3, city: "Fort Scott", state: "KS", size_acres: 0.79, type: "land", price: 185000, lat: 37.8395, lon: -94.7085, listingType: "sale", status: "available" },
+                { id: 4, city: "Coffeyville", state: "KS", size_acres: 1.28, type: "land", price: 425000, lat: 37.0373, lon: -95.6164, listingType: "sale", status: "available" },
+                { id: 5, city: "Booneville", state: "AR", size_acres: 1.3, type: "land", price: 275000, lat: 35.1401, lon: -93.9216, listingType: "sale", status: "available" },
+                { id: 6, city: "Osceola", state: "AR", size_acres: 0.7, type: "land", price: 165000, lat: 35.7051, lon: -89.9695, listingType: "sale", status: "available" },
+                { id: 7, city: "Bastrop", state: "LA", size_acres: 1.21, type: "land", price: 295000, lat: 32.7782, lon: -91.9085, listingType: "sale", status: "available" },
+                { id: 8, city: "Kingfisher", state: "OK", size_acres: 1.03, type: "land", price: 385000, lat: 35.8615, lon: -97.9317, listingType: "lease", status: "available" },
+                { id: 9, city: "Chillicothe", state: "MO", size_acres: 0.75, type: "land", price: 195000, lat: 39.7953, lon: -93.5522, listingType: "sale", status: "available" },
+                { id: 10, city: "Lonoke", state: "AR", size_acres: 1.88, type: "land", price: 725000, lat: 34.7837, lon: -91.8996, listingType: "sale", status: "available" },
+            ];
+        }
+        
+        // Save properties to localStorage
+        function savePropertiesToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(adminProperties));
+        }
+        
+        // Update stats
+        function updateStats() {
+            document.getElementById('stat-total').textContent = adminProperties.length;
+            document.getElementById('stat-sale').textContent = adminProperties.filter(p => p.listingType === 'sale' || p.listingType === 'both').length;
+            document.getElementById('stat-lease').textContent = adminProperties.filter(p => p.listingType === 'lease' || p.listingType === 'both').length;
+            
+            const states = [...new Set(adminProperties.map(p => p.state))];
+            document.getElementById('stat-states').textContent = states.length;
+        }
+        
+        // Populate state filter
+        function populateStateFilter() {
+            const states = [...new Set(adminProperties.map(p => p.state))].sort();
+            const select = document.getElementById('admin-filter-state');
+            select.innerHTML = '<option value="">All States</option>';
+            states.forEach(state => {
+                select.innerHTML += `<option value="${state}">${state}</option>`;
+            });
+        }
+        
+        // Filter properties
+        function filterAdminProperties() {
+            const search = document.getElementById('admin-search').value.toLowerCase();
+            const state = document.getElementById('admin-filter-state').value;
+            const type = document.getElementById('admin-filter-type').value;
+            
+            filteredProperties = adminProperties.filter(p => {
+                const matchesSearch = !search || 
+                    p.city.toLowerCase().includes(search) || 
+                    p.state.toLowerCase().includes(search) ||
+                    p.type.toLowerCase().includes(search);
+                const matchesState = !state || p.state === state;
+                const matchesType = !type || p.type === type;
+                
+                return matchesSearch && matchesState && matchesType;
+            });
+            
+            renderPropertiesTable();
+        }
+        
+        // Render properties table
+        function renderPropertiesTable() {
+            const tbody = document.getElementById('properties-table-body');
+            const noProps = document.getElementById('no-properties');
+            
+            if (filteredProperties.length === 0) {
+                tbody.innerHTML = '';
+                noProps.classList.remove('hidden');
+                return;
+            }
+            
+            noProps.classList.add('hidden');
+            
+            tbody.innerHTML = filteredProperties.map(p => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="h-10 w-10 bg-gray-200 rounded-lg flex items-center justify-center text-lg">
+                                ${getTypeIcon(p.type)}
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-900">${p.city}</p>
+                                <p class="text-sm text-gray-500">ID: ${p.id}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-900">${p.city}, ${p.state}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${getTypeBadgeClass(p.type)}">
+                            ${p.type.charAt(0).toUpperCase() + p.type.slice(1)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-900">${p.size_acres} acres</td>
+                    <td class="px-6 py-4 text-gray-900 font-medium">${formatPrice(p.price)}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${getListingBadgeClass(p.listingType)}">
+                            ${getListingLabel(p.listingType)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="editProperty(${p.id})" 
+                                class="text-walmart-blue hover:text-walmart-dark font-medium text-sm mr-3">
+                            Edit
+                        </button>
+                        <button onclick="deleteProperty(${p.id})" 
+                                class="text-red-600 hover:text-red-800 font-medium text-sm">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Helper functions
+        function getTypeIcon(type) {
+            const icons = { land: '🌾', retail: '🏪', warehouse: '🏭', office: '🏢' };
+            return icons[type] || '🏠';
+        }
+        
+        function getTypeBadgeClass(type) {
+            const classes = {
+                land: 'bg-green-100 text-green-800',
+                retail: 'bg-blue-100 text-blue-800',
+                warehouse: 'bg-orange-100 text-orange-800',
+                office: 'bg-purple-100 text-purple-800'
+            };
+            return classes[type] || 'bg-gray-100 text-gray-800';
+        }
+        
+        function getListingBadgeClass(type) {
+            const classes = {
+                sale: 'bg-green-100 text-green-800',
+                lease: 'bg-blue-100 text-blue-800',
+                both: 'bg-purple-100 text-purple-800'
+            };
+            return classes[type] || 'bg-gray-100 text-gray-800';
+        }
+        
+        function getListingLabel(type) {
+            const labels = { sale: 'For Sale', lease: 'For Lease', both: 'Sale/Lease' };
+            return labels[type] || type;
+        }
+        
+        function formatPrice(price) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
+        }
+        
+        // Open add modal
+        function openAddModal() {
+            document.getElementById('modal-title').textContent = 'Add New Property';
+            document.getElementById('property-form').reset();
+            document.getElementById('property-id').value = '';
+            document.getElementById('property-modal').classList.remove('hidden');
+            document.getElementById('property-modal').classList.add('flex');
+        }
+        
+        // Edit property
+        function editProperty(id) {
+            const property = adminProperties.find(p => p.id === id);
+            if (!property) return;
+            
+            document.getElementById('modal-title').textContent = 'Edit Property';
+            document.getElementById('property-id').value = property.id;
+            document.getElementById('property-city').value = property.city;
+            document.getElementById('property-state').value = property.state;
+            document.getElementById('property-type').value = property.type;
+            document.getElementById('property-listing-type').value = property.listingType || 'sale';
+            document.getElementById('property-size').value = property.size_acres;
+            document.getElementById('property-price').value = property.price;
+            document.getElementById('property-lat').value = property.lat;
+            document.getElementById('property-lon').value = property.lon;
+            document.getElementById('property-image').value = property.image || '';
+            document.getElementById('property-status').value = property.status || 'available';
+            
+            document.getElementById('property-modal').classList.remove('hidden');
+            document.getElementById('property-modal').classList.add('flex');
+        }
+        
+        // Close property modal
+        function closePropertyModal() {
+            document.getElementById('property-modal').classList.add('hidden');
+            document.getElementById('property-modal').classList.remove('flex');
+        }
+        
+        // Save property
+        function saveProperty(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('property-id').value;
+            const propertyData = {
+                city: document.getElementById('property-city').value,
+                state: document.getElementById('property-state').value.toUpperCase(),
+                type: document.getElementById('property-type').value,
+                listingType: document.getElementById('property-listing-type').value,
+                size_acres: parseFloat(document.getElementById('property-size').value),
+                price: parseInt(document.getElementById('property-price').value),
+                lat: parseFloat(document.getElementById('property-lat').value),
+                lon: parseFloat(document.getElementById('property-lon').value),
+                image: document.getElementById('property-image').value || null,
+                status: document.getElementById('property-status').value
+            };
+            
+            if (id) {
+                // Update existing
+                const index = adminProperties.findIndex(p => p.id === parseInt(id));
+                if (index !== -1) {
+                    adminProperties[index] = { ...adminProperties[index], ...propertyData };
+                    showToast('Property updated successfully!');
+                }
+            } else {
+                // Add new
+                const newId = Math.max(...adminProperties.map(p => p.id), 0) + 1;
+                adminProperties.push({ id: newId, ...propertyData });
+                showToast('Property added successfully!');
+            }
+            
+            savePropertiesToStorage();
+            closePropertyModal();
+            loadProperties();
+        }
+        
+        // Delete property
+        function deleteProperty(id) {
+            propertyToDelete = id;
+            const property = adminProperties.find(p => p.id === id);
+            document.getElementById('delete-property-name').textContent = 
+                `Are you sure you want to delete "${property.city}, ${property.state}"?`;
+            document.getElementById('delete-modal').classList.remove('hidden');
+            document.getElementById('delete-modal').classList.add('flex');
+        }
+        
+        // Confirm delete
+        function confirmDelete() {
+            if (propertyToDelete) {
+                adminProperties = adminProperties.filter(p => p.id !== propertyToDelete);
+                savePropertiesToStorage();
+                showToast('Property deleted');
+                loadProperties();
+            }
+            closeDeleteModal();
+        }
+        
+        // Close delete modal
+        function closeDeleteModal() {
+            propertyToDelete = null;
+            document.getElementById('delete-modal').classList.add('hidden');
+            document.getElementById('delete-modal').classList.remove('flex');
+        }
+        
+        // Export properties
+        function exportProperties() {
+            const dataStr = JSON.stringify(adminProperties, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `walmart-properties-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('Properties exported!');
+        }
+        
+        // Import properties
+        function importProperties(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        adminProperties = imported;
+                        savePropertiesToStorage();
+                        loadProperties();
+                        showToast(`Imported ${imported.length} properties!`);
+                    } else {
+                        showToast('Invalid file format', 'error');
+                    }
+                } catch (err) {
+                    showToast('Error reading file', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-800 text-white'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        // Initialize
+        checkAuth();
+    </script>
+</body>
+</html>
