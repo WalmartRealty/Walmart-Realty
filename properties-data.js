@@ -4,6 +4,33 @@
 
 const properties = [
   {
+    "store_num": 4686,
+    "city": "Rogers",
+    "state": "AR",
+    "address": "Near Mathis Airport Pkwy",
+    "size_acres": 33.38,
+    "type": "land",
+    "original_type": "Excess Land - Retail Zoned",
+    "price": 7000000,
+    "lat": 36.3371533,
+    "lon": -94.2258899,
+    "description": "Prime excess land parcel situated along major commercial corridor. 33.38 acres zoned retail with excellent visibility and traffic counts of 44,700 VPD on Peachtree Pkwy. Adjacent to Laurel Springs Golf Club with nearby retailers including Target, Home Depot, Lidl, CVS, and Five Guys.",
+    "features": ["High Traffic Location", "Retail Zoning", "Near Major Retailers", "Golf Course Adjacent", "Utilities Available", "Multiple Access Points"],
+    "broker": {
+      "name": "Matthew Nguyen",
+      "email": "mnguyencre@mnguyencre.com",
+      "phone": "(832) 555-0173",
+      "company": "CBRE, Inc."
+    },
+    "marketingMaterials": [
+      { "name": "4686 Marketing Materials.pdf", "url": "uploads/4686 Marketing Materials.pdf", "type": "application/pdf" },
+      { "name": "Site Aerial Map.png", "url": "uploads/image3.png", "type": "image/png" },
+      { "name": "Demographics Map.png", "url": "uploads/image5.png", "type": "image/png" },
+      { "name": "Property Overview.png", "url": "uploads/image6.png", "type": "image/png" }
+    ],
+    "featured": true
+  },
+  {
     "store_num": 7,
     "city": "Sherwood",
     "state": "AR",

@@ -184,50 +184,68 @@ function getListingBadgeClass(listingType) {
 }
 
 // Create property card HTML
+// Generate satellite map thumbnail URL from coordinates
+function getSatelliteThumbUrl(lat, lon) {
+    // Using ESRI World Imagery tile server - free, no API key needed
+    // Calculate tile coordinates for zoom level 15
+    const zoom = 15;
+    const n = Math.pow(2, zoom);
+    const x = Math.floor((lon + 180) / 360 * n);
+    const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n);
+    return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${y}/${x}`;
+}
+
 function createPropertyCard(property) {
     const priceDisplay = formatPrice(property.price, property.listingType);
     const listingLabel = property.listingType === 'sale' ? 'For Sale' : 'For Lease';
+    const satelliteUrl = getSatelliteThumbUrl(property.lat, property.lon);
     
     return `
-        <article class="property-card bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 cursor-pointer" 
+        <article class="property-card bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg" 
                  onclick="openPropertyModal(${property.id})"
                  tabindex="0"
                  role="button"
                  aria-label="View details for ${property.title}"
                  onkeydown="if(event.key==='Enter') openPropertyModal(${property.id})">
-            <div class="relative overflow-hidden h-48 property-image-container">
-                <img src="${property.image}" 
-                     alt="Aerial view of property in ${property.city}, ${property.state}" 
-                     class="property-image w-full h-full object-cover transition-transform duration-300"
-                     loading="lazy">
-                <!-- Official Walmart Spark Logo -->
-                <div class="absolute top-3 right-3 z-20 bg-white rounded-full p-1.5 shadow-lg">
-                    <img src="spark-logo.png" alt="Walmart" class="h-6 w-6 object-contain">
+            <div class="p-5 border-b border-gray-100">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="h-14 w-14 rounded-xl overflow-hidden shadow-sm border-2 border-gray-200 flex-shrink-0">
+                            <img src="${satelliteUrl}" 
+                                 alt="Satellite view of ${property.city}, ${property.state}" 
+                                 class="h-full w-full object-cover"
+                                 loading="lazy"
+                                 onerror="this.parentElement.innerHTML='<div class=\'h-full w-full bg-gray-200 flex items-center justify-center text-gray-400\'><svg class=\'h-6 w-6\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z\'/><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M15 11a3 3 0 11-6 0 3 3 0 016 0z\'/></svg></div>'">
+                        </div>
+                        <div>
+                            <div class="flex gap-2 mb-1">
+                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${getListingBadgeClass(property.listingType)}">
+                                    ${listingLabel}
+                                </span>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+                                    ${getTypeLabel(property.type)}
+                                </span>
+                            </div>
+                            <h4 class="text-lg font-bold text-gray-900 line-clamp-1">${property.city}, ${property.state}</h4>
+                        </div>
+                    </div>
+                    <img src="spark-logo.png" alt="Walmart" class="h-7 w-7 object-contain">
                 </div>
-                <div class="absolute top-3 left-3 flex gap-2 z-20">
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${getListingBadgeClass(property.listingType)}">
-                        ${listingLabel}
-                    </span>
-                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-800 text-white">
-                        ${getTypeLabel(property.type)}
-                    </span>
-                </div>
-            </div>
-            <div class="p-5">
-                <h4 class="text-lg font-bold text-gray-900 mb-2 line-clamp-1">${property.title}</h4>
-                <p class="text-gray-600 text-sm mb-3 flex items-center gap-1">
+                <p class="text-gray-600 text-sm flex items-center gap-1">
                     <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    ${property.city}, ${property.state}
+                    ${property.lotSize} · ${property.zoning} Zoning
                 </p>
+            </div>
+            <div class="p-5 bg-gray-50">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-2xl font-bold text-walmart-blue">${priceDisplay}</p>
-                        <p class="text-sm text-gray-500">${property.lotSize}</p>
+                        ${property.pricePerAcre ? `<p class="text-sm text-gray-500">$${property.pricePerAcre.toLocaleString()}/acre</p>` : ''}
                     </div>
-                    <button class="p-2 rounded-full hover:bg-gray-100 transition-colors focus-visible" 
+                    <button class="p-2 rounded-full hover:bg-white transition-colors focus-visible shadow-sm bg-white" 
                             aria-label="${isPropertySaved(property.id) ? 'Remove from saved' : 'Save property'}"
                             onclick="event.stopPropagation(); toggleSave(${property.id})">
                         <svg data-heart-id="${property.id}" class="h-6 w-6 ${isPropertySaved(property.id) ? 'text-red-500' : 'text-gray-400'} hover:text-red-500 transition-colors" fill="${isPropertySaved(property.id) ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
@@ -425,7 +443,7 @@ function openPropertyModal(id) {
                 <p class="text-gray-600">${property.description}</p>
             </div>
             
-            <div class="mb-8">
+            <div class="mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-3">Features</h3>
                 <ul class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     ${property.features.map(feature => `
@@ -439,13 +457,26 @@ function openPropertyModal(id) {
                 </ul>
             </div>
             
-            <div class="flex flex-col sm:flex-row gap-4">
+            <!-- Marketing Materials Section -->
+            <div id="marketing-materials-section" class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">📎 Marketing Materials</h3>
+                <div id="marketing-materials-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <p class="text-gray-500">Loading materials...</p>
+                </div>
+            </div>
+            
+            <!-- Broker Contact Section -->
+            <div id="broker-contact-section" class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100 text-center">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Broker Contact</h3>
+                <div id="broker-contact-container">
+                    <p class="text-gray-500">Loading broker info...</p>
+                </div>
+            </div>
+            
+            <div>
                 <button onclick="openLOIModal(${property.id})" 
-                   class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white text-center font-semibold py-3 px-6 rounded-lg transition-colors focus-visible">
+                   class="w-full bg-walmart-blue hover:bg-walmart-dark text-white text-center font-semibold py-4 px-6 rounded-lg transition-colors focus-visible text-lg">
                     Contact About Property
-                </button>
-                <button class="flex-1 border-2 border-walmart-blue text-walmart-blue hover:bg-walmart-blue hover:text-white font-semibold py-3 px-6 rounded-lg transition-colors focus-visible">
-                    Request Information Package
                 </button>
             </div>
         </div>
@@ -480,6 +511,10 @@ function openPropertyModal(id) {
         }
     }, 100);
     
+    // Auto-load marketing materials and broker info
+    loadMarketingMaterials(property.id);
+    loadBrokerContact(property.state, property.id);
+    
     // Focus trap
     modal.querySelector('button').focus();
 }
@@ -498,6 +533,134 @@ function closePropertyModal() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     document.body.style.overflow = '';
+}
+
+// Show marketing materials for a property
+async function showMarketingMaterials(propertyId) {
+    await loadMarketingMaterials(propertyId);
+}
+
+// Load marketing materials for a property (auto-called when modal opens)
+async function loadMarketingMaterials(propertyId) {
+    const container = document.getElementById('marketing-materials-container');
+    if (!container) return;
+    
+    container.innerHTML = '<p class="text-gray-500 col-span-2">Loading materials...</p>';
+    
+    // First check if property has embedded marketing materials (for static sites)
+    const property = properties.find(p => p.id === propertyId);
+    if (property && property.marketingMaterials && property.marketingMaterials.length > 0) {
+        container.innerHTML = property.marketingMaterials.map(m => {
+            const isPdf = m.type?.includes('pdf');
+            const isImage = m.type?.startsWith('image/');
+            const icon = isPdf ? '📄' : isImage ? '🖼️' : '📎';
+            
+            return `
+                <a href="${m.url}" target="_blank" rel="noopener noreferrer"
+                   class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
+                    <span class="text-2xl">${icon}</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-gray-900 truncate group-hover:text-walmart-blue text-sm">${m.name}</p>
+                        <p class="text-xs text-gray-500">${isPdf ? 'PDF' : isImage ? 'Image' : 'File'}</p>
+                    </div>
+                    <svg class="h-4 w-4 text-gray-400 group-hover:text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                </a>
+            `;
+        }).join('');
+        return;
+    }
+    
+    // Fallback to API call for dynamic sites
+    try {
+        const response = await fetch(`${window.location.origin}/api/properties/${propertyId}/marketing`);
+        if (response.ok) {
+            const materials = await response.json();
+            
+            if (materials.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-2 text-center py-4 bg-gray-50 rounded-lg">
+                        <p class="text-gray-500">No marketing materials available yet.</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = materials.map(m => {
+                    const isPdf = m.file_type?.includes('pdf');
+                    const isImage = m.file_type?.startsWith('image/');
+                    const icon = isPdf ? '📄' : isImage ? '🖼️' : '📎';
+                    
+                    return `
+                        <a href="${m.file_url}" target="_blank" rel="noopener noreferrer"
+                           class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
+                            <span class="text-2xl">${icon}</span>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-medium text-gray-900 truncate group-hover:text-walmart-blue text-sm">${m.file_name}</p>
+                                <p class="text-xs text-gray-500">${isPdf ? 'PDF' : isImage ? 'Image' : 'File'}</p>
+                            </div>
+                            <svg class="h-4 w-4 text-gray-400 group-hover:text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </a>
+                    `;
+                }).join('');
+            }
+        } else {
+            container.innerHTML = '<p class="text-gray-500 col-span-2">No materials available.</p>';
+        }
+    } catch (error) {
+        container.innerHTML = '<p class="text-gray-500 col-span-2">No materials available.</p>';
+    }
+}
+
+// Load broker contact info for a state (with property ID for embedded data)
+async function loadBrokerContact(state, propertyId) {
+    const container = document.getElementById('broker-contact-container');
+    if (!container) return;
+    
+    // First check if property has embedded broker info (for static sites)
+    if (propertyId) {
+        const property = properties.find(p => p.id === propertyId);
+        if (property && property.broker) {
+            const b = property.broker;
+            container.innerHTML = `
+                <div>
+                    <p class="font-semibold text-gray-900">${b.name}</p>
+                    <p class="text-sm text-gray-600">${b.company || 'Walmart Real Estate'}</p>
+                    <a href="mailto:${b.email}" class="text-walmart-blue hover:underline text-sm">${b.email}</a>
+                    ${b.phone ? `<p class="text-sm text-gray-500">${b.phone}</p>` : ''}
+                </div>
+            `;
+            return;
+        }
+    }
+    
+    // Fallback to API call for dynamic sites
+    try {
+        const response = await fetch(`${window.location.origin}/api/brokers/state/${state}`);
+        if (response.ok) {
+            const brokers = await response.json();
+            
+            if (brokers.length === 0) {
+                container.innerHTML = `
+                    <p class="text-gray-600">Contact us for information about properties in ${state}.</p>
+                `;
+            } else {
+                container.innerHTML = brokers.map(b => `
+                    <div class="${brokers.length > 1 ? 'mb-3 pb-3 border-b border-blue-100 last:border-0 last:mb-0 last:pb-0' : ''}">
+                        <p class="font-semibold text-gray-900">${b.name}</p>
+                        <p class="text-sm text-gray-600">${b.company || 'Walmart Real Estate'}</p>
+                        <a href="mailto:${b.email}" class="text-walmart-blue hover:underline text-sm">${b.email}</a>
+                        ${b.phone ? `<p class="text-sm text-gray-500">${b.phone}</p>` : ''}
+                    </div>
+                `).join('');
+            }
+        } else {
+            container.innerHTML = '<p class="text-gray-600">Contact us for more information.</p>';
+        }
+    } catch (error) {
+        container.innerHTML = '<p class="text-gray-600">Contact us for more information.</p>';
+    }
 }
 
 // LOI Documents available

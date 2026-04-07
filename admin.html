@@ -24,6 +24,8 @@
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+        .tab-active { border-bottom: 3px solid #FFC220; color: white; }
+        .tab-inactive { color: #93C5FD; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -64,7 +66,7 @@
     
     <!-- Admin Dashboard -->
     <div id="admin-dashboard" class="hidden">
-        <!-- Header -->
+        <!-- Header with Tabs -->
         <header class="bg-walmart-blue text-white shadow-lg sticky top-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
@@ -82,11 +84,26 @@
                         </button>
                     </div>
                 </div>
+                <!-- Tab Navigation -->
+                <nav class="flex gap-6 -mb-px">
+                    <button onclick="switchTab('properties')" id="tab-properties" class="py-3 px-1 font-medium tab-active">
+                        🏠 Properties
+                    </button>
+                    <button onclick="switchTab('brokers')" id="tab-brokers" class="py-3 px-1 font-medium tab-inactive">
+                        👥 Brokers
+                    </button>
+                    <button onclick="switchTab('loi')" id="tab-loi" class="py-3 px-1 font-medium tab-inactive">
+                        📄 LOI Submissions
+                    </button>
+                    <button onclick="switchTab('templates')" id="tab-templates" class="py-3 px-1 font-medium tab-inactive">
+                        📝 LOI Templates
+                    </button>
+                </nav>
             </div>
         </header>
         
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Properties Tab Content -->
+        <main id="content-properties" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <!-- Stats -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 <div class="bg-white rounded-xl p-6 shadow-sm">
@@ -166,12 +183,11 @@
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Size</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Price</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Listing</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Marketing</th>
                                 <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="properties-table-body" class="divide-y divide-gray-100">
-                            <!-- Properties will be inserted here -->
                         </tbody>
                     </table>
                 </div>
@@ -185,9 +201,298 @@
                 </div>
             </div>
         </main>
+        
+        <!-- Brokers Tab Content -->
+        <main id="content-brokers" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Broker Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <p class="text-gray-500 text-sm">Total Brokers</p>
+                    <p class="text-3xl font-bold text-gray-900" id="stat-brokers">0</p>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <p class="text-gray-500 text-sm">Active Brokers</p>
+                    <p class="text-3xl font-bold text-green-600" id="stat-active-brokers">0</p>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <p class="text-gray-500 text-sm">States Covered</p>
+                    <p class="text-3xl font-bold text-purple-600" id="stat-broker-states">0</p>
+                </div>
+            </div>
+            
+            <!-- Broker Actions -->
+            <div class="flex flex-wrap gap-4 mb-6">
+                <button onclick="openBrokerModal()" 
+                        class="bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add Broker
+                </button>
+                <label class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 cursor-pointer">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Import from CSV
+                    <input type="file" accept=".csv" onchange="importBrokersCSV(event)" class="hidden">
+                </label>
+                <button onclick="downloadBrokerTemplate()" 
+                        class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Download CSV Template
+                </button>
+            </div>
+            
+            <!-- CSV Import Info -->
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <h4 class="font-semibold text-blue-800 mb-2">📋 CSV Import Format</h4>
+                <p class="text-sm text-blue-700">Your CSV should have these columns: <code class="bg-blue-100 px-1 rounded">name, email, phone, company, states</code></p>
+                <p class="text-sm text-blue-700 mt-1">For multiple states, separate with commas: <code class="bg-blue-100 px-1 rounded">TX,OK,AR</code></p>
+            </div>
+            
+            <!-- Brokers Table -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Phone</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">States</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="brokers-table-body" class="divide-y divide-gray-100">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="no-brokers" class="hidden p-12 text-center text-gray-500">
+                    <svg class="h-12 w-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <p class="font-medium">No brokers found</p>
+                    <p class="text-sm">Add brokers to receive LOI submissions</p>
+                </div>
+            </div>
+        </main>
+        
+        <!-- LOI Submissions Tab Content -->
+        <main id="content-loi" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-6 border-b">
+                    <h2 class="text-xl font-bold text-gray-900">LOI Submissions</h2>
+                    <p class="text-gray-500 text-sm">View and manage Letters of Intent</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Property</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Submitter</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">LOI Type</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="loi-table-body" class="divide-y divide-gray-100">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+        
+        <!-- LOI Templates Tab Content -->
+        <main id="content-templates" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-6 border-b">
+                    <h2 class="text-xl font-bold text-gray-900">LOI Document Templates</h2>
+                    <p class="text-gray-500 text-sm">Upload and manage Letter of Intent templates for each transaction type</p>
+                </div>
+                
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="loi-templates-grid">
+                        <!-- Building Lease -->
+                        <div class="border border-gray-200 rounded-xl p-5 hover:border-walmart-blue transition-colors">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">🏢 Building Lease</h3>
+                                    <p class="text-sm text-gray-500">For leasing building space</p>
+                                </div>
+                                <span id="template-status-1" class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Active</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4" id="template-file-1">Current: Building Lease.docx</p>
+                            <div class="flex gap-2">
+                                <label class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white text-center text-sm font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors">
+                                    Upload New
+                                    <input type="file" accept=".doc,.docx,.pdf" onchange="uploadLOITemplate(event, 1, 'Building Lease')" class="hidden">
+                                </label>
+                                <a href="/loi-documents/Building Lease .docx" download class="border border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Building Sale -->
+                        <div class="border border-gray-200 rounded-xl p-5 hover:border-walmart-blue transition-colors">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">🏪 Building Sale</h3>
+                                    <p class="text-sm text-gray-500">For purchasing a building</p>
+                                </div>
+                                <span id="template-status-2" class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Active</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4" id="template-file-2">Current: Building Sale LOI.docx</p>
+                            <div class="flex gap-2">
+                                <label class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white text-center text-sm font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors">
+                                    Upload New
+                                    <input type="file" accept=".doc,.docx,.pdf" onchange="uploadLOITemplate(event, 2, 'Building Sale')" class="hidden">
+                                </label>
+                                <a href="/loi-documents/Building Sale LOI docx.docx" download class="border border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Building Sublease -->
+                        <div class="border border-gray-200 rounded-xl p-5 hover:border-walmart-blue transition-colors">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">🔄 Building Sublease</h3>
+                                    <p class="text-sm text-gray-500">For subleasing building space</p>
+                                </div>
+                                <span id="template-status-3" class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Active</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4" id="template-file-3">Current: Building Sublease LOI.docx</p>
+                            <div class="flex gap-2">
+                                <label class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white text-center text-sm font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors">
+                                    Upload New
+                                    <input type="file" accept=".doc,.docx,.pdf" onchange="uploadLOITemplate(event, 3, 'Building Sublease')" class="hidden">
+                                </label>
+                                <a href="/loi-documents/Building Sublease LOI.docx" download class="border border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Carveout Ground Lease -->
+                        <div class="border border-gray-200 rounded-xl p-5 hover:border-walmart-blue transition-colors">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">📐 Carveout Ground Lease</h3>
+                                    <p class="text-sm text-gray-500">For ground lease on carveout parcels</p>
+                                </div>
+                                <span id="template-status-4" class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Active</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4" id="template-file-4">Current: Carveout Ground Lease LOI.doc</p>
+                            <div class="flex gap-2">
+                                <label class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white text-center text-sm font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors">
+                                    Upload New
+                                    <input type="file" accept=".doc,.docx,.pdf" onchange="uploadLOITemplate(event, 4, 'Carveout Ground Lease')" class="hidden">
+                                </label>
+                                <a href="/loi-documents/Carveout Ground Lease LOI .doc" download class="border border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Carveout Sale -->
+                        <div class="border border-gray-200 rounded-xl p-5 hover:border-walmart-blue transition-colors">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">🗺️ Carveout Sale</h3>
+                                    <p class="text-sm text-gray-500">For purchasing carveout parcels</p>
+                                </div>
+                                <span id="template-status-5" class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Active</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4" id="template-file-5">Current: Carveout Sale LOI.docx</p>
+                            <div class="flex gap-2">
+                                <label class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white text-center text-sm font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors">
+                                    Upload New
+                                    <input type="file" accept=".doc,.docx,.pdf" onchange="uploadLOITemplate(event, 5, 'Carveout Sale')" class="hidden">
+                                </label>
+                                <a href="/loi-documents/Carveout Sale LOI.docx" download class="border border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Large Tract Land Sale -->
+                        <div class="border border-gray-200 rounded-xl p-5 hover:border-walmart-blue transition-colors">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">🌾 Large Tract Land Sale</h3>
+                                    <p class="text-sm text-gray-500">For purchasing large land tracts</p>
+                                </div>
+                                <span id="template-status-6" class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Active</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4" id="template-file-6">Current: Large Tract Land Sale LOI.docx</p>
+                            <div class="flex gap-2">
+                                <label class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white text-center text-sm font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors">
+                                    Upload New
+                                    <input type="file" accept=".doc,.docx,.pdf" onchange="uploadLOITemplate(event, 6, 'Large Tract Land Sale')" class="hidden">
+                                </label>
+                                <a href="/loi-documents/Large Tract Land Sale LOI.docx" download class="border border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Outlot Ground Lease -->
+                        <div class="border border-gray-200 rounded-xl p-5 hover:border-walmart-blue transition-colors">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">📍 Outlot Ground Lease</h3>
+                                    <p class="text-sm text-gray-500">For ground lease on outlot parcels</p>
+                                </div>
+                                <span id="template-status-7" class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Active</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4" id="template-file-7">Current: Outlot Ground Lease LOI.docx</p>
+                            <div class="flex gap-2">
+                                <label class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white text-center text-sm font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors">
+                                    Upload New
+                                    <input type="file" accept=".doc,.docx,.pdf" onchange="uploadLOITemplate(event, 7, 'Outlot Ground Lease')" class="hidden">
+                                </label>
+                                <a href="/loi-documents/Outlot Ground Lease LOI.docx" download class="border border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Outlot Land Sale -->
+                        <div class="border border-gray-200 rounded-xl p-5 hover:border-walmart-blue transition-colors">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">🏞️ Outlot Land Sale</h3>
+                                    <p class="text-sm text-gray-500">For purchasing outlot parcels</p>
+                                </div>
+                                <span id="template-status-8" class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Active</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4" id="template-file-8">Current: Outlot Land Sale LOI.docx</p>
+                            <div class="flex gap-2">
+                                <label class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white text-center text-sm font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors">
+                                    Upload New
+                                    <input type="file" accept=".doc,.docx,.pdf" onchange="uploadLOITemplate(event, 8, 'Outlot Land Sale')" class="hidden">
+                                </label>
+                                <a href="/loi-documents/Outlot Land Sale LOI .docx" download class="border border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
     
-    <!-- Add/Edit Property Modal -->
+    <!-- Property Modal -->
     <div id="property-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
@@ -268,13 +573,6 @@
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Image URL (optional)</label>
-                    <input type="url" id="property-image" placeholder="https://..."
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                    <p class="text-xs text-gray-500 mt-1">Leave blank to use auto-generated satellite image</p>
-                </div>
-                
-                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select id="property-status"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
@@ -284,12 +582,91 @@
                     </select>
                 </div>
                 
+                <!-- Marketing Materials Section -->
+                <div class="border-t pt-4 mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">📎 Marketing Materials</label>
+                    <div id="marketing-materials-list" class="mb-3 space-y-2"></div>
+                    <div class="flex items-center gap-2">
+                        <label class="flex-1 border-2 border-dashed border-gray-300 hover:border-walmart-blue rounded-lg p-4 text-center cursor-pointer transition-colors">
+                            <svg class="h-8 w-8 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            <span class="text-sm text-gray-600">Upload Marketing Materials (PDF, Images)</span>
+                            <input type="file" id="marketing-file" accept=".pdf,.jpg,.jpeg,.png" class="hidden" onchange="handleMarketingUpload(event)">
+                        </label>
+                    </div>
+                </div>
+                
                 <div class="flex gap-3 pt-4">
                     <button type="submit" 
                             class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors">
                         Save Property
                     </button>
                     <button type="button" onclick="closePropertyModal()"
+                            class="px-6 py-3 border-2 border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Broker Modal -->
+    <div id="broker-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full">
+            <div class="border-b px-6 py-4 flex items-center justify-between">
+                <h2 id="broker-modal-title" class="text-xl font-bold text-gray-900">Add Broker</h2>
+                <button onclick="closeBrokerModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                    <svg class="h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="broker-form" onsubmit="saveBroker(event)" class="p-6 space-y-4">
+                <input type="hidden" id="broker-id">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <input type="text" id="broker-name" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                    <input type="email" id="broker-email" required
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <input type="tel" id="broker-phone"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                    <input type="text" id="broker-company"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">States * <span class="text-gray-400 font-normal">(comma-separated, e.g., TX,OK,AR)</span></label>
+                    <input type="text" id="broker-states" required placeholder="TX,OK,AR"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue uppercase">
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="broker-active" checked class="h-4 w-4 text-walmart-blue rounded">
+                    <label for="broker-active" class="text-sm text-gray-700">Active (receives LOI notifications)</label>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" 
+                            class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Save Broker
+                    </button>
+                    <button type="button" onclick="closeBrokerModal()"
                             class="px-6 py-3 border-2 border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold rounded-lg transition-colors">
                         Cancel
                     </button>
@@ -307,8 +684,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Delete Property?</h3>
-                <p class="text-gray-600 mb-6" id="delete-property-name">Are you sure you want to delete this property?</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Delete Item?</h3>
+                <p class="text-gray-600 mb-6" id="delete-message">Are you sure?</p>
                 
                 <div class="flex gap-3">
                     <button onclick="confirmDelete()" 
@@ -323,7 +700,7 @@
             </div>
         </div>
     </div>
-    
+
     <script>
         // API base URL
         const API_BASE = window.location.origin;
@@ -332,18 +709,22 @@
         let authToken = sessionStorage.getItem('authToken');
         let currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
         
-        // Properties storage key
+        // Storage key for localStorage fallback
         const STORAGE_KEY = 'walmartRealtyProperties';
         
-        // Current properties
+        // Current data
         let adminProperties = [];
         let filteredProperties = [];
-        let propertyToDelete = null;
+        let brokers = [];
+        let loiSubmissions = [];
+        let deleteTarget = null;
+        let deleteType = null;
+        let currentPropertyId = null;
+        let pendingMarketingFiles = [];
         
-        // Check if already logged in
+        // Check auth on load
         function checkAuth() {
             if (authToken && currentUser) {
-                // Verify token is still valid
                 fetch(`${API_BASE}/api/auth/me`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 })
@@ -351,7 +732,6 @@
                     if (res.ok) {
                         showDashboard();
                     } else {
-                        // Token expired, clear it
                         handleLogout();
                     }
                 })
@@ -367,7 +747,6 @@
             const loginBtn = document.getElementById('login-btn');
             const errorDiv = document.getElementById('login-error');
             
-            // Disable button during login
             loginBtn.disabled = true;
             loginBtn.textContent = 'Logging in...';
             errorDiv.classList.add('hidden');
@@ -382,12 +761,10 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Store token and user info
                     authToken = data.token;
                     currentUser = data.user;
                     sessionStorage.setItem('authToken', authToken);
                     sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    
                     showToast(`Welcome back, ${currentUser.name}!`, 'success');
                     showDashboard();
                 } else {
@@ -403,7 +780,6 @@
             }
         }
         
-        // Handle logout
         function handleLogout() {
             authToken = null;
             currentUser = null;
@@ -413,62 +789,73 @@
             document.getElementById('admin-dashboard').classList.add('hidden');
         }
         
-        // Show dashboard
         function showDashboard() {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('admin-dashboard').classList.remove('hidden');
             loadProperties();
+            loadBrokers();
+            loadLOISubmissions();
         }
         
-        // Load properties from localStorage
+        // Tab switching
+        function switchTab(tab) {
+            const tabs = ['properties', 'brokers', 'loi', 'templates'];
+            tabs.forEach(t => {
+                const tabBtn = document.getElementById(`tab-${t}`);
+                const content = document.getElementById(`content-${t}`);
+                if (t === tab) {
+                    tabBtn.classList.remove('tab-inactive');
+                    tabBtn.classList.add('tab-active');
+                    content.classList.remove('hidden');
+                } else {
+                    tabBtn.classList.remove('tab-active');
+                    tabBtn.classList.add('tab-inactive');
+                    content.classList.add('hidden');
+                }
+            });
+            
+            // Load templates data when switching to templates tab
+            if (tab === 'templates') {
+                loadLOITemplates();
+            }
+        }
+        
+        // ========== PROPERTIES ==========
+        
         function loadProperties() {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 adminProperties = JSON.parse(stored);
             } else {
-                // Load default properties from app.js data
                 adminProperties = getDefaultProperties();
                 savePropertiesToStorage();
             }
-            
             filteredProperties = [...adminProperties];
             updateStats();
             populateStateFilter();
             renderPropertiesTable();
         }
         
-        // Get default properties (copy from main app)
         function getDefaultProperties() {
             return [
                 { id: 1, city: "Sherwood", state: "AR", size_acres: 2.43, type: "land", price: 500000, lat: 34.8151, lon: -92.2243, listingType: "sale", status: "available" },
                 { id: 2, city: "Newport", state: "AR", size_acres: 1.12, type: "land", price: 300000, lat: 35.6045, lon: -91.2818, listingType: "sale", status: "available" },
                 { id: 3, city: "Fort Scott", state: "KS", size_acres: 0.79, type: "land", price: 185000, lat: 37.8395, lon: -94.7085, listingType: "sale", status: "available" },
-                { id: 4, city: "Coffeyville", state: "KS", size_acres: 1.28, type: "land", price: 425000, lat: 37.0373, lon: -95.6164, listingType: "sale", status: "available" },
-                { id: 5, city: "Booneville", state: "AR", size_acres: 1.3, type: "land", price: 275000, lat: 35.1401, lon: -93.9216, listingType: "sale", status: "available" },
-                { id: 6, city: "Osceola", state: "AR", size_acres: 0.7, type: "land", price: 165000, lat: 35.7051, lon: -89.9695, listingType: "sale", status: "available" },
-                { id: 7, city: "Bastrop", state: "LA", size_acres: 1.21, type: "land", price: 295000, lat: 32.7782, lon: -91.9085, listingType: "sale", status: "available" },
-                { id: 8, city: "Kingfisher", state: "OK", size_acres: 1.03, type: "land", price: 385000, lat: 35.8615, lon: -97.9317, listingType: "lease", status: "available" },
-                { id: 9, city: "Chillicothe", state: "MO", size_acres: 0.75, type: "land", price: 195000, lat: 39.7953, lon: -93.5522, listingType: "sale", status: "available" },
-                { id: 10, city: "Lonoke", state: "AR", size_acres: 1.88, type: "land", price: 725000, lat: 34.7837, lon: -91.8996, listingType: "sale", status: "available" },
             ];
         }
         
-        // Save properties to localStorage
         function savePropertiesToStorage() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(adminProperties));
         }
         
-        // Update stats
         function updateStats() {
             document.getElementById('stat-total').textContent = adminProperties.length;
             document.getElementById('stat-sale').textContent = adminProperties.filter(p => p.listingType === 'sale' || p.listingType === 'both').length;
             document.getElementById('stat-lease').textContent = adminProperties.filter(p => p.listingType === 'lease' || p.listingType === 'both').length;
-            
             const states = [...new Set(adminProperties.map(p => p.state))];
             document.getElementById('stat-states').textContent = states.length;
         }
         
-        // Populate state filter
         function populateStateFilter() {
             const states = [...new Set(adminProperties.map(p => p.state))].sort();
             const select = document.getElementById('admin-filter-state');
@@ -478,7 +865,6 @@
             });
         }
         
-        // Filter properties
         function filterAdminProperties() {
             const search = document.getElementById('admin-search').value.toLowerCase();
             const state = document.getElementById('admin-filter-state').value;
@@ -491,14 +877,11 @@
                     p.type.toLowerCase().includes(search);
                 const matchesState = !state || p.state === state;
                 const matchesType = !type || p.type === type;
-                
                 return matchesSearch && matchesState && matchesType;
             });
-            
             renderPropertiesTable();
         }
         
-        // Render properties table
         function renderPropertiesTable() {
             const tbody = document.getElementById('properties-table-body');
             const noProps = document.getElementById('no-properties');
@@ -533,17 +916,15 @@
                     <td class="px-6 py-4 text-gray-900">${p.size_acres} acres</td>
                     <td class="px-6 py-4 text-gray-900 font-medium">${formatPrice(p.price)}</td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-1 rounded-full text-xs font-medium ${getListingBadgeClass(p.listingType)}">
-                            ${getListingLabel(p.listingType)}
-                        </span>
+                        <button onclick="openMarketingModal(${p.id})" class="text-walmart-blue hover:text-walmart-dark text-sm">
+                            📎 Upload
+                        </button>
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <button onclick="editProperty(${p.id})" 
-                                class="text-walmart-blue hover:text-walmart-dark font-medium text-sm mr-3">
+                        <button onclick="editProperty(${p.id})" class="text-walmart-blue hover:text-walmart-dark font-medium text-sm mr-3">
                             Edit
                         </button>
-                        <button onclick="deleteProperty(${p.id})" 
-                                class="text-red-600 hover:text-red-800 font-medium text-sm">
+                        <button onclick="deleteProperty(${p.id})" class="text-red-600 hover:text-red-800 font-medium text-sm">
                             Delete
                         </button>
                     </td>
@@ -551,7 +932,530 @@
             `).join('');
         }
         
-        // Helper functions
+        // ========== BROKERS ==========
+        
+        async function loadBrokers() {
+            try {
+                const response = await fetch(`${API_BASE}/api/brokers`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (response.ok) {
+                    brokers = await response.json();
+                    updateBrokerStats();
+                    renderBrokersTable();
+                }
+            } catch (error) {
+                console.error('Failed to load brokers:', error);
+            }
+        }
+        
+        function updateBrokerStats() {
+            document.getElementById('stat-brokers').textContent = brokers.length;
+            document.getElementById('stat-active-brokers').textContent = brokers.filter(b => b.is_active).length;
+            const allStates = brokers.flatMap(b => b.states.split(',').map(s => s.trim()));
+            document.getElementById('stat-broker-states').textContent = [...new Set(allStates)].length;
+        }
+        
+        function renderBrokersTable() {
+            const tbody = document.getElementById('brokers-table-body');
+            const noBrokers = document.getElementById('no-brokers');
+            
+            if (brokers.length === 0) {
+                tbody.innerHTML = '';
+                noBrokers.classList.remove('hidden');
+                return;
+            }
+            
+            noBrokers.classList.add('hidden');
+            
+            tbody.innerHTML = brokers.map(b => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium text-gray-900">${b.name}</td>
+                    <td class="px-6 py-4 text-gray-600">${b.email}</td>
+                    <td class="px-6 py-4 text-gray-600">${b.phone || '-'}</td>
+                    <td class="px-6 py-4 text-gray-600">${b.company || '-'}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex flex-wrap gap-1">
+                            ${b.states.split(',').map(s => `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">${s.trim()}</span>`).join('')}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${b.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
+                            ${b.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="editBroker(${b.id})" class="text-walmart-blue hover:text-walmart-dark font-medium text-sm mr-3">
+                            Edit
+                        </button>
+                        <button onclick="deleteBroker(${b.id})" class="text-red-600 hover:text-red-800 font-medium text-sm">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function openBrokerModal(brokerId = null) {
+            document.getElementById('broker-form').reset();
+            document.getElementById('broker-id').value = '';
+            document.getElementById('broker-modal-title').textContent = brokerId ? 'Edit Broker' : 'Add Broker';
+            document.getElementById('broker-modal').classList.remove('hidden');
+            document.getElementById('broker-modal').classList.add('flex');
+        }
+        
+        function closeBrokerModal() {
+            document.getElementById('broker-modal').classList.add('hidden');
+            document.getElementById('broker-modal').classList.remove('flex');
+        }
+        
+        function editBroker(id) {
+            const broker = brokers.find(b => b.id === id);
+            if (!broker) return;
+            
+            document.getElementById('broker-modal-title').textContent = 'Edit Broker';
+            document.getElementById('broker-id').value = broker.id;
+            document.getElementById('broker-name').value = broker.name;
+            document.getElementById('broker-email').value = broker.email;
+            document.getElementById('broker-phone').value = broker.phone || '';
+            document.getElementById('broker-company').value = broker.company || '';
+            document.getElementById('broker-states').value = broker.states;
+            document.getElementById('broker-active').checked = broker.is_active;
+            
+            document.getElementById('broker-modal').classList.remove('hidden');
+            document.getElementById('broker-modal').classList.add('flex');
+        }
+        
+        async function saveBroker(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('broker-id').value;
+            const brokerData = {
+                name: document.getElementById('broker-name').value,
+                email: document.getElementById('broker-email').value,
+                phone: document.getElementById('broker-phone').value || null,
+                company: document.getElementById('broker-company').value || null,
+                states: document.getElementById('broker-states').value.toUpperCase(),
+                is_active: document.getElementById('broker-active').checked
+            };
+            
+            try {
+                const url = id ? `${API_BASE}/api/brokers/${id}` : `${API_BASE}/api/brokers`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(brokerData)
+                });
+                
+                if (response.ok) {
+                    showToast(id ? 'Broker updated!' : 'Broker added!');
+                    closeBrokerModal();
+                    loadBrokers();
+                } else {
+                    const error = await response.json();
+                    showToast(error.error || 'Failed to save broker', 'error');
+                }
+            } catch (error) {
+                showToast('Connection error', 'error');
+            }
+        }
+        
+        function deleteBroker(id) {
+            const broker = brokers.find(b => b.id === id);
+            deleteTarget = id;
+            deleteType = 'broker';
+            document.getElementById('delete-message').textContent = `Delete broker "${broker.name}"?`;
+            document.getElementById('delete-modal').classList.remove('hidden');
+            document.getElementById('delete-modal').classList.add('flex');
+        }
+        
+        // CSV Import for Brokers
+        function importBrokersCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n').filter(line => line.trim());
+                    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                    
+                    const brokersList = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(',').map(v => v.trim());
+                        const broker = {};
+                        headers.forEach((h, idx) => {
+                            broker[h] = values[idx] || '';
+                        });
+                        if (broker.name && broker.email && broker.states) {
+                            brokersList.push(broker);
+                        }
+                    }
+                    
+                    if (brokersList.length === 0) {
+                        showToast('No valid brokers found in CSV', 'error');
+                        return;
+                    }
+                    
+                    const response = await fetch(`${API_BASE}/api/brokers/import`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ brokers: brokersList })
+                    });
+                    
+                    const result = await response.json();
+                    showToast(`Imported ${result.imported} brokers!`);
+                    loadBrokers();
+                } catch (err) {
+                    showToast('Error reading CSV file', 'error');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        
+        function downloadBrokerTemplate() {
+            const csv = 'name,email,phone,company,states\nJohn Smith,john@example.com,555-123-4567,ABC Realty,"TX,OK,AR"\nJane Doe,jane@example.com,555-987-6543,XYZ Properties,"CA,AZ,NV"';
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'broker-import-template.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // ========== LOI SUBMISSIONS ==========
+        
+        async function loadLOISubmissions() {
+            try {
+                const response = await fetch(`${API_BASE}/api/loi`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (response.ok) {
+                    loiSubmissions = await response.json();
+                    renderLOITable();
+                }
+            } catch (error) {
+                console.error('Failed to load LOI submissions:', error);
+            }
+        }
+        
+        function renderLOITable() {
+            const tbody = document.getElementById('loi-table-body');
+            if (loiSubmissions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500">No LOI submissions yet</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = loiSubmissions.map(loi => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-gray-600">${new Date(loi.created_at).toLocaleDateString()}</td>
+                    <td class="px-6 py-4 text-gray-900">${loi.city || 'N/A'}, ${loi.state || ''}</td>
+                    <td class="px-6 py-4 text-gray-900">${loi.first_name} ${loi.last_name}</td>
+                    <td class="px-6 py-4 text-gray-600">${loi.company || '-'}</td>
+                    <td class="px-6 py-4 text-gray-600">${loi.loi_type}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${getLoiStatusClass(loi.status)}">
+                            ${loi.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="viewLOI(${loi.id})" class="text-walmart-blue hover:text-walmart-dark font-medium text-sm">
+                            View
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function getLoiStatusClass(status) {
+            const classes = {
+                pending: 'bg-yellow-100 text-yellow-800',
+                reviewed: 'bg-blue-100 text-blue-800',
+                accepted: 'bg-green-100 text-green-800',
+                rejected: 'bg-red-100 text-red-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        }
+        
+        // ========== LOI TEMPLATES ==========
+        
+        const loiTemplateNames = {
+            1: 'Building Lease',
+            2: 'Building Sale',
+            3: 'Building Sublease',
+            4: 'Carveout Ground Lease',
+            5: 'Carveout Sale',
+            6: 'Large Tract Land Sale',
+            7: 'Outlot Ground Lease',
+            8: 'Outlot Land Sale'
+        };
+        
+        async function loadLOITemplates() {
+            try {
+                const response = await fetch(`${API_BASE}/api/loi-templates`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (response.ok) {
+                    const templates = await response.json();
+                    templates.forEach(t => {
+                        const fileEl = document.getElementById(`template-file-${t.id}`);
+                        const statusEl = document.getElementById(`template-status-${t.id}`);
+                        if (fileEl) fileEl.textContent = `Current: ${t.file_name}`;
+                        if (statusEl) {
+                            statusEl.textContent = t.is_active ? 'Active' : 'Inactive';
+                            statusEl.className = t.is_active 
+                                ? 'px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700'
+                                : 'px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700';
+                        }
+                    });
+                }
+            } catch (error) {
+                console.log('Using default LOI templates');
+            }
+        }
+        
+        async function uploadLOITemplate(event, templateId, templateName) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('template', file);
+            formData.append('template_id', templateId);
+            formData.append('template_name', templateName);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/loi-templates/${templateId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    showToast(`${templateName} template updated successfully!`);
+                    
+                    // Update the UI
+                    const fileEl = document.getElementById(`template-file-${templateId}`);
+                    if (fileEl) fileEl.textContent = `Current: ${file.name}`;
+                    
+                    // Update download link
+                    const downloadLinks = document.querySelectorAll(`a[href*="loi-documents"]`);
+                    // Reload to get new file path
+                    loadLOITemplates();
+                } else {
+                    const error = await response.json();
+                    showToast(error.error || 'Failed to upload template', 'error');
+                }
+            } catch (error) {
+                console.error('Upload failed:', error);
+                showToast('Failed to upload template', 'error');
+            }
+            
+            // Clear the input
+            event.target.value = '';
+        }
+        
+        // ========== PROPERTY CRUD ==========
+        
+        function openAddModal() {
+            document.getElementById('modal-title').textContent = 'Add New Property';
+            document.getElementById('property-form').reset();
+            document.getElementById('property-id').value = '';
+            document.getElementById('marketing-materials-list').innerHTML = '';
+            currentPropertyId = null;
+            pendingMarketingFiles = [];
+            document.getElementById('property-modal').classList.remove('hidden');
+            document.getElementById('property-modal').classList.add('flex');
+        }
+        
+        function editProperty(id) {
+            const property = adminProperties.find(p => p.id === id);
+            if (!property) return;
+            
+            document.getElementById('modal-title').textContent = 'Edit Property';
+            document.getElementById('property-id').value = property.id;
+            document.getElementById('property-city').value = property.city;
+            document.getElementById('property-state').value = property.state;
+            document.getElementById('property-type').value = property.type;
+            document.getElementById('property-listing-type').value = property.listingType || 'sale';
+            document.getElementById('property-size').value = property.size_acres;
+            document.getElementById('property-price').value = property.price;
+            document.getElementById('property-lat').value = property.lat;
+            document.getElementById('property-lon').value = property.lon;
+            document.getElementById('property-status').value = property.status || 'available';
+            
+            currentPropertyId = id;
+            loadMarketingMaterials(id);
+            
+            document.getElementById('property-modal').classList.remove('hidden');
+            document.getElementById('property-modal').classList.add('flex');
+        }
+        
+        function closePropertyModal() {
+            document.getElementById('property-modal').classList.add('hidden');
+            document.getElementById('property-modal').classList.remove('flex');
+        }
+        
+        function saveProperty(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('property-id').value;
+            const propertyData = {
+                city: document.getElementById('property-city').value,
+                state: document.getElementById('property-state').value.toUpperCase(),
+                type: document.getElementById('property-type').value,
+                listingType: document.getElementById('property-listing-type').value,
+                size_acres: parseFloat(document.getElementById('property-size').value),
+                price: parseInt(document.getElementById('property-price').value),
+                lat: parseFloat(document.getElementById('property-lat').value),
+                lon: parseFloat(document.getElementById('property-lon').value),
+                status: document.getElementById('property-status').value
+            };
+            
+            if (id) {
+                const index = adminProperties.findIndex(p => p.id === parseInt(id));
+                if (index !== -1) {
+                    adminProperties[index] = { ...adminProperties[index], ...propertyData };
+                    showToast('Property updated!');
+                }
+            } else {
+                const newId = Math.max(...adminProperties.map(p => p.id), 0) + 1;
+                adminProperties.push({ id: newId, ...propertyData });
+                showToast('Property added!');
+            }
+            
+            savePropertiesToStorage();
+            closePropertyModal();
+            loadProperties();
+        }
+        
+        function deleteProperty(id) {
+            const property = adminProperties.find(p => p.id === id);
+            deleteTarget = id;
+            deleteType = 'property';
+            document.getElementById('delete-message').textContent = `Delete property "${property.city}, ${property.state}"?`;
+            document.getElementById('delete-modal').classList.remove('hidden');
+            document.getElementById('delete-modal').classList.add('flex');
+        }
+        
+        async function confirmDelete() {
+            if (deleteType === 'property') {
+                adminProperties = adminProperties.filter(p => p.id !== deleteTarget);
+                savePropertiesToStorage();
+                showToast('Property deleted');
+                loadProperties();
+            } else if (deleteType === 'broker') {
+                try {
+                    await fetch(`${API_BASE}/api/brokers/${deleteTarget}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    showToast('Broker deleted');
+                    loadBrokers();
+                } catch (error) {
+                    showToast('Failed to delete broker', 'error');
+                }
+            }
+            closeDeleteModal();
+        }
+        
+        function closeDeleteModal() {
+            deleteTarget = null;
+            deleteType = null;
+            document.getElementById('delete-modal').classList.add('hidden');
+            document.getElementById('delete-modal').classList.remove('flex');
+        }
+        
+        // ========== MARKETING MATERIALS ==========
+        
+        async function loadMarketingMaterials(propertyId) {
+            const container = document.getElementById('marketing-materials-list');
+            container.innerHTML = '<p class="text-sm text-gray-500">Loading...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/properties/${propertyId}/marketing`);
+                if (response.ok) {
+                    const materials = await response.json();
+                    if (materials.length === 0) {
+                        container.innerHTML = '<p class="text-sm text-gray-500">No marketing materials uploaded</p>';
+                    } else {
+                        container.innerHTML = materials.map(m => `
+                            <div class="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-2xl">${m.file_type?.includes('pdf') ? '📄' : '🖼️'}</span>
+                                    <span class="text-sm text-gray-700">${m.file_name}</span>
+                                </div>
+                                <button onclick="deleteMarketingMaterial(${m.id})" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                container.innerHTML = '<p class="text-sm text-red-500">Failed to load materials</p>';
+            }
+        }
+        
+        async function handleMarketingUpload(event) {
+            const file = event.target.files[0];
+            if (!file || !currentPropertyId) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('name', file.name);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/properties/${currentPropertyId}/marketing`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    showToast('Marketing material uploaded!');
+                    loadMarketingMaterials(currentPropertyId);
+                } else {
+                    showToast('Upload failed', 'error');
+                }
+            } catch (error) {
+                showToast('Upload error', 'error');
+            }
+            
+            event.target.value = '';
+        }
+        
+        async function deleteMarketingMaterial(id) {
+            try {
+                await fetch(`${API_BASE}/api/marketing/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                showToast('Material removed');
+                if (currentPropertyId) loadMarketingMaterials(currentPropertyId);
+            } catch (error) {
+                showToast('Failed to remove', 'error');
+            }
+        }
+        
+        function openMarketingModal(propertyId) {
+            currentPropertyId = propertyId;
+            editProperty(propertyId);
+        }
+        
+        // ========== UTILITIES ==========
+        
         function getTypeIcon(type) {
             const icons = { land: '🌾', retail: '🏪', warehouse: '🏭', office: '🏢' };
             return icons[type] || '🏠';
@@ -567,132 +1471,14 @@
             return classes[type] || 'bg-gray-100 text-gray-800';
         }
         
-        function getListingBadgeClass(type) {
-            const classes = {
-                sale: 'bg-green-100 text-green-800',
-                lease: 'bg-blue-100 text-blue-800',
-                both: 'bg-purple-100 text-purple-800'
-            };
-            return classes[type] || 'bg-gray-100 text-gray-800';
-        }
-        
-        function getListingLabel(type) {
-            const labels = { sale: 'For Sale', lease: 'For Lease', both: 'Sale/Lease' };
-            return labels[type] || type;
-        }
-        
         function formatPrice(price) {
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(price);
         }
         
-        // Open add modal
-        function openAddModal() {
-            document.getElementById('modal-title').textContent = 'Add New Property';
-            document.getElementById('property-form').reset();
-            document.getElementById('property-id').value = '';
-            document.getElementById('property-modal').classList.remove('hidden');
-            document.getElementById('property-modal').classList.add('flex');
-        }
-        
-        // Edit property
-        function editProperty(id) {
-            const property = adminProperties.find(p => p.id === id);
-            if (!property) return;
-            
-            document.getElementById('modal-title').textContent = 'Edit Property';
-            document.getElementById('property-id').value = property.id;
-            document.getElementById('property-city').value = property.city;
-            document.getElementById('property-state').value = property.state;
-            document.getElementById('property-type').value = property.type;
-            document.getElementById('property-listing-type').value = property.listingType || 'sale';
-            document.getElementById('property-size').value = property.size_acres;
-            document.getElementById('property-price').value = property.price;
-            document.getElementById('property-lat').value = property.lat;
-            document.getElementById('property-lon').value = property.lon;
-            document.getElementById('property-image').value = property.image || '';
-            document.getElementById('property-status').value = property.status || 'available';
-            
-            document.getElementById('property-modal').classList.remove('hidden');
-            document.getElementById('property-modal').classList.add('flex');
-        }
-        
-        // Close property modal
-        function closePropertyModal() {
-            document.getElementById('property-modal').classList.add('hidden');
-            document.getElementById('property-modal').classList.remove('flex');
-        }
-        
-        // Save property
-        function saveProperty(event) {
-            event.preventDefault();
-            
-            const id = document.getElementById('property-id').value;
-            const propertyData = {
-                city: document.getElementById('property-city').value,
-                state: document.getElementById('property-state').value.toUpperCase(),
-                type: document.getElementById('property-type').value,
-                listingType: document.getElementById('property-listing-type').value,
-                size_acres: parseFloat(document.getElementById('property-size').value),
-                price: parseInt(document.getElementById('property-price').value),
-                lat: parseFloat(document.getElementById('property-lat').value),
-                lon: parseFloat(document.getElementById('property-lon').value),
-                image: document.getElementById('property-image').value || null,
-                status: document.getElementById('property-status').value
-            };
-            
-            if (id) {
-                // Update existing
-                const index = adminProperties.findIndex(p => p.id === parseInt(id));
-                if (index !== -1) {
-                    adminProperties[index] = { ...adminProperties[index], ...propertyData };
-                    showToast('Property updated successfully!');
-                }
-            } else {
-                // Add new
-                const newId = Math.max(...adminProperties.map(p => p.id), 0) + 1;
-                adminProperties.push({ id: newId, ...propertyData });
-                showToast('Property added successfully!');
-            }
-            
-            savePropertiesToStorage();
-            closePropertyModal();
-            loadProperties();
-        }
-        
-        // Delete property
-        function deleteProperty(id) {
-            propertyToDelete = id;
-            const property = adminProperties.find(p => p.id === id);
-            document.getElementById('delete-property-name').textContent = 
-                `Are you sure you want to delete "${property.city}, ${property.state}"?`;
-            document.getElementById('delete-modal').classList.remove('hidden');
-            document.getElementById('delete-modal').classList.add('flex');
-        }
-        
-        // Confirm delete
-        function confirmDelete() {
-            if (propertyToDelete) {
-                adminProperties = adminProperties.filter(p => p.id !== propertyToDelete);
-                savePropertiesToStorage();
-                showToast('Property deleted');
-                loadProperties();
-            }
-            closeDeleteModal();
-        }
-        
-        // Close delete modal
-        function closeDeleteModal() {
-            propertyToDelete = null;
-            document.getElementById('delete-modal').classList.add('hidden');
-            document.getElementById('delete-modal').classList.remove('flex');
-        }
-        
-        // Export properties
         function exportProperties() {
             const dataStr = JSON.stringify(adminProperties, null, 2);
             const blob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            
             const a = document.createElement('a');
             a.href = url;
             a.download = `walmart-properties-${new Date().toISOString().split('T')[0]}.json`;
@@ -700,11 +1486,9 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
             showToast('Properties exported!');
         }
         
-        // Import properties
         function importProperties(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -729,7 +1513,6 @@
             event.target.value = '';
         }
         
-        // Toast notification
         function showToast(message, type = 'success') {
             const existing = document.querySelector('.toast');
             if (existing) existing.remove();
@@ -740,7 +1523,6 @@
             }`;
             toast.textContent = message;
             document.body.appendChild(toast);
-            
             setTimeout(() => toast.remove(), 3000);
         }
         
