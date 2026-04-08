@@ -14,6 +14,7 @@ function getStoredProperties() {
 }
 
 const rawProperties = getStoredProperties() || [
+    { id: 51, city: "Rogers", state: "AR", address: "Near Mathis Airport Pkwy", size_acres: 33.38, type: "land", price: 7000000, lat: 36.3371533, lon: -94.2258899, listingType: "sale", status: "available", description: "Prime excess land parcel situated along major commercial corridor. 33.38 acres zoned retail with excellent visibility and traffic counts of 44,700 VPD on Peachtree Pkwy. Adjacent to Laurel Springs Golf Club with nearby retailers including Target, Home Depot, Lidl, CVS, and Five Guys.", features: ["High Traffic Location", "Retail Zoning", "Near Major Retailers", "Golf Course Adjacent", "Utilities Available"], store_number: "4686", broker: { name: "Minh Nguyen", email: "mnguyen@mnguyencre.com", phone: "(832) 555-0173", company: "Commercial Real Estate Broker" }, marketingMaterials: [{ name: "4686 Marketing Materials.pdf", url: "/uploads/4686 Marketing Materials.pdf", type: "application/pdf" }, { name: "Site Aerial Map.png", url: "/uploads/image3.png", type: "image/png" }, { name: "Broker Contact - Minh Nguyen.png", url: "/uploads/image5.png", type: "image/png" }, { name: "Aerial Site View.png", url: "/uploads/image6.png", type: "image/png" }], featured: true },
     { city: "Sherwood", state: "AR", size_acres: 2.43, type: "land", price: 500000, lat: 34.8151, lon: -92.2243 },
     { city: "Newport", state: "AR", size_acres: 1.12, type: "land", price: 300000, lat: 35.6045, lon: -91.2818 },
     { city: "Fort Scott", state: "KS", size_acres: 0.79, type: "land", price: 185000, lat: 37.8395, lon: -94.7085 },
@@ -102,33 +103,53 @@ const properties = rawProperties.map((p, index) => {
     // Calculate price per acre for land
     const pricePerAcre = p.size_acres ? Math.round(p.price / p.size_acres) : null;
     
+    // If property already has full data (like the Rogers demo property), preserve it
+    if (p.id && p.marketingMaterials) {
+        return {
+            ...p,
+            title: p.title || (isRetail 
+                ? `Former Retail Location - ${p.city}, ${p.state}`
+                : `Development Land - ${p.city}, ${p.state}`),
+            pricePerAcre: pricePerAcre,
+            sizeAcres: p.size_acres,
+            image: image,
+            zip: p.zip || getZipForState(p.state),
+            lotSize: `${p.size_acres} acres`,
+            zoning: p.zoning || 'Commercial'
+        };
+    }
+    
     return {
-        id: index + 1,
+        id: p.id || (index + 1),
         title: isRetail 
             ? `Former Retail Location - ${p.city}, ${p.state}`
             : `Development Land - ${p.city}, ${p.state}`,
         type: p.type,
-        listingType: 'sale',
+        listingType: p.listingType || 'sale',
         price: p.price,
         pricePerAcre: pricePerAcre,
         sizeAcres: p.size_acres,
         size: isRetail ? Math.round(p.size_acres * 43560 * 0.15) : null,
-        address: `Commercial Property`,
+        address: p.address || `Commercial Property`,
         city: p.city,
         state: p.state,
-        zip: getZipForState(p.state),
+        zip: p.zip || getZipForState(p.state),
         lat: p.lat,
         lon: p.lon,
         image: image,
-        description: isRetail
+        description: p.description || (isRetail
             ? `Former retail location in ${p.city}, ${p.state}. Prime commercial property with excellent visibility and established traffic patterns. ${p.size_acres} acre site ready for redevelopment or continued retail use.`
-            : `Development-ready land parcel in ${p.city}, ${p.state}. ${p.size_acres} acres of commercial-zoned land ideal for retail, restaurant, or service businesses. Excellent location with strong demographics.`,
-        features: isRetail
+            : `Development-ready land parcel in ${p.city}, ${p.state}. ${p.size_acres} acres of commercial-zoned land ideal for retail, restaurant, or service businesses. Excellent location with strong demographics.`),
+        features: p.features || (isRetail
             ? [`${p.size_acres} Acre Site`, 'Established Location', 'High Traffic Area', 'Utilities In Place', 'Signalized Access']
-            : [`${p.size_acres} Acres`, 'Commercial Zoning', 'Utilities Available', 'Pad-Ready', 'Strong Demographics'],
+            : [`${p.size_acres} Acres`, 'Commercial Zoning', 'Utilities Available', 'Pad-Ready', 'Strong Demographics']),
         yearBuilt: null,
         lotSize: `${p.size_acres} acres`,
-        zoning: 'Commercial'
+        zoning: p.zoning || 'Commercial',
+        broker: p.broker || null,
+        marketingMaterials: p.marketingMaterials || null,
+        store_number: p.store_number || null,
+        featured: p.featured || false
     };
 });
 
@@ -145,7 +166,45 @@ function getZipForState(state) {
 
 // Current view state
 let currentView = 'grid';
-let filteredProperties = [...properties];
+let filteredProperties = [];
+
+// Fetch properties from API and initialize
+async function fetchPropertiesFromAPI() {
+    try {
+        const response = await fetch(`${window.location.origin}/api/properties`);
+        if (response.ok) {
+            const apiProps = await response.json();
+            // Clear existing properties and populate from API
+            properties.length = 0;
+            apiProps.forEach(p => {
+                properties.push({
+                    id: p.id,
+                    city: p.city || '',
+                    state: p.state || '',
+                    address: p.address || '',
+                    size_acres: p.size_acres || 0,
+                    lotSize: p.size_acres ? `${p.size_acres} acres` : 'N/A',
+                    type: p.property_type || 'land',
+                    listingType: p.listing_type || 'sale',
+                    price: p.price || 0,
+                    status: p.status || 'available',
+                    description: p.description || `Marketable property in ${p.city}, ${p.state}`,
+                    lat: p.lat || 0,
+                    lon: p.lon || 0,
+                    store_number: p.store_number || '',
+                    broker_name: p.broker_name || '',
+                    features: ['Commercial Zoning', 'Utilities Available'],
+                    featured: false,
+                    zip: getZipForState(p.state)
+                });
+            });
+            console.log(`Loaded ${properties.length} properties from API`);
+        }
+    } catch (error) {
+        console.error('Error fetching properties:', error);
+    }
+    filteredProperties = [...properties];
+}
 
 // Format price for display
 function formatPrice(price, listingType) {
@@ -167,10 +226,12 @@ function formatSize(size) {
 // Get property type label
 function getTypeLabel(type) {
     const labels = {
+        land: 'Land',
+        outlots: 'Outlots',
+        'dark-stores': 'Dark Stores',
         retail: 'Retail',
         warehouse: 'Warehouse',
         office: 'Office',
-        land: 'Land',
         industrial: 'Industrial'
     };
     return labels[type] || type;
@@ -181,6 +242,46 @@ function getListingBadgeClass(listingType) {
     return listingType === 'sale' 
         ? 'bg-green-500 text-white' 
         : 'bg-walmart-blue text-white';
+}
+
+// Gallery scroll helper
+function scrollGallery(button, direction) {
+    const gallery = button.closest('.relative').querySelector('.overflow-x-auto');
+    const scrollAmount = gallery.offsetWidth;
+    gallery.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+}
+
+// Open image in lightbox
+function openImageLightbox(imageUrl, imageName) {
+    // Create lightbox overlay
+    const lightbox = document.createElement('div');
+    lightbox.id = 'image-lightbox';
+    lightbox.className = 'fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4';
+    lightbox.onclick = (e) => { if (e.target === lightbox) lightbox.remove(); };
+    
+    lightbox.innerHTML = `
+        <div class="relative max-w-6xl max-h-full">
+            <button onclick="document.getElementById('image-lightbox').remove()" 
+                    class="absolute -top-12 right-0 text-white hover:text-gray-300 p-2">
+                <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <img src="${imageUrl}" alt="${imageName}" class="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl">
+            <p class="text-white text-center mt-4 text-lg">${imageName}</p>
+        </div>
+    `;
+    
+    document.body.appendChild(lightbox);
+    
+    // Close on escape key
+    const closeOnEscape = (e) => {
+        if (e.key === 'Escape') {
+            lightbox.remove();
+            document.removeEventListener('keydown', closeOnEscape);
+        }
+    };
+    document.addEventListener('keydown', closeOnEscape);
 }
 
 // Create property card HTML
@@ -236,14 +337,13 @@ function createPropertyCard(property) {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    ${property.lotSize} · ${property.zoning} Zoning
+                    ${property.lotSize} · ${property.zoning || 'Commercial'} Zoning
                 </p>
             </div>
             <div class="p-5 bg-gray-50">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-2xl font-bold text-walmart-blue">${priceDisplay}</p>
-                        ${property.pricePerAcre ? `<p class="text-sm text-gray-500">$${property.pricePerAcre.toLocaleString()}/acre</p>` : ''}
+                        <p class="text-lg font-semibold text-walmart-blue">View Details</p>
                     </div>
                     <button class="p-2 rounded-full hover:bg-white transition-colors focus-visible shadow-sm bg-white" 
                             aria-label="${isPropertySaved(property.id) ? 'Remove from saved' : 'Save property'}"
@@ -278,7 +378,10 @@ function renderProperties() {
     container.innerHTML = filteredProperties.map(createPropertyCard).join('');
     
     // Update results count
-    document.querySelector('#results-count span').textContent = filteredProperties.length;
+    const countEl = document.getElementById('results-count');
+    if (countEl) {
+        countEl.innerHTML = `Showing <span class="font-semibold">${filteredProperties.length}</span> ${filteredProperties.length === 1 ? 'property' : 'properties'}`;
+    }
 }
 
 // Set view mode
@@ -307,21 +410,24 @@ function setView(view) {
 function filterProperties() {
     const propertyType = document.getElementById('property-type').value;
     const listingType = document.getElementById('listing-type').value;
-    const location = document.getElementById('location').value.toLowerCase();
+    const stateFilter = document.getElementById('state-filter').value;
     const priceRange = document.getElementById('price-range').value;
+    const sizeRange = document.getElementById('size-range').value;
     
     filteredProperties = properties.filter(property => {
-        // Property type filter
-        if (propertyType && property.type !== propertyType) return false;
+        // Property type filter - map dropdown values to data types
+        if (propertyType) {
+            const acres = property.size_acres || property.sizeAcres || 0;
+            if (propertyType === 'land' && property.type !== 'land') return false;
+            if (propertyType === 'outlots' && (property.type !== 'land' || acres >= 5)) return false;
+            if (propertyType === 'dark-stores' && property.type !== 'retail') return false;
+        }
         
         // Listing type filter
         if (listingType && property.listingType !== listingType) return false;
         
-        // Location filter
-        if (location) {
-            const searchText = `${property.city} ${property.state} ${property.zip}`.toLowerCase();
-            if (!searchText.includes(location)) return false;
-        }
+        // State filter
+        if (stateFilter && property.state !== stateFilter) return false;
         
         // Price filter
         if (priceRange) {
@@ -332,13 +438,110 @@ function filterProperties() {
             if (property.price < min || property.price > max) return false;
         }
         
+        // Size filter (acres)
+        if (sizeRange) {
+            const acres = property.size_acres || property.sizeAcres || 0;
+            if (sizeRange === '0-1' && acres >= 1) return false;
+            if (sizeRange === '1-5' && (acres < 1 || acres >= 5)) return false;
+            if (sizeRange === '5-20' && (acres < 5 || acres >= 20)) return false;
+            if (sizeRange === '20+' && acres < 20) return false;
+        }
+        
         return true;
     });
     
-    // Sort
+    // Sort and render
     sortProperties();
     renderProperties();
     updateMapMarkers();
+}
+
+// Perform keyword search from the main search bar
+function performSearch() {
+    const searchInput = document.getElementById('search-input');
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    
+    if (!searchTerm) {
+        // If empty, just run the filter with current dropdown values
+        filterProperties();
+        return;
+    }
+    
+    // Get current filter values
+    const propertyType = document.getElementById('property-type').value;
+    const listingType = document.getElementById('listing-type').value;
+    const stateFilter = document.getElementById('state-filter').value;
+    const priceRange = document.getElementById('price-range').value;
+    const sizeRange = document.getElementById('size-range').value;
+    
+    filteredProperties = properties.filter(property => {
+        // Keyword search - check multiple fields
+        const searchFields = [
+            property.title,
+            property.city,
+            property.state,
+            property.address,
+            property.description,
+            property.zoning,
+            String(property.price),
+            property.features?.join(' ')
+        ].filter(Boolean).join(' ').toLowerCase();
+        
+        if (!searchFields.includes(searchTerm)) return false;
+        
+        // Apply other filters too
+        // Property type filter
+        if (propertyType) {
+            const acres = property.size_acres || property.sizeAcres || 0;
+            if (propertyType === 'land' && property.type !== 'land') return false;
+            if (propertyType === 'outlots' && (property.type !== 'land' || acres >= 5)) return false;
+            if (propertyType === 'dark-stores' && property.type !== 'retail') return false;
+        }
+        
+        // Listing type filter
+        if (listingType && property.listingType !== listingType) return false;
+        
+        // State filter
+        if (stateFilter && property.state !== stateFilter) return false;
+        
+        // Price filter
+        if (priceRange) {
+            const [min, max] = priceRange.split('-').map(p => {
+                if (p.includes('+')) return Infinity;
+                return parseInt(p);
+            });
+            if (property.price < min || property.price > max) return false;
+        }
+        
+        // Size filter
+        if (sizeRange) {
+            const acres = property.size_acres || property.sizeAcres || 0;
+            if (sizeRange === '0-1' && acres >= 1) return false;
+            if (sizeRange === '1-5' && (acres < 1 || acres >= 5)) return false;
+            if (sizeRange === '5-20' && (acres < 5 || acres >= 20)) return false;
+            if (sizeRange === '20+' && acres < 20) return false;
+        }
+        
+        return true;
+    });
+    
+    sortProperties();
+    renderProperties();
+    updateMapMarkers();
+}
+
+// Filter by listing type (For Sale / For Lease) - called from nav links
+function filterByType(type) {
+    const listingTypeSelect = document.getElementById('listing-type');
+    listingTypeSelect.value = type;
+    filterProperties();
+}
+
+// Filter by property type - called from footer links
+function filterByPropertyType(type) {
+    const propertyTypeSelect = document.getElementById('property-type');
+    propertyTypeSelect.value = type;
+    filterProperties();
 }
 
 // Sort properties
@@ -346,16 +549,23 @@ function sortProperties() {
     const sortValue = document.getElementById('sort').value;
     
     filteredProperties.sort((a, b) => {
+        const aSize = a.size_acres || a.sizeAcres || 0;
+        const bSize = b.size_acres || b.sizeAcres || 0;
+        
         switch (sortValue) {
             case 'price-low':
                 return a.price - b.price;
             case 'price-high':
                 return b.price - a.price;
-            case 'size':
-                return (b.sizeAcres || 0) - (a.sizeAcres || 0);
+            case 'size-high':
+                return bSize - aSize;
+            case 'size-low':
+                return aSize - bSize;
+            case 'state':
+                return a.state.localeCompare(b.state);
             case 'newest':
             default:
-                return a.id - b.id;
+                return b.id - a.id; // Higher ID = newer
         }
     });
 }
@@ -414,8 +624,7 @@ function openPropertyModal(id) {
                     <p class="text-gray-400 text-sm mt-1">Coordinates: ${property.lat}, ${property.lon}</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-3xl font-bold text-walmart-blue">${priceDisplay}</p>
-                    ${property.pricePerAcre ? `<p class="text-gray-500">$${property.pricePerAcre.toLocaleString()}/acre</p>` : ''}
+                    <p class="text-2xl font-bold text-walmart-blue">Contact for Pricing</p>
                 </div>
             </div>
             
@@ -436,6 +645,14 @@ function openPropertyModal(id) {
                     <p class="text-2xl font-bold text-walmart-blue">${property.type === 'retail' ? 'Retail' : 'Land'}</p>
                     <p class="text-sm text-gray-500">Property Type</p>
                 </div>
+            </div>
+            
+            <!-- Contact Button - Centered -->
+            <div class="flex justify-center mb-6">
+                <button onclick="openLOIModal(${property.id})" 
+                   class="bg-walmart-blue hover:bg-walmart-dark text-white text-center font-semibold py-3 px-8 rounded-lg transition-colors focus-visible text-lg">
+                    Contact About Property
+                </button>
             </div>
             
             <div class="mb-6">
@@ -471,13 +688,6 @@ function openPropertyModal(id) {
                 <div id="broker-contact-container">
                     <p class="text-gray-500">Loading broker info...</p>
                 </div>
-            </div>
-            
-            <div>
-                <button onclick="openLOIModal(${property.id})" 
-                   class="w-full bg-walmart-blue hover:bg-walmart-dark text-white text-center font-semibold py-4 px-6 rounded-lg transition-colors focus-visible text-lg">
-                    Contact About Property
-                </button>
             </div>
         </div>
     `;
@@ -515,8 +725,34 @@ function openPropertyModal(id) {
     loadMarketingMaterials(property.id);
     loadBrokerContact(property.state, property.id);
     
+    // Setup dynamic scrollbar sizing
+    setupDynamicScrollbar();
+    
     // Focus trap
     modal.querySelector('button').focus();
+}
+
+// Dynamic scrollbar that shrinks as you scroll down
+function setupDynamicScrollbar() {
+    const scrollContainer = document.getElementById('modal-scroll-container');
+    if (!scrollContainer) return;
+    
+    scrollContainer.addEventListener('scroll', function() {
+        const scrollTop = this.scrollTop;
+        const scrollHeight = this.scrollHeight - this.clientHeight;
+        const scrollPercent = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+        
+        // Scrollbar width: starts at 10px, shrinks to 4px at bottom
+        const maxWidth = 10;
+        const minWidth = 4;
+        const width = maxWidth - (scrollPercent * (maxWidth - minWidth));
+        
+        this.style.setProperty('--scrollbar-width', `${width}px`);
+    });
+    
+    // Reset scrollbar width when modal opens
+    scrollContainer.style.setProperty('--scrollbar-width', '10px');
+    scrollContainer.scrollTop = 0;
 }
 
 // Close property modal
@@ -540,6 +776,79 @@ async function showMarketingMaterials(propertyId) {
     await loadMarketingMaterials(propertyId);
 }
 
+// Render a PDF page to canvas and return as image
+async function renderPdfPageAsImage(pdfUrl, pageNum) {
+    const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+    const page = await pdf.getPage(pageNum);
+    const scale = 2.0;
+    const viewport = page.getViewport({ scale });
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const context = canvas.getContext('2d');
+    
+    await page.render({ canvasContext: context, viewport }).promise;
+    return canvas.toDataURL('image/png');
+}
+
+// Render all PDF pages as images
+async function renderPdfAsImages(pdfUrl, fileName, container) {
+    try {
+        const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+        const numPages = pdf.numPages;
+        
+        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const scale = 2.0;
+            const viewport = page.getViewport({ scale });
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const context = canvas.getContext('2d');
+            
+            await page.render({ canvasContext: context, viewport }).promise;
+            const imageDataUrl = canvas.toDataURL('image/png');
+            
+            const pageLabel = numPages > 1 ? ` (Page ${pageNum}/${numPages})` : '';
+            const div = document.createElement('div');
+            div.className = 'rounded-lg overflow-hidden border border-gray-200 shadow-sm';
+            div.innerHTML = `
+                <img src="${imageDataUrl}" 
+                     alt="${fileName}${pageLabel}" 
+                     class="w-full h-auto cursor-pointer hover:opacity-95 transition-opacity"
+                     onclick="openImageLightbox('${imageDataUrl}', '${fileName.replace(/'/g, "\\'")}${pageLabel}')">
+                <div class="bg-gray-50 px-3 py-2 flex items-center justify-between">
+                    <span class="text-sm text-gray-700 font-medium">${fileName}${pageLabel}</span>
+                    <a href="${pdfUrl}" download class="text-walmart-blue hover:underline text-sm flex items-center gap-1">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Download PDF
+                    </a>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+    } catch (error) {
+        console.error('Error rendering PDF:', error);
+        // Fallback to download link
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <a href="${pdfUrl}" target="_blank" rel="noopener noreferrer"
+               class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
+                <span class="text-2xl">📄</span>
+                <div class="flex-1 min-w-0">
+                    <p class="font-medium text-gray-900 truncate group-hover:text-walmart-blue text-sm">${fileName}</p>
+                    <p class="text-xs text-gray-500">PDF Document</p>
+                </div>
+            </a>
+        `;
+        container.appendChild(div);
+    }
+}
+
 // Load marketing materials for a property (auto-called when modal opens)
 async function loadMarketingMaterials(propertyId) {
     const container = document.getElementById('marketing-materials-container');
@@ -547,32 +856,73 @@ async function loadMarketingMaterials(propertyId) {
     
     container.innerHTML = '<p class="text-gray-500 col-span-2">Loading materials...</p>';
     
-    // First check if property has embedded marketing materials (for static sites)
+    // First check if property has embedded marketing materials
     const property = properties.find(p => p.id === propertyId);
     if (property && property.marketingMaterials && property.marketingMaterials.length > 0) {
-        container.innerHTML = property.marketingMaterials.map(m => {
-            const isPdf = m.type?.includes('pdf');
-            const isImage = m.type?.startsWith('image/');
-            const icon = isPdf ? '📄' : isImage ? '🖼️' : '📎';
-            
-            return `
-                <a href="${m.url}" target="_blank" rel="noopener noreferrer"
-                   class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
-                    <span class="text-2xl">${icon}</span>
-                    <div class="flex-1 min-w-0">
-                        <p class="font-medium text-gray-900 truncate group-hover:text-walmart-blue text-sm">${m.name}</p>
-                        <p class="text-xs text-gray-500">${isPdf ? 'PDF' : isImage ? 'Image' : 'File'}</p>
-                    </div>
-                    <svg class="h-4 w-4 text-gray-400 group-hover:text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                </a>
+        const materials = property.marketingMaterials;
+        const images = materials.filter(m => m.type?.startsWith('image/'));
+        const pdfs = materials.filter(m => m.type?.includes('pdf'));
+        const otherDocs = materials.filter(m => !m.type?.startsWith('image/') && !m.type?.includes('pdf'));
+        
+        container.innerHTML = '';
+        const galleryDiv = document.createElement('div');
+        galleryDiv.className = 'col-span-2 space-y-4';
+        
+        // Show images inline
+        images.forEach(img => {
+            const div = document.createElement('div');
+            div.className = 'rounded-lg overflow-hidden border border-gray-200 shadow-sm';
+            div.innerHTML = `
+                <img src="${img.url}" 
+                     alt="${img.name}" 
+                     class="w-full h-auto cursor-pointer hover:opacity-95 transition-opacity"
+                     onclick="openImageLightbox('${img.url}', '${img.name.replace(/'/g, "\\'")}')">
+                <div class="bg-gray-50 px-3 py-2 flex items-center justify-between">
+                    <span class="text-sm text-gray-700 font-medium">${img.name}</span>
+                    <a href="${img.url}" download class="text-walmart-blue hover:underline text-sm flex items-center gap-1">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Download
+                    </a>
+                </div>
             `;
-        }).join('');
+            galleryDiv.appendChild(div);
+        });
+        
+        // Render PDFs as images
+        for (const pdf of pdfs) {
+            await renderPdfAsImages(pdf.url, pdf.name, galleryDiv);
+        }
+        
+        container.appendChild(galleryDiv);
+        
+        // Show other docs as download links
+        if (otherDocs.length > 0) {
+            const docsDiv = document.createElement('div');
+            docsDiv.className = 'col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-4 border-t';
+            otherDocs.forEach(doc => {
+                docsDiv.innerHTML += `
+                    <a href="${doc.url}" target="_blank" rel="noopener noreferrer"
+                       class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
+                        <span class="text-2xl">📎</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-gray-900 truncate group-hover:text-walmart-blue text-sm">${doc.name}</p>
+                            <p class="text-xs text-gray-500">Document</p>
+                        </div>
+                    </a>
+                `;
+            });
+            container.appendChild(docsDiv);
+        }
+        
+        if (container.children.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 col-span-2">No materials available.</p>';
+        }
         return;
     }
     
-    // Fallback to API call for dynamic sites
+    // Fallback to API
     try {
         const response = await fetch(`${window.location.origin}/api/properties/${propertyId}/marketing`);
         if (response.ok) {
@@ -585,25 +935,61 @@ async function loadMarketingMaterials(propertyId) {
                     </div>
                 `;
             } else {
-                container.innerHTML = materials.map(m => {
-                    const isPdf = m.file_type?.includes('pdf');
-                    const isImage = m.file_type?.startsWith('image/');
-                    const icon = isPdf ? '📄' : isImage ? '🖼️' : '📎';
-                    
-                    return `
-                        <a href="${m.file_url}" target="_blank" rel="noopener noreferrer"
-                           class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
-                            <span class="text-2xl">${icon}</span>
-                            <div class="flex-1 min-w-0">
-                                <p class="font-medium text-gray-900 truncate group-hover:text-walmart-blue text-sm">${m.file_name}</p>
-                                <p class="text-xs text-gray-500">${isPdf ? 'PDF' : isImage ? 'Image' : 'File'}</p>
-                            </div>
-                            <svg class="h-4 w-4 text-gray-400 group-hover:text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                            </svg>
-                        </a>
+                const images = materials.filter(m => m.file_type?.startsWith('image/'));
+                const pdfs = materials.filter(m => m.file_type?.includes('pdf'));
+                const otherDocs = materials.filter(m => !m.file_type?.startsWith('image/') && !m.file_type?.includes('pdf'));
+                
+                container.innerHTML = '';
+                const galleryDiv = document.createElement('div');
+                galleryDiv.className = 'col-span-2 space-y-4';
+                
+                // Show images inline
+                images.forEach(img => {
+                    const div = document.createElement('div');
+                    div.className = 'rounded-lg overflow-hidden border border-gray-200 shadow-sm';
+                    div.innerHTML = `
+                        <img src="${img.file_url}" 
+                             alt="${img.file_name}" 
+                             class="w-full h-auto cursor-pointer hover:opacity-95 transition-opacity"
+                             onclick="openImageLightbox('${img.file_url}', '${img.file_name.replace(/'/g, "\\'")}')">
+                        <div class="bg-gray-50 px-3 py-2 flex items-center justify-between">
+                            <span class="text-sm text-gray-700 font-medium">${img.file_name}</span>
+                            <a href="${img.file_url}" download class="text-walmart-blue hover:underline text-sm flex items-center gap-1">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Download
+                            </a>
+                        </div>
                     `;
-                }).join('');
+                    galleryDiv.appendChild(div);
+                });
+                
+                // Render PDFs as images
+                for (const pdf of pdfs) {
+                    await renderPdfAsImages(pdf.file_url, pdf.file_name, galleryDiv);
+                }
+                
+                container.appendChild(galleryDiv);
+                
+                // Show other docs as download links
+                if (otherDocs.length > 0) {
+                    const docsDiv = document.createElement('div');
+                    docsDiv.className = 'col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-4 border-t';
+                    otherDocs.forEach(doc => {
+                        docsDiv.innerHTML += `
+                            <a href="${doc.file_url}" target="_blank" rel="noopener noreferrer"
+                               class="flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group">
+                                <span class="text-2xl">📎</span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-medium text-gray-900 truncate group-hover:text-walmart-blue text-sm">${doc.file_name}</p>
+                                    <p class="text-xs text-gray-500">Document</p>
+                                </div>
+                            </a>
+                        `;
+                    });
+                    container.appendChild(docsDiv);
+                }
             }
         } else {
             container.innerHTML = '<p class="text-gray-500 col-span-2">No materials available.</p>';
@@ -613,12 +999,12 @@ async function loadMarketingMaterials(propertyId) {
     }
 }
 
-// Load broker contact info for a state (with property ID for embedded data)
+// Load broker contact info for a state (with optional propertyId for embedded data)
 async function loadBrokerContact(state, propertyId) {
     const container = document.getElementById('broker-contact-container');
     if (!container) return;
     
-    // First check if property has embedded broker info (for static sites)
+    // First check if property has embedded broker info
     if (propertyId) {
         const property = properties.find(p => p.id === propertyId);
         if (property && property.broker) {
@@ -635,7 +1021,7 @@ async function loadBrokerContact(state, propertyId) {
         }
     }
     
-    // Fallback to API call for dynamic sites
+    // Fallback to API
     try {
         const response = await fetch(`${window.location.origin}/api/brokers/state/${state}`);
         if (response.ok) {
@@ -668,8 +1054,6 @@ const loiDocuments = [
     { id: 1, name: 'Building Lease', file: 'loi-documents/Building Lease .docx', description: 'For leasing building space', icon: '🏢' },
     { id: 2, name: 'Building Sale', file: 'loi-documents/Building Sale LOI docx.docx', description: 'For purchasing a building', icon: '🏪' },
     { id: 3, name: 'Building Sublease', file: 'loi-documents/Building Sublease LOI.docx', description: 'For subleasing building space', icon: '🔄' },
-    { id: 4, name: 'Carveout Ground Lease', file: 'loi-documents/Carveout Ground Lease LOI .doc', description: 'For ground lease on carveout parcels', icon: '📐' },
-    { id: 5, name: 'Carveout Sale', file: 'loi-documents/Carveout Sale LOI.docx', description: 'For purchasing carveout parcels', icon: '🗺️' },
     { id: 6, name: 'Large Tract Land Sale', file: 'loi-documents/Large Tract Land Sale LOI.docx', description: 'For purchasing large land tracts', icon: '🌾' },
     { id: 7, name: 'Outlot Ground Lease', file: 'loi-documents/Outlot Ground Lease LOI.docx', description: 'For ground lease on outlot parcels', icon: '📍' },
     { id: 8, name: 'Outlot Land Sale', file: 'loi-documents/Outlot Land Sale LOI .docx', description: 'For purchasing outlot parcels', icon: '🏞️' }
@@ -896,99 +1280,6 @@ function getLOIFormFields(loiId, property) {
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Intended Use *</label>
                 <input type="text" name="intendedUse" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-            </div>`,
-        
-        4: `<!-- Carveout Ground Lease -->
-            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 mt-6">Ground Lease Terms</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Annual Rent *</label>
-                    <input type="text" name="annualRent" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., $75,000">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Lease Term (Years) *</label>
-                    <input type="text" name="leaseTerm" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., 20 years">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Desired Acreage *</label>
-                    <input type="text" name="acreage" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           value="${property.size_acres} acres">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Commencement Date *</label>
-                    <input type="date" name="commencementDate" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Development / Use *</label>
-                <input type="text" name="proposedUse" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                       placeholder="e.g., Quick Service Restaurant, Bank, Car Wash">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Rent Escalations</label>
-                <input type="text" name="rentEscalations" 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                       placeholder="e.g., 10% every 5 years">
-            </div>`,
-        
-        5: `<!-- Carveout Sale -->
-            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 mt-6">Purchase Terms</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Offer Price *</label>
-                    <input type="text" name="offerPrice" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Earnest Money Deposit *</label>
-                    <input type="text" name="earnestMoney" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Desired Acreage *</label>
-                    <input type="text" name="acreage" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           value="${property.size_acres} acres">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Due Diligence Period (Days) *</label>
-                    <input type="number" name="dueDiligencePeriod" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., 60">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Closing Date *</label>
-                    <input type="date" name="closingDate" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Financing Type *</label>
-                    <select name="financingType" required 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                        <option value="">Select...</option>
-                        <option value="cash">All Cash</option>
-                        <option value="conventional">Conventional Financing</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Development / Use *</label>
-                <input type="text" name="proposedUse" required 
                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
             </div>`,
         
@@ -1798,7 +2089,7 @@ function addPropertyMarkers(propertiesToShow) {
                 <img src="${property.image}" alt="${property.title}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;">
                 <h4 style="font-weight: bold; margin-bottom: 4px; font-size: 14px;">${property.title}</h4>
                 <p style="color: #666; font-size: 12px; margin-bottom: 4px;">${property.city}, ${property.state}</p>
-                <p style="color: #0071CE; font-weight: bold; font-size: 16px; margin-bottom: 8px;">${formatPrice(property.price, property.listingType)}</p>
+                <p style="color: #0071CE; font-weight: bold; font-size: 14px; margin-bottom: 8px;">Contact for Pricing</p>
                 <p style="color: #666; font-size: 12px; margin-bottom: 8px;">${property.lotSize}</p>
                 <button onclick="openPropertyModal(${property.id})" style="background-color: #0071CE; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600;">View Details</button>
             </div>
@@ -1854,25 +2145,79 @@ function updateMapMarkers() {
     }
 }
 
+// Populate state filter dropdown
+function populateStateFilter() {
+    const stateFilter = document.getElementById('state-filter');
+    if (!stateFilter) return;
+    
+    // Get unique states from properties
+    const states = [...new Set(properties.map(p => p.state))].sort();
+    
+    // Clear existing options except the first one
+    stateFilter.innerHTML = '<option value="">All States</option>';
+    
+    // Add state options
+    states.forEach(state => {
+        const option = document.createElement('option');
+        option.value = state;
+        option.textContent = state;
+        stateFilter.appendChild(option);
+    });
+}
+
 // Event listeners
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Fetch properties from API first
+    await fetchPropertiesFromAPI();
+    
     renderProperties();
     initMainMap();
     updateSavedCount();
+    populateStateFilter();
+    
+    // Main search bar - Enter key support
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                hideAutocomplete();
+                performSearch();
+                saveRecentSearch(searchInput.value.trim());
+            }
+        });
+        
+        // Show autocomplete on input
+        searchInput.addEventListener('input', () => {
+            updateAutocomplete(searchInput.value.trim());
+        });
+        
+        // Show recent searches on focus (if empty)
+        searchInput.addEventListener('focus', () => {
+            if (!searchInput.value.trim()) {
+                showRecentSearches();
+            } else {
+                updateAutocomplete(searchInput.value.trim());
+            }
+        });
+        
+        // Hide autocomplete on blur (with delay for clicks)
+        searchInput.addEventListener('blur', () => {
+            setTimeout(hideAutocomplete, 200);
+        });
+    }
     
     document.getElementById('search-form').addEventListener('submit', (e) => {
         e.preventDefault();
         filterProperties();
     });
     
-    ['property-type', 'listing-type', 'price-range'].forEach(id => {
-        document.getElementById(id).addEventListener('change', filterProperties);
-    });
-    
-    let debounceTimer;
-    document.getElementById('location').addEventListener('input', () => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(filterProperties, 300);
+    // Add change listeners to all filter dropdowns
+    ['property-type', 'listing-type', 'state-filter', 'price-range', 'size-range'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('change', filterProperties);
+        }
     });
     
     document.getElementById('sort').addEventListener('change', () => {
@@ -1906,4 +2251,365 @@ document.addEventListener('DOMContentLoaded', () => {
             closeLOIFormModal();
         }
     });
+    
+    // Populate contact form state dropdown
+    populateContactStateDropdown();
+    
+    // Contact form submission
+    const contactForm = document.getElementById('contact-form');
+    if (contactForm) {
+        contactForm.addEventListener('submit', handleContactFormSubmit);
+    }
 });
+
+// Populate state dropdown in contact form
+function populateContactStateDropdown() {
+    const select = document.getElementById('contact-state');
+    if (!select) return;
+    
+    // Get unique states sorted alphabetically
+    const states = [...new Set(properties.map(p => p.state))].sort();
+    
+    select.innerHTML = '<option value="">Select a state (optional)</option>';
+    states.forEach(state => {
+        const option = document.createElement('option');
+        option.value = state;
+        option.textContent = state;
+        select.appendChild(option);
+    });
+}
+
+// Update property dropdown based on selected state
+function updateContactPropertyDropdown() {
+    const stateSelect = document.getElementById('contact-state');
+    const propertySelect = document.getElementById('contact-property');
+    if (!stateSelect || !propertySelect) return;
+    
+    const selectedState = stateSelect.value;
+    
+    if (!selectedState) {
+        propertySelect.innerHTML = '<option value="">Select a state first</option>';
+        propertySelect.disabled = true;
+        return;
+    }
+    
+    // Filter properties by state and sort by city
+    const stateProperties = properties
+        .filter(p => p.state === selectedState)
+        .sort((a, b) => a.city.localeCompare(b.city));
+    
+    propertySelect.disabled = false;
+    propertySelect.innerHTML = '<option value="">Select a property (optional)</option>';
+    
+    stateProperties.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.id;
+        option.textContent = `${p.city} - ${p.lotSize || p.size_acres + ' acres'}`;
+        propertySelect.appendChild(option);
+    });
+}
+
+// Handle contact form submission
+async function handleContactFormSubmit(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    // Get form data
+    const formData = {
+        name: document.getElementById('contact-name').value.trim(),
+        email: document.getElementById('contact-email').value.trim(),
+        phone: document.getElementById('contact-phone').value.trim(),
+        company: document.getElementById('contact-company').value.trim(),
+        property_id: document.getElementById('contact-property').value || null,
+        message: document.getElementById('contact-message').value.trim()
+    };
+    
+    // Validation
+    if (!formData.name || !formData.email || !formData.message) {
+        showToast('Please fill in all required fields');
+        return;
+    }
+    
+    // Disable button and show loading
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+    
+    try {
+        const response = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            // Success!
+            showContactSuccess();
+            form.reset();
+        } else {
+            showToast(result.error || 'Failed to submit inquiry');
+        }
+    } catch (error) {
+        console.error('Contact  error:', error);
+        showToast('Connection error. Please try again.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
+
+// Show contact form success message
+function showContactSuccess() {
+    const form = document.getElementById('contact-form');
+    const container = form.parentElement;
+    
+    // Replace form with success message
+    container.innerHTML = `
+        <div class="text-center py-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">Thank You!</h3>
+            <p class="text-gray-600 mb-6">Your inquiry has been submitted successfully.<br>Our team will respond within 1-2 business days.</p>
+            <button onclick="location.reload()" class="bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                Submit Another Inquiry
+            </button>
+        </div>
+    `;
+    
+    // Scroll to success message
+    container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ============= SEARCH AUTOCOMPLETE =============
+
+const RECENT_SEARCHES_KEY = 'walmartRealtyRecentSearches';
+const MAX_RECENT_SEARCHES = 5;
+
+// Get recent searches from localStorage
+function getRecentSearches() {
+    const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+    return stored ? JSON.parse(stored) : [];
+}
+
+// Save a search term to recent searches
+function saveRecentSearch(term) {
+    if (!term || term.length < 2) return;
+    
+    let recent = getRecentSearches();
+    // Remove if already exists
+    recent = recent.filter(s => s.toLowerCase() !== term.toLowerCase());
+    // Add to beginning
+    recent.unshift(term);
+    // Keep only MAX
+    recent = recent.slice(0, MAX_RECENT_SEARCHES);
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent));
+}
+
+// Clear recent searches
+function clearRecentSearches() {
+    localStorage.removeItem(RECENT_SEARCHES_KEY);
+    hideAutocomplete();
+}
+
+// Show the autocomplete dropdown
+function showAutocomplete() {
+    const dropdown = document.getElementById('search-autocomplete');
+    if (dropdown) dropdown.classList.remove('hidden');
+}
+
+// Hide the autocomplete dropdown
+function hideAutocomplete() {
+    const dropdown = document.getElementById('search-autocomplete');
+    if (dropdown) dropdown.classList.add('hidden');
+}
+
+// Show recent searches (when input is focused but empty)
+function showRecentSearches() {
+    const recent = getRecentSearches();
+    const recentSection = document.getElementById('recent-searches-section');
+    const recentList = document.getElementById('recent-searches-list');
+    const statesSection = document.getElementById('states-section');
+    const citiesSection = document.getElementById('cities-section');
+    const noResults = document.getElementById('no-results-section');
+    
+    // Hide other sections
+    statesSection.classList.add('hidden');
+    citiesSection.classList.add('hidden');
+    noResults.classList.add('hidden');
+    
+    if (recent.length === 0) {
+        recentSection.classList.add('hidden');
+        hideAutocomplete();
+        return;
+    }
+    
+    recentSection.classList.remove('hidden');
+    recentList.innerHTML = recent.map(term => `
+        <div class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center gap-3 border-b border-gray-100 last:border-0"
+             onclick="selectRecentSearch('${term.replace(/'/g, "\\'")}')"
+             role="option">
+            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="text-gray-700">${term}</span>
+        </div>
+    `).join('') + `
+        <div class="px-4 py-2 bg-gray-50 border-t">
+            <button onclick="clearRecentSearches()" class="text-xs text-gray-500 hover:text-red-600">Clear recent searches</button>
+        </div>
+    `;
+    
+    showAutocomplete();
+}
+
+// Select a recent search
+function selectRecentSearch(term) {
+    const searchInput = document.getElementById('search-input');
+    searchInput.value = term;
+    hideAutocomplete();
+    performSearch();
+}
+
+// Update autocomplete based on search term
+function updateAutocomplete(term) {
+    const dropdown = document.getElementById('search-autocomplete');
+    const recentSection = document.getElementById('recent-searches-section');
+    const statesSection = document.getElementById('states-section');
+    const statesList = document.getElementById('states-list');
+    const citiesSection = document.getElementById('cities-section');
+    const citiesList = document.getElementById('cities-list');
+    const noResults = document.getElementById('no-results-section');
+    
+    // If empty, show recent searches instead
+    if (!term) {
+        showRecentSearches();
+        return;
+    }
+    
+    // Hide recent searches when typing
+    recentSection.classList.add('hidden');
+    
+    const termLower = term.toLowerCase();
+    
+    // Find matching states
+    const stateMatches = [];
+    const stateCounts = {};
+    properties.forEach(p => {
+        if (!stateCounts[p.state]) stateCounts[p.state] = 0;
+        stateCounts[p.state]++;
+    });
+    
+    Object.keys(stateCounts).forEach(state => {
+        if (state.toLowerCase().includes(termLower)) {
+            stateMatches.push({ state, count: stateCounts[state] });
+        }
+    });
+    stateMatches.sort((a, b) => a.state.localeCompare(b.state));
+    
+    // Find matching cities
+    const cityMatches = [];
+    const cityCounts = {};
+    properties.forEach(p => {
+        const key = `${p.city}, ${p.state}`;
+        if (!cityCounts[key]) cityCounts[key] = { city: p.city, state: p.state, count: 0 };
+        cityCounts[key].count++;
+    });
+    
+    Object.values(cityCounts).forEach(item => {
+        if (item.city.toLowerCase().includes(termLower)) {
+            cityMatches.push(item);
+        }
+    });
+    cityMatches.sort((a, b) => a.city.localeCompare(b.city));
+    
+    // Update UI
+    const hasStates = stateMatches.length > 0;
+    const hasCities = cityMatches.length > 0;
+    
+    if (!hasStates && !hasCities) {
+        statesSection.classList.add('hidden');
+        citiesSection.classList.add('hidden');
+        noResults.classList.remove('hidden');
+        showAutocomplete();
+        return;
+    }
+    
+    noResults.classList.add('hidden');
+    
+    // Render states
+    if (hasStates) {
+        statesSection.classList.remove('hidden');
+        statesList.innerHTML = stateMatches.slice(0, 5).map(item => `
+            <div class="px-4 py-3 hover:bg-blue-50 cursor-pointer flex items-center justify-between border-b border-gray-100 last:border-0"
+                 onclick="selectStateSearch('${item.state}')"
+                 role="option">
+                <div class="flex items-center gap-3">
+                    <svg class="h-4 w-4 text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    </svg>
+                    <span class="font-medium text-gray-900">${item.state}</span>
+                </div>
+                <span class="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">${item.count} ${item.count === 1 ? 'property' : 'properties'}</span>
+            </div>
+        `).join('');
+    } else {
+        statesSection.classList.add('hidden');
+    }
+    
+    // Render cities
+    if (hasCities) {
+        citiesSection.classList.remove('hidden');
+        citiesList.innerHTML = cityMatches.slice(0, 8).map(item => `
+            <div class="px-4 py-3 hover:bg-blue-50 cursor-pointer flex items-center justify-between border-b border-gray-100 last:border-0"
+                 onclick="selectCitySearch('${item.city}', '${item.state}')"
+                 role="option">
+                <div class="flex items-center gap-3">
+                    <svg class="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <span class="text-gray-900">${item.city}, <span class="text-gray-500">${item.state}</span></span>
+                </div>
+                <span class="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">${item.count} ${item.count === 1 ? 'property' : 'properties'}</span>
+            </div>
+        `).join('');
+    } else {
+        citiesSection.classList.add('hidden');
+    }
+    
+    showAutocomplete();
+}
+
+// Select a state from autocomplete
+function selectStateSearch(state) {
+    const searchInput = document.getElementById('search-input');
+    const stateFilter = document.getElementById('state-filter');
+    
+    // Set state filter dropdown
+    stateFilter.value = state;
+    searchInput.value = '';
+    
+    hideAutocomplete();
+    filterProperties();
+    saveRecentSearch(state);
+}
+
+// Select a city from autocomplete
+function selectCitySearch(city, state) {
+    const searchInput = document.getElementById('search-input');
+    const stateFilter = document.getElementById('state-filter');
+    
+    // Set state filter and search for city
+    stateFilter.value = state;
+    searchInput.value = city;
+    
+    hideAutocomplete();
+    performSearch();
+    saveRecentSearch(`${city}, ${state}`);
+}
