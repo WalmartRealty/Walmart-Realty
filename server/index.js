@@ -1152,7 +1152,8 @@ async function findAvailablePort(startPort) {
 
 async function startServer() {
     try {
-        const port = await findAvailablePort(DEFAULT_PORT);
+        // Use Azure's PORT env variable, or find available port locally
+        const port = process.env.PORT || await findAvailablePort(DEFAULT_PORT);
         
         app.listen(port, () => {
             console.log('\n============================================');
