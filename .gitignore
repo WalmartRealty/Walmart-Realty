@@ -1,22 +1,66 @@
-# Dependencies
-node_modules/
+# ============================================
+# WALMART REAL ESTATE - GITIGNORE
+# ============================================
 
-# Environment
+# ============= SECURITY - NEVER COMMIT =============
 .env
 .env.local
+.env.production
+*.pem
+*.key
+*.crt
+secrets/
+credentials/
 
-# OS files
-.DS_Store
-Thumbs.db
+# ============= DATABASE =============
+*.db
+*.sqlite
+*.sqlite3
+walmart-realty.db
 
-# Logs
+# ============= UPLOADS (user data) =============
+uploads/
+!uploads/.gitkeep
+
+# ============= DEPENDENCIES =============
+node_modules/
+.npm
+.yarn
+
+# ============= BUILD =============
+dist/
+build/
+.cache/
+
+# ============= LOGS =============
+logs/
 *.log
 npm-debug.log*
 
-# Uploads (if sensitive)
-uploads/*
-!uploads/.gitkeep
-
-# IDE
-.vscode/
+# ============= IDE =============
 .idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============= TESTING =============
+coverage/
+.nyc_output/
+
+# ============= TEMP =============
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ============= OS =============
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
