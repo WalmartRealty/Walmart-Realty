@@ -7,13 +7,21 @@
     "address": "3101 A ST",
     "size_acres": 1.19,
     "type": "land",
-    "price": null,
+    "price": 850000,
     "lat": 61.1922415,
     "lon": -149.8796498,
-    "description": "Marketable property - Store #2070",
+    "description": "Prime commercial outlot in Anchorage, Alaska. 1.19 acres of development-ready land adjacent to Walmart Supercenter with excellent visibility and high traffic counts. Ideal for restaurant, bank, or retail pad site. All utilities available at the property line. Strong demographics with growing residential population in the surrounding area.",
+    "features": ["High Traffic Location", "Adjacent to Walmart Supercenter", "Utilities Available", "Pad-Ready Site", "Strong Demographics", "Excellent Visibility"],
     "broker_name": "Carl Kuhn",
-    "broker_email": null,
-    "broker_phone": null
+    "broker_email": "carl.kuhn@walmart.com",
+    "broker_phone": "(479) 555-0142",
+    "broker_company": "Walmart Realty",
+    "marketingMaterials": [
+      { "name": "Marketing Package.pdf", "url": "uploads/RealtyMarketing Package.pdf", "type": "application/pdf" },
+      { "name": "Site Aerial View.png", "url": "uploads/image3.png", "type": "image/png" },
+      { "name": "Property Overview.png", "url": "uploads/image6.png", "type": "image/png" }
+    ],
+    "featured": true
   },
   {
     "id": 53,
