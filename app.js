@@ -305,6 +305,10 @@ async function fetchPropertiesFromAPI() {
 
 // Format price for display
 function formatPrice(price, listingType) {
+    // Handle null/undefined prices
+    if (price === null || price === undefined) {
+        return 'Contact for Pricing';
+    }
     if (listingType === 'lease') {
         return `$${price.toLocaleString()}/SF/YR`;
     }
