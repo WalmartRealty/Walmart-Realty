@@ -192,6 +192,11 @@ function transformProperties(rawProps) {
             phone: p.broker_phone,
             company: p.broker_company || 'Walmart Realty'
         } : null),
+        // Keep raw broker fields for fallback
+        broker_name: p.broker_name || null,
+        broker_email: p.broker_email || null,
+        broker_phone: p.broker_phone || null,
+        broker_company: p.broker_company || null,
         marketingMaterials: p.marketingMaterials || null,
         store_number: p.store_number || p.store_num || null,
         featured: p.featured || false
@@ -1115,8 +1120,11 @@ async function loadBrokerContact(state, propertyId) {
     // First check if property has embedded broker info
     if (propertyId) {
         const property = properties.find(p => p.id === propertyId || p.id === parseInt(propertyId));
-        console.log('Found property:', property ? 'yes' : 'no', 'broker:', property?.broker);
+        console.log('Found property:', property ? 'yes' : 'no');
+        console.log('Property broker:', property?.broker);
+        console.log('Property broker_name:', property?.broker_name);
         
+        // Check for broker object first
         if (property && property.broker && property.broker.name) {
             const b = property.broker;
             container.innerHTML = `
@@ -1125,6 +1133,19 @@ async function loadBrokerContact(state, propertyId) {
                     <p class="text-sm text-gray-600 mb-2">${b.company || 'Walmart Realty'}</p>
                     ${b.email ? `<p class="mb-1"><a href="mailto:${b.email}" class="text-walmart-blue hover:underline">${b.email}</a></p>` : ''}
                     ${b.phone ? `<p class="text-gray-700">${b.phone}</p>` : ''}
+                </div>
+            `;
+            return;
+        }
+        
+        // Fallback: check for broker_name, broker_email, etc. fields directly
+        if (property && property.broker_name) {
+            container.innerHTML = `
+                <div class="text-left">
+                    <p class="font-semibold text-gray-900 text-lg">${property.broker_name}</p>
+                    <p class="text-sm text-gray-600 mb-2">${property.broker_company || 'Walmart Realty'}</p>
+                    ${property.broker_email ? `<p class="mb-1"><a href="mailto:${property.broker_email}" class="text-walmart-blue hover:underline">${property.broker_email}</a></p>` : ''}
+                    ${property.broker_phone ? `<p class="text-gray-700">${property.broker_phone}</p>` : ''}
                 </div>
             `;
             return;
