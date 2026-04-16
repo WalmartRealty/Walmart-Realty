@@ -771,6 +771,7 @@ function openPropertyModal(id) {
                 <p class="text-gray-600">${property.description}</p>
             </div>
             
+            ${property.features && property.features.length > 0 ? `
             <div class="mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-3">Features</h3>
                 <ul class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -784,6 +785,7 @@ function openPropertyModal(id) {
                     `).join('')}
                 </ul>
             </div>
+            ` : ''}
             
             <!-- Marketing Materials Section -->
             <div id="marketing-materials-section" class="mb-6">
