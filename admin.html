@@ -867,15 +867,12 @@
         
         async function fetchPropertiesData() {
             try {
-                const response = await fetch('properties-data.js');
-                const text = await response.text();
-                // Extract the array from the JS module
-                const match = text.match(/const properties = (\[\s*\S*\s*\S*[\s\S]*?\]);/);
-                if (match) {
-                    const props = JSON.parse(match[1]);
+                const response = await fetch('properties.json');
+                if (response.ok) {
+                    const props = await response.json();
                     // Add id and normalize fields
                     return props.map((p, i) => ({
-                        id: i + 1,
+                        id: p.id || i + 1,
                         city: p.city,
                         state: p.state,
                         address: p.address || '',
@@ -886,7 +883,7 @@
                         lon: p.lon,
                         description: p.description || '',
                         features: p.features || [],
-                        broker: p.broker || null,
+                        broker: p.broker_name ? { name: p.broker_name, email: p.broker_email, phone: p.broker_phone } : null,
                         store_num: p.store_num,
                         listingType: 'sale',
                         status: 'available'

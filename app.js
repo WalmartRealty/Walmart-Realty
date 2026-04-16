@@ -17,24 +17,21 @@ let rawProperties = getStoredProperties() || [];
 let properties = [];
 let filteredProperties = [];
 
-// Load properties from properties-data.js file
+// Load properties from properties.json file
 async function loadPropertiesFromFile() {
     try {
-        const response = await fetch('properties-data.js');
-        const text = await response.text();
-        // Extract the array from the JS module
-        const match = text.match(/const properties = (\[\s*\S*\s*\S*[\s\S]*?\]);/);
-        if (match) {
-            const props = JSON.parse(match[1]);
+        const response = await fetch('properties.json');
+        if (response.ok) {
+            const props = await response.json();
             return props.map((p, i) => ({
                 ...p,
-                id: p.store_num || (i + 1),
+                id: p.id || p.store_num || (i + 1),
                 listingType: 'sale',
                 status: 'available'
             }));
         }
     } catch (e) {
-        console.error('Failed to load properties from file:', e);
+        console.error('Failed to load properties from JSON:', e);
     }
     return null;
 }
