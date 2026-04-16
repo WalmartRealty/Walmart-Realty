@@ -221,7 +221,24 @@ async function fetchPropertiesFromAPI() {
             console.log(`Loaded ${fileProps.length} properties from properties.json`);
             rawProperties = fileProps;
             properties.length = 0;
-            properties.push(...transformProperties(rawProperties));
+            try {
+                const transformed = transformProperties(rawProperties);
+                console.log('Transformed', transformed.length, 'properties');
+                properties.push(...transformed);
+            } catch (transformError) {
+                console.error('Error in transformProperties:', transformError);
+                // Fallback: just use raw properties directly
+                properties.push(...rawProperties.map((p, i) => ({
+                    ...p,
+                    id: p.id || p.store_num || (i + 1),
+                    title: `Property in ${p.city}, ${p.state}`,
+                    image: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800&h=600&fit=crop',
+                    listingType: 'sale',
+                    status: 'available',
+                    sizeAcres: p.size_acres,
+                    lotSize: `${p.size_acres} acres`
+                })));
+            }
             filteredProperties = [...properties];
             console.log('Final properties count:', properties.length);
             console.log('Final filteredProperties count:', filteredProperties.length);
