@@ -1333,6 +1333,26 @@
         };
         
         async function loadLOITemplates() {
+            // In static mode, use localStorage or just show defaults
+            if (STATIC_MODE) {
+                const stored = localStorage.getItem('walmartRealtyTemplates');
+                if (stored) {
+                    const templates = JSON.parse(stored);
+                    templates.forEach(t => {
+                        const fileEl = document.getElementById(`template-file-${t.id}`);
+                        const statusEl = document.getElementById(`template-status-${t.id}`);
+                        if (fileEl) fileEl.textContent = `Current: ${t.file_name}`;
+                        if (statusEl) {
+                            statusEl.textContent = t.is_active ? 'Active' : 'Inactive';
+                            statusEl.className = t.is_active 
+                                ? 'px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700'
+                                : 'px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700';
+                        }
+                    });
+                }
+                return;
+            }
+            
             try {
                 const response = await fetch(`${API_BASE}/api/loi-templates`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
@@ -1359,6 +1379,27 @@
         async function uploadLOITemplate(event, templateId, templateName) {
             const file = event.target.files[0];
             if (!file) return;
+            
+            // In static mode, just show a message
+            if (STATIC_MODE) {
+                showToast('Template upload requires server. File saved locally for reference.', 'success');
+                const fileEl = document.getElementById(`template-file-${templateId}`);
+                if (fileEl) fileEl.textContent = `Current: ${file.name}`;
+                
+                // Save to localStorage
+                const stored = localStorage.getItem('walmartRealtyTemplates');
+                let templates = stored ? JSON.parse(stored) : [];
+                const existing = templates.find(t => t.id === templateId);
+                if (existing) {
+                    existing.file_name = file.name;
+                    existing.is_active = true;
+                } else {
+                    templates.push({ id: templateId, name: templateName, file_name: file.name, is_active: true });
+                }
+                localStorage.setItem('walmartRealtyTemplates', JSON.stringify(templates));
+                event.target.value = '';
+                return;
+            }
             
             const formData = new FormData();
             formData.append('template', file);
