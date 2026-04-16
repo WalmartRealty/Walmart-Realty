@@ -979,8 +979,12 @@ async function loadMarketingMaterials(propertyId) {
     
     container.innerHTML = '<p class="text-gray-500 col-span-2">Loading materials...</p>';
     
+    console.log('loadMarketingMaterials called with propertyId:', propertyId);
+    
     // First check if property has embedded marketing materials
-    const property = properties.find(p => p.id === propertyId);
+    const property = properties.find(p => p.id === propertyId || p.id === parseInt(propertyId));
+    console.log('Found property:', property ? 'yes' : 'no', 'marketingMaterials:', property?.marketingMaterials);
+    
     if (property && property.marketingMaterials && property.marketingMaterials.length > 0) {
         const materials = property.marketingMaterials;
         const images = materials.filter(m => m.type?.startsWith('image/'));
@@ -1013,9 +1017,38 @@ async function loadMarketingMaterials(propertyId) {
             galleryDiv.appendChild(div);
         });
         
-        // Render PDFs as images
+        // Show PDFs with download link and try to render as images
         for (const pdf of pdfs) {
-            await renderPdfAsImages(pdf.url, pdf.name, galleryDiv);
+            // First add a download link immediately
+            const pdfDiv = document.createElement('div');
+            pdfDiv.className = 'rounded-lg border border-gray-200 shadow-sm bg-white p-4';
+            pdfDiv.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">📄</span>
+                        <div>
+                            <p class="font-medium text-gray-900">${pdf.name}</p>
+                            <p class="text-sm text-gray-500">PDF Document</p>
+                        </div>
+                    </div>
+                    <a href="${pdf.url}" target="_blank" class="bg-walmart-blue hover:bg-walmart-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Download PDF
+                    </a>
+                </div>
+            `;
+            galleryDiv.appendChild(pdfDiv);
+            
+            // Try to render PDF pages as images (if PDF.js is available)
+            try {
+                if (typeof pdfjsLib !== 'undefined') {
+                    await renderPdfAsImages(pdf.url, pdf.name, galleryDiv);
+                }
+            } catch (e) {
+                console.log('PDF rendering failed, download link shown instead:', e);
+            }
         }
         
         container.appendChild(galleryDiv);
