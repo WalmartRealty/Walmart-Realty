@@ -5,9 +5,20 @@
 // Check for admin-managed properties in localStorage
 const STORAGE_KEY = 'walmartRealtyProperties';
 function getStoredProperties() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-        return JSON.parse(stored);
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            // Only use if it's a valid array with properties
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                console.log('Found', parsed.length, 'properties in localStorage');
+                return parsed;
+            }
+        }
+    } catch (e) {
+        console.error('Error reading localStorage:', e);
+        // Clear corrupted data
+        localStorage.removeItem(STORAGE_KEY);
     }
     return null;
 }
