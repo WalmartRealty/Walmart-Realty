@@ -186,7 +186,12 @@ function transformProperties(rawProps) {
         yearBuilt: null,
         lotSize: `${p.size_acres} acres`,
         zoning: p.zoning || 'Commercial',
-        broker: p.broker || null,
+        broker: p.broker || (p.broker_name ? {
+            name: p.broker_name,
+            email: p.broker_email,
+            phone: p.broker_phone,
+            company: p.broker_company || 'Walmart Realty'
+        } : null),
         marketingMaterials: p.marketingMaterials || null,
         store_number: p.store_number || p.store_num || null,
         featured: p.featured || false
