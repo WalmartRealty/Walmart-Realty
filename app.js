@@ -794,10 +794,20 @@ function openPropertyModal(id) {
             </div>
             
             <!-- Broker Contact Section -->
-            <div id="broker-contact-section" class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100 text-center">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Broker Contact</h3>
+            <div id="broker-contact-section" class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Broker Contact</h3>
                 <div id="broker-contact-container">
-                    <p class="text-gray-500">Loading broker info...</p>
+                    ${property.broker_name ? `
+                        <div class="text-left">
+                            <p class="font-semibold text-gray-900 text-lg">${property.broker_name}</p>
+                            <p class="text-sm text-gray-600 mb-2">${property.broker_company || 'Walmart Realty'}</p>
+                            ${property.broker_email ? `<p class="mb-1"><a href="mailto:${property.broker_email}" class="text-walmart-blue hover:underline">${property.broker_email}</a></p>` : ''}
+                            ${property.broker_phone ? `<p class="text-gray-700 font-medium">${property.broker_phone}</p>` : ''}
+                        </div>
+                    ` : `
+                        <p class="text-gray-600">Contact us for information about this property.</p>
+                        <p class="text-sm text-gray-500 mt-2">Email: <a href="mailto:realestate@walmart.com" class="text-walmart-blue hover:underline">realestate@walmart.com</a></p>
+                    `}
                 </div>
             </div>
         </div>
