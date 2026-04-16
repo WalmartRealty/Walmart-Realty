@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Walmart Real Estate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'walmart-blue': '#0071CE',
+                        'walmart-dark': '#004C91',
+                        'walmart-yellow': '#FFC220',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .status-badge { @apply px-2 py-1 rounded-full text-xs font-medium; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-walmart-blue to-walmart-dark">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <img src="../spark-logo.png" alt="Walmart" class="h-12 w-12 mx-auto mb-4">
+                <h1 class="text-2xl font-bold text-gray-900">Admin Login</h1>
+                <p class="text-gray-600">Walmart Real Estate Management</p>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="login-email" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
+                           placeholder="admin@walmart.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="login-password" required 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
+                           placeholder="••••••••">
+                </div>
+                <div id="login-error" class="text-red-600 text-sm hidden"></div>
+                <button type="submit" 
+                        class="w-full bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    Sign In
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="hidden">
+        <!-- Header -->
+        <header class="bg-walmart-blue text-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-3">
+                        <img src="../spark-logo.png" alt="Walmart" class="h-8 w-8">
+                        <div>
+                            <h1 class="text-lg font-bold">Walmart Real Estate</h1>
+                            <p class="text-xs text-blue-200">Admin Dashboard</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span id="user-name" class="text-sm"></span>
+                        <button onclick="logout()" class="text-blue-200 hover:text-white text-sm">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-white border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex gap-8">
+                    <button onclick="showTab('dashboard')" class="tab-btn py-4 border-b-2 border-walmart-blue text-walmart-blue font-medium" data-tab="dashboard">
+                        Dashboard
+                    </button>
+                    <button onclick="showTab('properties')" class="tab-btn py-4 border-b-2 border-transparent text-gray-600 hover:text-walmart-blue" data-tab="properties">
+                        Properties
+                    </button>
+                    <button onclick="showTab('loi')" class="tab-btn py-4 border-b-2 border-transparent text-gray-600 hover:text-walmart-blue" data-tab="loi">
+                        LOI Submissions
+                    </button>
+                    <button onclick="showTab('activity')" class="tab-btn py-4 border-b-2 border-transparent text-gray-600 hover:text-walmart-blue" data-tab="activity">
+                        Activity Log
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- Dashboard Tab -->
+            <div id="tab-dashboard" class="tab-content">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h2>
+                
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="text-3xl font-bold text-walmart-blue" id="stat-total">0</div>
+                        <div class="text-gray-600">Total Properties</div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="text-3xl font-bold text-green-600" id="stat-active">0</div>
+                        <div class="text-gray-600">Active Listings</div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="text-3xl font-bold text-amber-600" id="stat-contract">0</div>
+                        <div class="text-gray-600">Under Contract</div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="text-3xl font-bold text-purple-600" id="stat-loi">0</div>
+                        <div class="text-gray-600">Pending LOIs</div>
+                    </div>
+                </div>
+                
+                <!-- Status Breakdown -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Properties by Status</h3>
+                        <div id="status-breakdown" class="space-y-3"></div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Properties by State</h3>
+                        <div id="state-breakdown" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Properties Tab -->
+            <div id="tab-properties" class="tab-content hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Manage Properties</h2>
+                    <button onclick="openPropertyModal()" 
+                            class="bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Property
+                    </button>
+                </div>
+                
+                <!-- Filters -->
+                <div class="bg-white rounded-xl shadow p-4 mb-6 flex flex-wrap gap-4">
+                    <select id="filter-status" onchange="loadProperties()" class="px-4 py-2 border rounded-lg">
+                        <option value="">All Statuses</option>
+                    </select>
+                    <select id="filter-type" onchange="loadProperties()" class="px-4 py-2 border rounded-lg">
+                        <option value="">All Types</option>
+                        <option value="land">Land</option>
+                        <option value="retail">Retail</option>
+                        <option value="warehouse">Warehouse</option>
+                        <option value="office">Office</option>
+                    </select>
+                    <select id="filter-listing" onchange="loadProperties()" class="px-4 py-2 border rounded-lg">
+                        <option value="">All Listings</option>
+                        <option value="sale">For Sale</option>
+                        <option value="lease">For Lease</option>
+                        <option value="ground_lease">Ground Lease</option>
+                    </select>
+                </div>
+                
+                <!-- Properties Table -->
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Property</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="properties-table" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- LOI Tab -->
+            <div id="tab-loi" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">LOI Submissions</h2>
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Property</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">LOI Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="loi-table" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Activity Tab -->
+            <div id="tab-activity" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Activity Log</h2>
+                <div class="bg-white rounded-xl shadow overflow-hidden">
+                    <div id="activity-log" class="divide-y divide-gray-200">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Property Modal -->
+    <div id="property-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+                <h2 id="property-modal-title" class="text-xl font-bold">Add Property</h2>
+                <button onclick="closePropertyModal()" class="p-2 hover:bg-gray-100 rounded-full">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="property-form" class="p-6 space-y-4">
+                <input type="hidden" id="property-id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                        <input type="text" id="prop-city" required class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                        <input type="text" id="prop-state" required class="w-full px-4 py-2 border rounded-lg" maxlength="2" placeholder="TX">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <input type="text" id="prop-address" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Size (Acres)</label>
+                        <input type="number" step="0.01" id="prop-acres" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+                        <select id="prop-type" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="land">Land</option>
+                            <option value="retail">Retail</option>
+                            <option value="warehouse">Warehouse</option>
+                            <option value="office">Office</option>
+                            <option value="mixed">Mixed Use</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Listing Type</label>
+                        <select id="prop-listing" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="sale">For Sale</option>
+                            <option value="lease">For Lease</option>
+                            <option value="ground_lease">Ground Lease</option>
+                            <option value="sublease">Sublease</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                        <input type="number" id="prop-price" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select id="prop-status" class="w-full px-4 py-2 border rounded-lg"></select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                        <input type="number" step="0.0001" id="prop-lat" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                        <input type="number" step="0.0001" id="prop-lon" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea id="prop-description" rows="3" class="w-full px-4 py-2 border rounded-lg"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Broker Name</label>
+                        <input type="text" id="prop-broker-name" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Broker Email</label>
+                        <input type="email" id="prop-broker-email" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Broker Phone</label>
+                        <input type="tel" id="prop-broker-phone" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-6">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" id="prop-featured" class="rounded text-walmart-blue">
+                        <span class="text-sm">Featured Property</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" id="prop-active" checked class="rounded text-walmart-blue">
+                        <span class="text-sm">Active Listing</span>
+                    </label>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg">
+                        Save Property
+                    </button>
+                    <button type="button" onclick="closePropertyModal()" class="px-6 py-3 border rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
