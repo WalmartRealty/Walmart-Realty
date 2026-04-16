@@ -19,10 +19,13 @@ let filteredProperties = [];
 
 // Load properties from properties.json file
 async function loadPropertiesFromFile() {
+    console.log('Attempting to load properties.json...');
     try {
         const response = await fetch('properties.json');
+        console.log('Fetch response status:', response.status);
         if (response.ok) {
             const props = await response.json();
+            console.log('Parsed', props.length, 'properties from JSON');
             return props.map((p, i) => ({
                 ...p,
                 id: p.id || p.store_num || (i + 1),
@@ -196,6 +199,8 @@ let currentView = 'grid';
 
 // Fetch properties from API, file, or localStorage
 async function fetchPropertiesFromAPI() {
+    console.log('fetchPropertiesFromAPI called');
+    
     // 1. Check localStorage first (admin-managed properties)
     const stored = getStoredProperties();
     if (stored && stored.length > 0) {
@@ -204,22 +209,26 @@ async function fetchPropertiesFromAPI() {
         properties.length = 0;
         properties.push(...transformProperties(rawProperties));
         filteredProperties = [...properties];
+        console.log('Properties loaded from localStorage:', properties.length);
         return;
     }
     
-    // 2. Try loading from properties-data.js file (GitHub Pages)
+    // 2. Try loading from properties.json file (GitHub Pages)
+    console.log('No localStorage data, trying properties.json...');
     try {
         const fileProps = await loadPropertiesFromFile();
         if (fileProps && fileProps.length > 0) {
-            console.log(`Loaded ${fileProps.length} properties from properties-data.js`);
+            console.log(`Loaded ${fileProps.length} properties from properties.json`);
             rawProperties = fileProps;
             properties.length = 0;
             properties.push(...transformProperties(rawProperties));
             filteredProperties = [...properties];
+            console.log('Final properties count:', properties.length);
+            console.log('Final filteredProperties count:', filteredProperties.length);
             return;
         }
     } catch (e) {
-        console.log('Could not load from file, trying API...');
+        console.error('Error loading from file:', e);
     }
     
     // 3. Try API (backend server mode)
