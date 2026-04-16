@@ -1110,49 +1110,32 @@ async function loadBrokerContact(state, propertyId) {
     const container = document.getElementById('broker-contact-container');
     if (!container) return;
     
+    console.log('loadBrokerContact called with state:', state, 'propertyId:', propertyId);
+    
     // First check if property has embedded broker info
     if (propertyId) {
-        const property = properties.find(p => p.id === propertyId);
-        if (property && property.broker) {
+        const property = properties.find(p => p.id === propertyId || p.id === parseInt(propertyId));
+        console.log('Found property:', property ? 'yes' : 'no', 'broker:', property?.broker);
+        
+        if (property && property.broker && property.broker.name) {
             const b = property.broker;
             container.innerHTML = `
-                <div>
-                    <p class="font-semibold text-gray-900">${b.name}</p>
-                    <p class="text-sm text-gray-600">${b.company || 'Walmart Real Estate'}</p>
-                    <a href="mailto:${b.email}" class="text-walmart-blue hover:underline text-sm">${b.email}</a>
-                    ${b.phone ? `<p class="text-sm text-gray-500">${b.phone}</p>` : ''}
+                <div class="text-left">
+                    <p class="font-semibold text-gray-900 text-lg">${b.name}</p>
+                    <p class="text-sm text-gray-600 mb-2">${b.company || 'Walmart Realty'}</p>
+                    ${b.email ? `<p class="mb-1"><a href="mailto:${b.email}" class="text-walmart-blue hover:underline">${b.email}</a></p>` : ''}
+                    ${b.phone ? `<p class="text-gray-700">${b.phone}</p>` : ''}
                 </div>
             `;
             return;
         }
     }
     
-    // Fallback to API
-    try {
-        const response = await fetch(`${window.location.origin}/api/brokers/state/${state}`);
-        if (response.ok) {
-            const brokers = await response.json();
-            
-            if (brokers.length === 0) {
-                container.innerHTML = `
-                    <p class="text-gray-600">Contact us for information about properties in ${state}.</p>
-                `;
-            } else {
-                container.innerHTML = brokers.map(b => `
-                    <div class="${brokers.length > 1 ? 'mb-3 pb-3 border-b border-blue-100 last:border-0 last:mb-0 last:pb-0' : ''}">
-                        <p class="font-semibold text-gray-900">${b.name}</p>
-                        <p class="text-sm text-gray-600">${b.company || 'Walmart Real Estate'}</p>
-                        <a href="mailto:${b.email}" class="text-walmart-blue hover:underline text-sm">${b.email}</a>
-                        ${b.phone ? `<p class="text-sm text-gray-500">${b.phone}</p>` : ''}
-                    </div>
-                `).join('');
-            }
-        } else {
-            container.innerHTML = '<p class="text-gray-600">Contact us for more information.</p>';
-        }
-    } catch (error) {
-        container.innerHTML = '<p class="text-gray-600">Contact us for more information.</p>';
-    }
+    // Fallback message for GitHub Pages (no API)
+    container.innerHTML = `
+        <p class="text-gray-600">Contact us for information about properties in ${state}.</p>
+        <p class="text-sm text-gray-500 mt-2">Email: <a href="mailto:realestate@walmart.com" class="text-walmart-blue hover:underline">realestate@walmart.com</a></p>
+    `;
 }
 
 // LOI Documents available
