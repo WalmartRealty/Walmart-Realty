@@ -798,19 +798,19 @@ function openPropertyModal(id) {
             </div>
             
             <!-- Broker Contact Section -->
-            <div id="broker-contact-section" class="mb-8 p-6 bg-blue-50 rounded-xl border-2 border-blue-200 shadow-sm">
-                <h3 class="text-xl font-bold text-gray-900 mb-4 text-center">Broker Contact</h3>
-                <div id="broker-contact-container">
+            <div id="broker-contact-section" class="mb-8 p-8 bg-blue-50 rounded-xl border-2 border-blue-200 shadow-md">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Broker Contact</h3>
+                <div id="broker-contact-container" class="flex flex-col items-center justify-center">
                     ${property.broker_name ? `
                         <div class="text-center">
-                            <p class="font-bold text-gray-900 text-2xl mb-1">${property.broker_name}</p>
-                            <p class="text-lg text-gray-600 mb-3">${property.broker_company || 'Walmart Realty'}</p>
-                            ${property.broker_phone ? `<p class="text-xl font-semibold text-walmart-blue mb-2">${property.broker_phone}</p>` : ''}
-                            ${property.broker_email ? `<p><a href="mailto:${property.broker_email}" class="text-lg text-walmart-blue hover:underline font-medium">${property.broker_email}</a></p>` : ''}
+                            <p class="font-bold text-gray-900 text-3xl mb-2">${property.broker_name}</p>
+                            <p class="text-xl text-gray-600 mb-4">${property.broker_company || 'Walmart Realty'}</p>
+                            ${property.broker_phone ? `<p class="mb-3"><a href="tel:${property.broker_phone.replace(/[^0-9+]/g, '')}" class="text-2xl font-bold text-walmart-blue hover:underline">${property.broker_phone}</a></p>` : ''}
+                            ${property.broker_email ? `<p><a href="mailto:${property.broker_email}" class="text-xl text-walmart-blue hover:underline font-medium">${property.broker_email}</a></p>` : ''}
                         </div>
                     ` : `
-                        <p class="text-gray-600 text-center">Contact us for information about this property.</p>
-                        <p class="text-center mt-2"><a href="mailto:realestate@walmart.com" class="text-lg text-walmart-blue hover:underline">realestate@walmart.com</a></p>
+                        <p class="text-gray-600 text-center text-lg">Contact us for information about this property.</p>
+                        <p class="text-center mt-3"><a href="mailto:realestate@walmart.com" class="text-xl text-walmart-blue hover:underline">realestate@walmart.com</a></p>
                     `}
                 </div>
             </div>
