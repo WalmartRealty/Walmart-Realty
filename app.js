@@ -1,6 +1,5 @@
-// Real Walmart Property Data - Generated from Non-Earning Land Report 11-30-2025
+// Real Walmart Property Data - Generated from Non-Earning Land Report
 // Store numbers, cities, states, and sizes are REAL data
-// Prices are randomly generated for demonstration purposes
 // Coordinates are based on city centers - actual property locations may vary
 
 // Check for admin-managed properties in localStorage
@@ -13,7 +12,35 @@ function getStoredProperties() {
     return null;
 }
 
-const rawProperties = getStoredProperties() || [
+// Will be populated from properties-data.js
+let rawProperties = getStoredProperties() || [];
+let properties = [];
+let filteredProperties = [];
+
+// Load properties from properties-data.js file
+async function loadPropertiesFromFile() {
+    try {
+        const response = await fetch('properties-data.js');
+        const text = await response.text();
+        // Extract the array from the JS module
+        const match = text.match(/const properties = (\[\s*\S*\s*\S*[\s\S]*?\]);/);
+        if (match) {
+            const props = JSON.parse(match[1]);
+            return props.map((p, i) => ({
+                ...p,
+                id: p.store_num || (i + 1),
+                listingType: 'sale',
+                status: 'available'
+            }));
+        }
+    } catch (e) {
+        console.error('Failed to load properties from file:', e);
+    }
+    return null;
+}
+
+// Fallback properties if file load fails
+const fallbackProperties = [
     { id: 51, city: "Rogers", state: "AR", address: "Near Mathis Airport Pkwy", size_acres: 33.38, type: "land", price: 7000000, lat: 36.3371533, lon: -94.2258899, listingType: "sale", status: "available", description: "Prime excess land parcel situated along major commercial corridor. 33.38 acres zoned retail with excellent visibility and traffic counts of 44,700 VPD on Peachtree Pkwy. Adjacent to Laurel Springs Golf Club with nearby retailers including Target, Home Depot, Lidl, CVS, and Five Guys.", features: ["High Traffic Location", "Retail Zoning", "Near Major Retailers", "Golf Course Adjacent", "Utilities Available"], store_number: "4686", broker: { name: "Minh Nguyen", email: "mnguyen@mnguyencre.com", phone: "(832) 555-0173", company: "Commercial Real Estate Broker" }, marketingMaterials: [{ name: "4686 Marketing Materials.pdf", url: "/uploads/4686 Marketing Materials.pdf", type: "application/pdf" }, { name: "Site Aerial Map.png", url: "/uploads/image3.png", type: "image/png" }, { name: "Broker Contact - Minh Nguyen.png", url: "/uploads/image5.png", type: "image/png" }, { name: "Aerial Site View.png", url: "/uploads/image6.png", type: "image/png" }], featured: true },
     { city: "Sherwood", state: "AR", size_acres: 2.43, type: "land", price: 500000, lat: 34.8151, lon: -92.2243 },
     { city: "Newport", state: "AR", size_acres: 1.12, type: "land", price: 300000, lat: 35.6045, lon: -91.2818 },
@@ -94,52 +121,54 @@ function getPropertyImage(index, type) {
 }
 
 // Transform raw data into full property objects
-const properties = rawProperties.map((p, index) => {
-    const isRetail = p.type === 'retail';
-    
-    // Get thumbnail image
-    const image = getPropertyImage(index, p.type);
-    
-    // Calculate price per acre for land
-    const pricePerAcre = p.size_acres ? Math.round(p.price / p.size_acres) : null;
-    
-    // If property already has full data (like the Rogers demo property), preserve it
-    if (p.id && p.marketingMaterials) {
+function transformProperties(rawProps) {
+    return rawProps.map((p, index) => {
+        const isRetail = p.type === 'retail';
+        
+        // Get thumbnail image
+        const image = getPropertyImage(index, p.type);
+        
+        // Calculate price per acre for land
+        const pricePerAcre = p.size_acres ? Math.round((p.price || 0) / p.size_acres) : null;
+        
+        // If property already has full data, preserve it
+        if (p.id && p.marketingMaterials) {
+            return {
+                ...p,
+                title: p.title || (isRetail 
+                    ? `Former Retail Location - ${p.city}, ${p.state}`
+                    : `Development Land - ${p.city}, ${p.state}`),
+                pricePerAcre: pricePerAcre,
+                sizeAcres: p.size_acres,
+                image: image,
+                zip: p.zip || getZipForState(p.state),
+                lotSize: `${p.size_acres} acres`,
+                zoning: p.zoning || 'Commercial'
+            };
+        }
+        
         return {
-            ...p,
-            title: p.title || (isRetail 
+            id: p.id || p.store_num || (index + 1),
+            store_num: p.store_num,
+            title: isRetail 
                 ? `Former Retail Location - ${p.city}, ${p.state}`
-                : `Development Land - ${p.city}, ${p.state}`),
+                : `Development Land - ${p.city}, ${p.state}`,
+            type: p.type || 'land',
+            listingType: p.listingType || 'sale',
+            price: p.price,
             pricePerAcre: pricePerAcre,
             sizeAcres: p.size_acres,
-            image: image,
+            size: isRetail ? Math.round(p.size_acres * 43560 * 0.15) : null,
+            address: p.address || `Commercial Property`,
+            city: p.city,
+            state: p.state,
             zip: p.zip || getZipForState(p.state),
-            lotSize: `${p.size_acres} acres`,
-            zoning: p.zoning || 'Commercial'
-        };
-    }
-    
-    return {
-        id: p.id || (index + 1),
-        title: isRetail 
-            ? `Former Retail Location - ${p.city}, ${p.state}`
-            : `Development Land - ${p.city}, ${p.state}`,
-        type: p.type,
-        listingType: p.listingType || 'sale',
-        price: p.price,
-        pricePerAcre: pricePerAcre,
-        sizeAcres: p.size_acres,
-        size: isRetail ? Math.round(p.size_acres * 43560 * 0.15) : null,
-        address: p.address || `Commercial Property`,
-        city: p.city,
-        state: p.state,
-        zip: p.zip || getZipForState(p.state),
-        lat: p.lat,
-        lon: p.lon,
-        image: image,
-        description: p.description || (isRetail
-            ? `Former retail location in ${p.city}, ${p.state}. Prime commercial property with excellent visibility and established traffic patterns. ${p.size_acres} acre site ready for redevelopment or continued retail use.`
-            : `Development-ready land parcel in ${p.city}, ${p.state}. ${p.size_acres} acres of commercial-zoned land ideal for retail, restaurant, or service businesses. Excellent location with strong demographics.`),
+            lat: p.lat,
+            lon: p.lon,
+            image: image,
+            description: p.description || (isRetail
+                ? `Former retail location in ${p.city}, ${p.state}. Prime commercial property with excellent visibility and established traffic patterns. ${p.size_acres} acre site ready for redevelopment or continued retail use.`
+                : `Development-ready land parcel in ${p.city}, ${p.state}. ${p.size_acres} acres of commercial-zoned land ideal for retail, restaurant, or service businesses. Excellent location with strong demographics.`),
         features: p.features || (isRetail
             ? [`${p.size_acres} Acre Site`, 'Established Location', 'High Traffic Area', 'Utilities In Place', 'Signalized Access']
             : [`${p.size_acres} Acres`, 'Commercial Zoning', 'Utilities Available', 'Pad-Ready', 'Strong Demographics']),
@@ -148,10 +177,11 @@ const properties = rawProperties.map((p, index) => {
         zoning: p.zoning || 'Commercial',
         broker: p.broker || null,
         marketingMaterials: p.marketingMaterials || null,
-        store_number: p.store_number || null,
+        store_number: p.store_number || p.store_num || null,
         featured: p.featured || false
     };
-});
+    });
+}
 
 // Helper function to generate plausible ZIP codes
 function getZipForState(state) {
@@ -166,15 +196,40 @@ function getZipForState(state) {
 
 // Current view state
 let currentView = 'grid';
-let filteredProperties = [];
 
-// Fetch properties from API and initialize
+// Fetch properties from API, file, or localStorage
 async function fetchPropertiesFromAPI() {
+    // 1. Check localStorage first (admin-managed properties)
+    const stored = getStoredProperties();
+    if (stored && stored.length > 0) {
+        console.log(`Loading ${stored.length} properties from localStorage`);
+        rawProperties = stored;
+        properties.length = 0;
+        properties.push(...transformProperties(rawProperties));
+        filteredProperties = [...properties];
+        return;
+    }
+    
+    // 2. Try loading from properties-data.js file (GitHub Pages)
+    try {
+        const fileProps = await loadPropertiesFromFile();
+        if (fileProps && fileProps.length > 0) {
+            console.log(`Loaded ${fileProps.length} properties from properties-data.js`);
+            rawProperties = fileProps;
+            properties.length = 0;
+            properties.push(...transformProperties(rawProperties));
+            filteredProperties = [...properties];
+            return;
+        }
+    } catch (e) {
+        console.log('Could not load from file, trying API...');
+    }
+    
+    // 3. Try API (backend server mode)
     try {
         const response = await fetch(`${window.location.origin}/api/properties`);
         if (response.ok) {
             const apiProps = await response.json();
-            // Clear existing properties and populate from API
             properties.length = 0;
             apiProps.forEach(p => {
                 properties.push({
@@ -199,10 +254,18 @@ async function fetchPropertiesFromAPI() {
                 });
             });
             console.log(`Loaded ${properties.length} properties from API`);
+            filteredProperties = [...properties];
+            return;
         }
     } catch (error) {
-        console.error('Error fetching properties:', error);
+        console.log('API not available, using fallback');
     }
+    
+    // 4. Fallback to hardcoded properties
+    console.log(`Using ${fallbackProperties.length} fallback properties`);
+    rawProperties = fallbackProperties;
+    properties.length = 0;
+    properties.push(...transformProperties(rawProperties));
     filteredProperties = [...properties];
 }
 
