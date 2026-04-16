@@ -702,7 +702,11 @@
     </div>
 
     <script>
-        // API base URL
+        // Static site mode for GitHub Pages
+        const STATIC_MODE = true;
+        const STATIC_CREDENTIALS = { username: 'admin', password: 'admin123' };
+        
+        // API base URL (used when running with backend server)
         const API_BASE = window.location.origin;
         
         // Auth token storage
@@ -725,17 +729,22 @@
         // Check auth on load
         function checkAuth() {
             if (authToken && currentUser) {
-                fetch(`${API_BASE}/api/auth/me`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                })
-                .then(res => {
-                    if (res.ok) {
-                        showDashboard();
-                    } else {
-                        handleLogout();
-                    }
-                })
-                .catch(() => handleLogout());
+                if (STATIC_MODE) {
+                    // In static mode, just verify session exists
+                    showDashboard();
+                } else {
+                    fetch(`${API_BASE}/api/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    })
+                    .then(res => {
+                        if (res.ok) {
+                            showDashboard();
+                        } else {
+                            handleLogout();
+                        }
+                    })
+                    .catch(() => handleLogout());
+                }
             }
         }
         
@@ -751,6 +760,25 @@
             loginBtn.textContent = 'Logging in...';
             errorDiv.classList.add('hidden');
             
+            // Static mode authentication (GitHub Pages)
+            if (STATIC_MODE) {
+                if (username === STATIC_CREDENTIALS.username && password === STATIC_CREDENTIALS.password) {
+                    authToken = 'static-auth-token';
+                    currentUser = { name: 'Admin', role: 'admin' };
+                    sessionStorage.setItem('authToken', authToken);
+                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    showToast('Welcome back, Admin!', 'success');
+                    showDashboard();
+                } else {
+                    errorDiv.textContent = 'Invalid credentials';
+                    errorDiv.classList.remove('hidden');
+                }
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+                return;
+            }
+            
+            // Backend server authentication
             try {
                 const response = await fetch(`${API_BASE}/api/auth/login`, {
                     method: 'POST',
@@ -822,12 +850,13 @@
         
         // ========== PROPERTIES ==========
         
-        function loadProperties() {
+        async function loadProperties() {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 adminProperties = JSON.parse(stored);
             } else {
-                adminProperties = getDefaultProperties();
+                // Load from properties-data.js file
+                adminProperties = await fetchPropertiesData();
                 savePropertiesToStorage();
             }
             filteredProperties = [...adminProperties];
@@ -836,11 +865,39 @@
             renderPropertiesTable();
         }
         
-        function getDefaultProperties() {
+        async function fetchPropertiesData() {
+            try {
+                const response = await fetch('properties-data.js');
+                const text = await response.text();
+                // Extract the array from the JS module
+                const match = text.match(/const properties = (\[\s*\S*\s*\S*[\s\S]*?\]);/);
+                if (match) {
+                    const props = JSON.parse(match[1]);
+                    // Add id and normalize fields
+                    return props.map((p, i) => ({
+                        id: i + 1,
+                        city: p.city,
+                        state: p.state,
+                        address: p.address || '',
+                        size_acres: p.size_acres,
+                        type: p.type || 'land',
+                        price: p.price,
+                        lat: p.lat,
+                        lon: p.lon,
+                        description: p.description || '',
+                        features: p.features || [],
+                        broker: p.broker || null,
+                        store_num: p.store_num,
+                        listingType: 'sale',
+                        status: 'available'
+                    }));
+                }
+            } catch (e) {
+                console.error('Failed to load properties:', e);
+            }
+            // Fallback to minimal defaults
             return [
                 { id: 1, city: "Sherwood", state: "AR", size_acres: 2.43, type: "land", price: 500000, lat: 34.8151, lon: -92.2243, listingType: "sale", status: "available" },
-                { id: 2, city: "Newport", state: "AR", size_acres: 1.12, type: "land", price: 300000, lat: 35.6045, lon: -91.2818, listingType: "sale", status: "available" },
-                { id: 3, city: "Fort Scott", state: "KS", size_acres: 0.79, type: "land", price: 185000, lat: 37.8395, lon: -94.7085, listingType: "sale", status: "available" },
             ];
         }
         
@@ -935,6 +992,15 @@
         // ========== BROKERS ==========
         
         async function loadBrokers() {
+            // In static mode, use localStorage
+            if (STATIC_MODE) {
+                const stored = localStorage.getItem('walmartRealtyBrokers');
+                brokers = stored ? JSON.parse(stored) : [];
+                updateBrokerStats();
+                renderBrokersTable();
+                return;
+            }
+            
             try {
                 const response = await fetch(`${API_BASE}/api/brokers`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
@@ -1139,6 +1205,14 @@
         // ========== LOI SUBMISSIONS ==========
         
         async function loadLOISubmissions() {
+            // In static mode, use localStorage
+            if (STATIC_MODE) {
+                const stored = localStorage.getItem('walmartRealtyLOI');
+                loiSubmissions = stored ? JSON.parse(stored) : [];
+                renderLOITable();
+                return;
+            }
+            
             try {
                 const response = await fetch(`${API_BASE}/api/loi`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
