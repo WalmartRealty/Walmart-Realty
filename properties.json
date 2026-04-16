@@ -33,19 +33,9 @@
     "broker_company": "Jack White Commercial",
     "marketingMaterials": [
       {
-        "name": "Mock up Marketing Materials.pdf",
-        "url": "uploads/Mock up Marketing Materials.pdf",
+        "name": "Marketing Materials.pdf",
+        "url": "uploads/Marketing Materials.pdf",
         "type": "application/pdf"
-      },
-      {
-        "name": "Site Aerial View.png",
-        "url": "uploads/image3.png",
-        "type": "image/png"
-      },
-      {
-        "name": "Property Overview.png",
-        "url": "uploads/image6.png",
-        "type": "image/png"
       }
     ],
     "featured": true
