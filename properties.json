@@ -10,15 +10,8 @@
     "listing_type": "sale",
     "price": 850000,
     "status": "available",
-    "description": "Prime commercial outlot in Anchorage, Alaska. 1.19 acres of development-ready land adjacent to Walmart Supercenter with excellent visibility and high traffic counts. Ideal for restaurant, bank, or retail pad site. All utilities available at the property line. Strong demographics with growing residential population in the surrounding area.",
-    "features": [
-      "High Traffic Location",
-      "Adjacent to Walmart Supercenter",
-      "Utilities Available",
-      "Pad-Ready Site",
-      "Strong Demographics",
-      "Excellent Visibility"
-    ],
+    "description": null,
+    "features": null,
     "lat": 61.1922415,
     "lon": -149.8796498,
     "image_url": null,
