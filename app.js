@@ -386,10 +386,10 @@ function populateStateCarousel() {
     const states = Object.keys(stateCounts).sort();
     const totalProperties = properties.length;
     
-    // Create "All" button first (Walmart Spark yellow), then state buttons
+    // Create "All" button first (Walmart Spark yellow) - inverted hover colors
     const allButton = `
         <button onclick="filterByStateIcon('')" 
-                class="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-[#ffc22033] hover:ring-2 hover:ring-walmart-blue transition-all group focus:outline-none focus:ring-2 focus:ring-walmart-blue"
+                class="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-blue-50 hover:ring-2 hover:ring-[#ffc220] transition-all group focus:outline-none focus:ring-2 focus:ring-[#ffc220]"
                 aria-label="View all properties">
             <div class="w-16 h-16 rounded-full bg-[#ffc220] flex items-center justify-center text-gray-900 font-bold text-lg shadow-md group-hover:shadow-lg transition-shadow">
                 ALL
