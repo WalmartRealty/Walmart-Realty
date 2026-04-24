@@ -892,13 +892,19 @@
         // Handle login
         async function handleLogin(event) {
             event.preventDefault();
+            event.stopPropagation();
             
-            console.log('Login attempt started...');
+            console.log('=== LOGIN ATTEMPT ===' );
+            console.log('STATIC_MODE:', STATIC_MODE);
+            console.log('Hostname:', window.location.hostname);
             
             const username = document.getElementById('admin-username').value.trim();
             const password = document.getElementById('admin-password').value;
             const loginBtn = document.getElementById('login-btn');
             const errorDiv = document.getElementById('login-error');
+            
+            console.log('Username entered:', username);
+            console.log('Expected:', DEMO_CREDENTIALS.username);
             
             // Validate inputs
             if (!username || !password) {
@@ -909,13 +915,17 @@
             
             loginBtn.disabled = true;
             loginBtn.textContent = 'Logging in...';
+            errorDiv.classList.add('hidden');
             
-            // DEMO MODE: Check credentials locally on GitHub Pages
+            // DEMO MODE: Check credentials locally
             if (STATIC_MODE) {
+                console.log('Using DEMO MODE login');
+                
                 // Small delay to feel realistic
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 300));
                 
                 if (username === DEMO_CREDENTIALS.username && password === DEMO_CREDENTIALS.password) {
+                    console.log('Login SUCCESS!');
                     authToken = 'demo-token';
                     currentUser = { name: 'Demo Admin', email: 'admin@walmart.com', role: 'admin' };
                     sessionStorage.setItem('authToken', authToken);
@@ -923,9 +933,10 @@
                     showToast('Welcome to Demo Mode! Changes save to your browser.', 'success');
                     showDashboard();
                 } else {
+                    console.log('Login FAILED - wrong credentials');
                     errorDiv.innerHTML = `
                         <p class="text-red-600">Invalid credentials.</p>
-                        <p class="text-gray-500 text-sm mt-1">Hint: admin / walmart2024</p>
+                        <p class="text-gray-500 text-sm mt-1">Use: admin / walmart2024</p>
                     `;
                     errorDiv.classList.remove('hidden');
                 }
