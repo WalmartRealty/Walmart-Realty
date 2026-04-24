@@ -821,12 +821,19 @@
                             window.location.hostname.includes('pages.') ||
                             window.location.protocol === 'file:';
         
+        // Demo mode credentials (for GitHub Pages presentations)
+        const DEMO_CREDENTIALS = {
+            username: 'admin',
+            password: 'walmart2024'
+        };
+        
         // Auth token storage
         let authToken = sessionStorage.getItem('authToken');
         let currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
         
-        // Storage key for localStorage fallback
+        // Storage keys for localStorage
         const STORAGE_KEY = 'walmartRealtyProperties';
+        const BROKERS_STORAGE_KEY = 'walmartRealtyBrokers';
         
         // Current data
         let adminProperties = [];
@@ -840,25 +847,26 @@
         
         // Check auth on load
         function checkAuth() {
-            // Show static mode message if on GitHub Pages
+            // In STATIC_MODE, check if already logged in via sessionStorage
             if (STATIC_MODE) {
+                if (authToken === 'demo-token' && currentUser) {
+                    // Already logged in via demo mode
+                    showDashboard();
+                    return;
+                }
+                
+                // Show demo mode info
                 const errorDiv = document.getElementById('login-error');
                 if (errorDiv) {
                     errorDiv.innerHTML = `
-                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-left">
-                            <p class="font-semibold text-amber-800">⚠️ Static Hosting Detected</p>
-                            <p class="text-amber-700 text-sm mt-1">Admin features require the local server.</p>
-                            <p class="text-amber-700 text-sm mt-1">Run <code class="bg-amber-100 px-1 rounded">npm start</code> and visit <a href="http://localhost:3000/admin.html" class="underline">localhost:3000/admin.html</a></p>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                            <p class="font-semibold text-blue-800">📋 Demo Mode</p>
+                            <p class="text-blue-700 text-sm mt-1">Username: <code class="bg-blue-100 px-1 rounded">admin</code></p>
+                            <p class="text-blue-700 text-sm mt-1">Password: <code class="bg-blue-100 px-1 rounded">walmart2024</code></p>
+                            <p class="text-blue-600 text-xs mt-2">Changes save to your browser and appear on the public site.</p>
                         </div>
                     `;
                     errorDiv.classList.remove('hidden');
-                }
-                // Disable the login form
-                const loginBtn = document.getElementById('login-btn');
-                if (loginBtn) {
-                    loginBtn.disabled = true;
-                    loginBtn.textContent = 'Server Required';
-                    loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
                 }
                 return;
             }
@@ -882,11 +890,6 @@
         async function handleLogin(event) {
             event.preventDefault();
             
-            // Don't attempt login on static hosting
-            if (STATIC_MODE) {
-                return;
-            }
-            
             console.log('Login attempt started...');
             
             const username = document.getElementById('admin-username').value.trim();
@@ -903,6 +906,32 @@
             
             loginBtn.disabled = true;
             loginBtn.textContent = 'Logging in...';
+            
+            // DEMO MODE: Check credentials locally on GitHub Pages
+            if (STATIC_MODE) {
+                // Small delay to feel realistic
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                if (username === DEMO_CREDENTIALS.username && password === DEMO_CREDENTIALS.password) {
+                    authToken = 'demo-token';
+                    currentUser = { name: 'Demo Admin', email: 'admin@walmart.com', role: 'admin' };
+                    sessionStorage.setItem('authToken', authToken);
+                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    showToast('Welcome to Demo Mode! Changes save to your browser.', 'success');
+                    showDashboard();
+                } else {
+                    errorDiv.innerHTML = `
+                        <p class="text-red-600">Invalid credentials.</p>
+                        <p class="text-gray-500 text-sm mt-1">Hint: admin / walmart2024</p>
+                    `;
+                    errorDiv.classList.remove('hidden');
+                }
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+                return;
+            }
+            
+            // SERVER MODE: Authenticate against backend
             errorDiv.classList.add('hidden');
             
             try {
@@ -992,6 +1021,43 @@
         // ========== PROPERTIES ==========
         
         async function loadProperties() {
+            // DEMO MODE: Load from localStorage or fetch properties.json
+            if (STATIC_MODE) {
+                try {
+                    // First check localStorage
+                    const stored = localStorage.getItem(STORAGE_KEY);
+                    if (stored) {
+                        adminProperties = JSON.parse(stored);
+                        console.log(`Loaded ${adminProperties.length} properties from localStorage`);
+                    } else {
+                        // Fetch from properties.json
+                        const response = await fetch('properties.json');
+                        if (response.ok) {
+                            adminProperties = await response.json();
+                            adminProperties = adminProperties.map((p, i) => ({
+                                ...p,
+                                id: p.id || i + 1,
+                                type: p.property_type || p.type || 'land',
+                                listingType: p.listing_type || p.listingType || 'sale',
+                                status: p.status || 'available'
+                            }));
+                            // Save to localStorage for future edits
+                            savePropertiesToStorage();
+                            console.log(`Loaded ${adminProperties.length} properties from properties.json`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading properties in demo mode:', error);
+                    adminProperties = getDefaultProperties();
+                }
+                filteredProperties = [...adminProperties];
+                updateStats();
+                populateStateFilter();
+                renderPropertiesTable();
+                return;
+            }
+            
+            // SERVER MODE: Load from API
             try {
                 const response = await fetch(`${API_BASE}/api/properties`, {
                     headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
@@ -1120,6 +1186,45 @@
         // ========== BROKERS ==========
         
         async function loadBrokers() {
+            // DEMO MODE: Load from localStorage
+            if (STATIC_MODE) {
+                try {
+                    const stored = localStorage.getItem(BROKERS_STORAGE_KEY);
+                    if (stored) {
+                        brokers = JSON.parse(stored);
+                    } else {
+                        // Extract brokers from properties or use defaults
+                        const uniqueBrokers = [];
+                        const seen = new Set();
+                        adminProperties.forEach(p => {
+                            const name = p.broker_name || (p.broker && p.broker.name);
+                            if (name && !seen.has(name)) {
+                                seen.add(name);
+                                uniqueBrokers.push({
+                                    id: uniqueBrokers.length + 1,
+                                    name: name,
+                                    email: p.broker_email || (p.broker && p.broker.email) || '',
+                                    phone: p.broker_phone || (p.broker && p.broker.phone) || '',
+                                    company: p.broker_company || (p.broker && p.broker.company) || '',
+                                    states: p.state,
+                                    is_active: true
+                                });
+                            }
+                        });
+                        brokers = uniqueBrokers;
+                        saveBrokersToStorage();
+                    }
+                    console.log(`Loaded ${brokers.length} brokers in demo mode`);
+                } catch (error) {
+                    console.error('Error loading brokers in demo mode:', error);
+                    brokers = [];
+                }
+                updateBrokerStats();
+                renderBrokersTable();
+                return;
+            }
+            
+            // SERVER MODE
             try {
                 const response = await fetch(`${API_BASE}/api/brokers`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
@@ -1132,6 +1237,10 @@
             } catch (error) {
                 console.error('Failed to load brokers:', error);
             }
+        }
+        
+        function saveBrokersToStorage() {
+            localStorage.setItem(BROKERS_STORAGE_KEY, JSON.stringify(brokers));
         }
         
         function updateBrokerStats() {
@@ -1224,6 +1333,26 @@
                 is_active: document.getElementById('broker-active').checked
             };
             
+            // DEMO MODE: Save locally
+            if (STATIC_MODE) {
+                if (id) {
+                    const index = brokers.findIndex(b => b.id === parseInt(id));
+                    if (index !== -1) {
+                        brokers[index] = { ...brokers[index], ...brokerData };
+                        showToast('Broker updated!');
+                    }
+                } else {
+                    const newId = Math.max(...brokers.map(b => b.id), 0) + 1;
+                    brokers.push({ id: newId, ...brokerData });
+                    showToast('Broker added!');
+                }
+                saveBrokersToStorage();
+                closeBrokerModal();
+                loadBrokers();
+                return;
+            }
+            
+            // SERVER MODE
             try {
                 const url = id ? `${API_BASE}/api/brokers/${id}` : `${API_BASE}/api/brokers`;
                 const method = id ? 'PUT' : 'POST';
@@ -1819,15 +1948,25 @@
                 showToast('Property deleted');
                 loadProperties();
             } else if (deleteType === 'broker') {
-                try {
-                    await fetch(`${API_BASE}/api/brokers/${deleteTarget}`, {
-                        method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${authToken}` }
-                    });
+                // DEMO MODE: Delete locally
+                if (STATIC_MODE) {
+                    brokers = brokers.filter(b => b.id !== deleteTarget);
+                    saveBrokersToStorage();
                     showToast('Broker deleted');
                     loadBrokers();
-                } catch (error) {
-                    showToast('Failed to delete broker', 'error');
+                } else {
+                    // SERVER MODE
+                    try {
+                        await fetch(`${API_BASE}/api/brokers/${deleteTarget}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${authToken}` }
+                        });
+                        showToast('Broker deleted');
+                        loadBrokers();
+                    } catch (error) {
+                        showToast('Failed to delete broker', 'error');
+                    }
+                }
                 }
             }
             closeDeleteModal();
