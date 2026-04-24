@@ -818,8 +818,11 @@
         const API_BASE = window.location.origin;
         
         // Detect static hosting (GitHub Pages, etc.) - no API available
+        // Demo mode: works on GitHub Pages, localhost (no server), or file:// protocol
         const STATIC_MODE = window.location.hostname.includes('github.io') || 
                             window.location.hostname.includes('pages.') ||
+                            window.location.hostname === 'localhost' ||
+                            window.location.hostname === '127.0.0.1' ||
                             window.location.protocol === 'file:';
         
         // Demo mode credentials (for GitHub Pages presentations)
