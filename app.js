@@ -347,6 +347,68 @@ function formatSize(size) {
     return `${size.toLocaleString()} SF`;
 }
 
+// State abbreviation to full name mapping
+const STATE_NAMES = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+    'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+    'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+    'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+    'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+};
+
+// Scroll the states carousel
+function scrollStates(direction) {
+    const carousel = document.getElementById('states-carousel');
+    if (carousel) {
+        const scrollAmount = 200;
+        carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    }
+}
+
+// Populate state icons carousel
+function populateStateCarousel() {
+    const carousel = document.getElementById('states-carousel');
+    if (!carousel) return;
+    
+    // Get unique states from properties with counts
+    const stateCounts = {};
+    properties.forEach(p => {
+        if (p.state) {
+            stateCounts[p.state] = (stateCounts[p.state] || 0) + 1;
+        }
+    });
+    
+    const states = Object.keys(stateCounts).sort();
+    
+    carousel.innerHTML = states.map(state => `
+        <button onclick="filterByStateIcon('${state}')" 
+                class="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-blue-50 transition-colors group focus:outline-none focus:ring-2 focus:ring-walmart-blue"
+                aria-label="View ${STATE_NAMES[state] || state} properties">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-walmart-blue to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-shadow">
+                ${state}
+            </div>
+            <span class="text-sm font-medium text-gray-700 group-hover:text-walmart-blue">${STATE_NAMES[state] || state}</span>
+            <span class="text-xs text-gray-500">${stateCounts[state]} ${stateCounts[state] === 1 ? 'property' : 'properties'}</span>
+        </button>
+    `).join('');
+}
+
+// Filter by clicking state icon
+function filterByStateIcon(state) {
+    const stateFilter = document.getElementById('state-filter');
+    if (stateFilter) {
+        stateFilter.value = state;
+        filterProperties();
+        // Scroll to results
+        document.getElementById('main-content')?.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
 // Get property type label
 function getTypeLabel(type) {
     const labels = {
@@ -2403,6 +2465,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Continue with rest of initialization
     updateSavedCount();
     populateStateFilter();
+    populateStateCarousel();
     
     // Main search bar - Enter key support
     const searchInput = document.getElementById('search-input');
