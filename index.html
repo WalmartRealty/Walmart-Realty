@@ -42,6 +42,15 @@
                     },
                     fontFamily: {
                         'bogle': ['Bogle', 'Arial', 'Helvetica Neue', 'Helvetica', 'sans-serif'],
+                    },
+                    screens: {
+                        '3xl': '1800px',
+                        '4xl': '2400px',
+                    },
+                    maxWidth: {
+                        '8xl': '1440px',
+                        '9xl': '1800px',
+                        '10xl': '2200px',
                     }
                 }
             }
@@ -140,6 +149,56 @@
         /* Map container */
         #map { height: 400px; width: 100%; }
         
+        /* Header scroll effect */
+        #main-header {
+            background: #0071CE;
+            transition: all 0.4s ease;
+        }
+        #main-header.scrolled {
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        #main-header .header-text {
+            color: white;
+            transition: color 0.4s ease;
+        }
+        #main-header.scrolled .header-text {
+            color: #0071CE;
+        }
+        #main-header .header-text-subtle {
+            color: rgba(191, 219, 254, 1);
+            transition: color 0.4s ease;
+        }
+        #main-header.scrolled .header-text-subtle {
+            color: #6B7280;
+        }
+        
+        /* Property Type Tab Active State */
+        .property-type-tab.active {
+            background: white !important;
+            color: #1f2937 !important;
+            border-color: #FFC220 !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        .property-type-tab.active .text-sm {
+            color: #1f2937;
+        }
+        .property-type-tab.active > div:first-child {
+            background: linear-gradient(135deg, #0071CE, #004C91) !important;
+        }
+        .property-type-tab.active svg {
+            color: white;
+        }
+        
+        /* State Cards Scroll */
+        .states-scroll {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        .states-scroll::-webkit-scrollbar { display: none; }
+        .states-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
         /* List view styles */
         .list-view .property-card {
             display: flex;
@@ -200,8 +259,8 @@
     <a href="#main-content" class="skip-link focus-visible">Skip to main content</a>
     
     <!-- Header -->
-    <header class="bg-walmart-blue text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header id="main-header" class="shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl 3xl:max-w-9xl 4xl:max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 3xl:px-12">
             <div class="flex items-center justify-between h-16">
                 <!-- Logo -->
                 <div class="flex items-center gap-3">
@@ -210,16 +269,16 @@
                         <img src="spark-logo.png" alt="Walmart Spark" class="h-9 w-9 object-contain" aria-hidden="true">
                     </div>
                     <div>
-                        <h1 class="text-xl font-bold">Walmart Real Estate</h1>
-                        <p class="text-xs text-blue-200">Commercial Properties</p>
+                        <h1 class="text-xl font-bold header-text">Walmart Real Estate</h1>
+                        <p class="text-xs header-text-subtle">Commercial Properties</p>
                     </div>
                 </div>
                 
                 <!-- Navigation -->
                 <nav class="hidden md:flex items-center gap-6" aria-label="Main navigation">
-                    <a href="#" class="text-white hover:text-walmart-yellow transition-colors font-medium" aria-current="page">Properties</a>
-                    <a href="#contact" class="text-blue-200 hover:text-walmart-yellow transition-colors">Contact</a>
-                    <button onclick="showSavedProperties()" class="relative text-blue-200 hover:text-walmart-yellow transition-colors flex items-center gap-1">
+                    <a href="#" class="header-text hover:text-walmart-yellow transition-colors font-medium" aria-current="page">Properties</a>
+                    <a href="#contact" class="header-text-subtle hover:text-walmart-yellow transition-colors">Contact</a>
+                    <button onclick="showSavedProperties()" class="relative header-text-subtle hover:text-walmart-yellow transition-colors flex items-center gap-1">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                         </svg>
@@ -229,7 +288,7 @@
                 </nav>
                 
                 <!-- Mobile menu button -->
-                <button class="md:hidden p-2 rounded-lg hover:bg-walmart-dark" aria-label="Open menu" onclick="toggleMobileMenu()">
+                <button class="md:hidden p-2 rounded-lg hover:bg-walmart-dark header-text" aria-label="Open menu" onclick="toggleMobileMenu()">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -247,26 +306,88 @@
         </div>
     </header>
     
-    <!-- Hero Search Section -->
-    <section class="bg-gradient-to-r from-walmart-dark to-walmart-blue py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-2xl md:text-3xl font-bold text-white text-center mb-2">Find Your Next Commercial Property</h2>
-            <p class="text-blue-200 text-center mb-6">Browse available properties for sale</p>
+    <!-- Hero Section with Background Image -->
+    <section class="relative min-h-[480px] flex items-center justify-center overflow-hidden">
+        <!-- Background Image (Blurred) -->
+        <div class="absolute inset-0 z-0 bg-walmart-blue">
+            <img src="hero-bg.jpg" alt="" class="w-full h-full object-cover blur-sm scale-105" style="object-position: 85% 65%;" aria-hidden="true">
+            <div class="absolute inset-0 bg-gradient-to-r from-walmart-dark/60 via-walmart-dark/30 to-walmart-blue/40"></div>
+        </div>
+        
+        <!-- Hero Content -->
+        <div class="relative z-10 w-full max-w-5xl 3xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-white text-center mb-3 drop-shadow-lg">Walmart Real Estate</h2>
+            <p class="text-xl text-white/90 text-center mb-8 drop-shadow">Find your next commercial property opportunity</p>
             
-            <!-- Search Bar -->
-            <div class="max-w-3xl mx-auto mb-6">
-                <div class="relative">
-                    <input type="text" 
-                           id="search-input" 
-                           placeholder="Search by keyword, city, state, or address..." 
-                           class="w-full px-5 py-4 pr-12 rounded-xl text-lg border-2 border-transparent focus:border-walmart-yellow focus:ring-0 shadow-lg"
-                           aria-label="Search properties"
-                           autocomplete="off">
-                    <button onclick="performSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-walmart-blue hover:text-walmart-dark" aria-label="Search">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            <!-- Property Type Icon Tabs (3D Style) -->
+            <div class="flex justify-center gap-2 sm:gap-4 mb-6">
+                <button onclick="selectPropertyType('')" id="type-tab-all" 
+                        class="property-type-tab active flex flex-col items-center gap-2 px-4 sm:px-6 py-3 rounded-xl bg-white/90 backdrop-blur-md border-2 border-white shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-200 focus-visible"
+                        aria-pressed="true">
+                    <div class="p-2 rounded-lg bg-gradient-to-br from-walmart-blue to-walmart-dark shadow-inner">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                         </svg>
-                    </button>
+                    </div>
+                    <span class="text-sm font-bold text-gray-800">All</span>
+                </button>
+                <button onclick="selectPropertyType('land')" id="type-tab-land" 
+                        class="property-type-tab flex flex-col items-center gap-2 px-4 sm:px-6 py-3 rounded-xl bg-white/20 backdrop-blur-md border-2 border-white/40 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 hover:bg-white/30 transition-all duration-200 focus-visible"
+                        aria-pressed="false">
+                    <div class="p-2 rounded-lg bg-white/20 shadow-inner">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <span class="text-sm font-bold">Land</span>
+                </button>
+                <button onclick="selectPropertyType('outlots')" id="type-tab-outlots" 
+                        class="property-type-tab flex flex-col items-center gap-2 px-4 sm:px-6 py-3 rounded-xl bg-white/20 backdrop-blur-md border-2 border-white/40 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 hover:bg-white/30 transition-all duration-200 focus-visible"
+                        aria-pressed="false">
+                    <div class="p-2 rounded-lg bg-white/20 shadow-inner">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <span class="text-sm font-bold">Outlots</span>
+                </button>
+                <button onclick="selectPropertyType('dark-stores')" id="type-tab-dark-stores" 
+                        class="property-type-tab flex flex-col items-center gap-2 px-4 sm:px-6 py-3 rounded-xl bg-white/20 backdrop-blur-md border-2 border-white/40 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 hover:bg-white/30 transition-all duration-200 focus-visible"
+                        aria-pressed="false">
+                    <div class="p-2 rounded-lg bg-white/20 shadow-inner">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                    </div>
+                    <span class="text-sm font-bold">Vacant Stores</span>
+                </button>
+            </div>
+            
+            <!-- Modern Search Bar -->
+            <div class="max-w-3xl mx-auto">
+                <div class="relative">
+                    <div class="flex items-center bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+                        <div class="flex-1 relative">
+                            <svg class="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <input type="text" 
+                                   id="search-input" 
+                                   placeholder="Search by city, state, or address..." 
+                                   class="w-full pl-14 pr-4 py-4 text-lg bg-transparent border-0 focus:ring-0 focus:outline-none text-gray-800 placeholder-gray-400"
+                                   aria-label="Search properties"
+                                   autocomplete="off">
+                        </div>
+                        <button onclick="performSearch()" 
+                                class="m-2 bg-walmart-blue hover:bg-walmart-dark text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 hover:shadow-lg flex items-center gap-2 focus-visible"
+                                aria-label="Search">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <span class="hidden sm:inline">Search</span>
+                        </button>
+                    </div>
                     
                     <!-- Autocomplete Dropdown -->
                     <div id="search-autocomplete" class="hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 max-h-96 overflow-y-auto">
@@ -301,71 +422,65 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Advanced Filters -->
-            <div class="bg-white rounded-xl shadow-xl p-6">
-                <form id="search-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4" role="search">
-                    <!-- Property Type -->
-                    <div>
-                        <label for="property-type" class="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
-                        <select id="property-type" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                            <option value="">All Types</option>
-                            <option value="land">Land</option>
-                            <option value="outlots">Outlots</option>
-                            <option value="dark-stores">Dark Stores</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Listing Type -->
-                    <div>
-                        <label for="listing-type" class="block text-sm font-medium text-gray-700 mb-1">Listing Type</label>
-                        <select id="listing-type" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                            <option value="">All Properties</option>
-                            <option value="sale">For Sale</option>
-                        </select>
-                    </div>
-                    
-                    <!-- State -->
-                    <div>
-                        <label for="state-filter" class="block text-sm font-medium text-gray-700 mb-1">State</label>
-                        <select id="state-filter" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                            <option value="">All States</option>
-                            <!-- Populated by JavaScript -->
-                        </select>
-                    </div>
-                    
-                    <!-- Price Range -->
-                    <div>
-                        <label for="price-range" class="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
-                        <select id="price-range" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                            <option value="">Any Price</option>
-                            <option value="0-500000">Under $500K</option>
-                            <option value="500000-1000000">$500K - $1M</option>
-                            <option value="1000000-5000000">$1M - $5M</option>
-                            <option value="5000000-10000000">$5M - $10M</option>
-                            <option value="10000000+">$10M+</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Size Range -->
-                    <div>
-                        <label for="size-range" class="block text-sm font-medium text-gray-700 mb-1">Size (Acres)</label>
-                        <select id="size-range" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                            <option value="">Any Size</option>
-                            <option value="0-1">Under 1 acre</option>
-                            <option value="1-5">1 - 5 acres</option>
-                            <option value="5-20">5 - 20 acres</option>
-                            <option value="20+">20+ acres</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
+        </div>
+    </section>
+    
+    <!-- Advanced Filters Bar -->
+    <section class="bg-white border-b shadow-sm">
+        <div class="max-w-7xl 3xl:max-w-9xl 4xl:max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 3xl:px-12 py-4">
+            <form id="search-form" class="grid grid-cols-2 md:grid-cols-4 gap-4" role="search">
+                <!-- Hidden Property Type (controlled by icon tabs) -->
+                <input type="hidden" id="property-type" value="">
+                
+                <!-- State -->
+                <div>
+                    <label for="state-filter" class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                    <select id="state-filter" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                        <option value="">All States</option>
+                        <!-- Populated by JavaScript -->
+                    </select>
+                </div>
+                
+                <!-- Price Range -->
+                <div>
+                    <label for="price-range" class="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+                    <select id="price-range" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                        <option value="">Any Price</option>
+                        <option value="0-500000">Under $500K</option>
+                        <option value="500000-1000000">$500K - $1M</option>
+                        <option value="1000000-5000000">$1M - $5M</option>
+                        <option value="5000000-10000000">$5M - $10M</option>
+                        <option value="10000000+">$10M+</option>
+                    </select>
+                </div>
+                
+                <!-- Size Range -->
+                <div>
+                    <label for="size-range" class="block text-sm font-medium text-gray-700 mb-1">Size (Acres)</label>
+                    <select id="size-range" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                        <option value="">Any Size</option>
+                        <option value="0-1">Under 1 acre</option>
+                        <option value="1-5">1 - 5 acres</option>
+                        <option value="5-20">5 - 20 acres</option>
+                        <option value="20+">20+ acres</option>
+                    </select>
+                </div>
+                
+                <!-- Listing Type -->
+                <div>
+                    <label for="listing-type" class="block text-sm font-medium text-gray-700 mb-1">Listing Type</label>
+                    <select id="listing-type" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                        <option value="">All Properties</option>
+                        <option value="sale">For Sale</option>
+                    </select>
+                </div>
+            </form>
         </div>
     </section>
     
     <!-- Interactive Map Section -->
     <section class="bg-white border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="max-w-7xl 3xl:max-w-9xl 4xl:max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 3xl:px-12 py-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                     <svg class="h-6 w-6 text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -378,12 +493,36 @@
                     <button onclick="toggleMapView('satellite')" id="satellite-view-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-300">Satellite</button>
                 </div>
             </div>
-            <div id="main-map" class="rounded-xl shadow-lg w-full" style="height: 350px;"></div>
+            <div id="main-map" class="rounded-xl shadow-lg w-full" style="height: 350px; min-height: 350px; max-height: 500px; height: clamp(350px, 25vw, 500px);"></div>
+        </div>
+    </section>
+    
+    <!-- Explore by State Section -->
+    <section class="bg-white py-10 border-b">
+        <div class="max-w-7xl 3xl:max-w-9xl 4xl:max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 3xl:px-12">
+            <div class="flex items-center justify-center mb-8">
+                <h3 class="text-2xl font-bold text-walmart-blue">Explore by State</h3>
+            </div>
+            <div class="relative">
+                <button onclick="scrollStates(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white shadow-lg hover:bg-gray-100 transition-colors focus-visible" aria-label="Scroll left">
+                    <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <button onclick="scrollStates(1)" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white shadow-lg hover:bg-gray-100 transition-colors focus-visible" aria-label="Scroll right">
+                    <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+                <div id="states-carousel" class="states-scroll flex justify-start gap-8 overflow-x-auto pt-4 pb-4 px-10">
+                    <!-- State cards will be populated by JavaScript -->
+                </div>
+            </div>
         </div>
     </section>
     
     <!-- Main Content -->
-    <main id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main id="main-content" class="max-w-7xl 3xl:max-w-9xl 4xl:max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 3xl:px-12 py-8">
         <!-- Results Header -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
             <div>
@@ -424,7 +563,7 @@
         </div>
         
         <!-- Property Grid/List -->
-        <div id="property-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="property-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-6">
             <!-- Properties will be rendered here by JavaScript -->
         </div>
         
@@ -436,7 +575,7 @@
     
     <!-- Contact Section -->
     <section id="contact" class="bg-gray-100 py-16">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl 3xl:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 class="text-3xl font-bold text-center text-gray-900 mb-8">Contact Our Team</h2>
             <div class="bg-white rounded-2xl shadow-xl p-8">
                 <form id="contact-form" class="space-y-6">
@@ -489,7 +628,7 @@
     
     <!-- Footer -->
     <footer class="bg-gray-900 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="max-w-7xl 3xl:max-w-9xl 4xl:max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 3xl:px-12 py-12">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <div class="flex items-center gap-2 mb-4">
@@ -511,7 +650,7 @@
                     <ul class="space-y-2 text-gray-400 text-sm">
                         <li><a href="#" onclick="filterByPropertyType('land'); return false;" class="hover:text-walmart-yellow transition-colors">Land</a></li>
                         <li><a href="#" onclick="filterByPropertyType('outlots'); return false;" class="hover:text-walmart-yellow transition-colors">Outlots</a></li>
-                        <li><a href="#" onclick="filterByPropertyType('dark-stores'); return false;" class="hover:text-walmart-yellow transition-colors">Dark Stores</a></li>
+                        <li><a href="#" onclick="filterByPropertyType('dark-stores'); return false;" class="hover:text-walmart-yellow transition-colors">Vacant Stores</a></li>
                     </ul>
                 </div>
                 
@@ -530,7 +669,7 @@
                     <ul class="space-y-2 text-gray-400 text-sm">
                         <li>702 SW 8th Street</li>
                         <li>Bentonville, AR 72716</li>
-                        <li class="pt-2"><a href="mailto:realestate@walmart.com" class="hover:text-walmart-yellow transition-colors">realestate@walmart.com</a></li>
+                        <li class="pt-2"><a href="mailto:realestatedispositions@walmart.com" class="hover:text-walmart-yellow transition-colors">realestatedispositions@walmart.com</a></li>
                     </ul>
                 </div>
             </div>
@@ -578,5 +717,26 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <script src="app.js?v=2"></script>
+    
+    <!-- Header scroll effect -->
+    <script>
+        (function() {
+            const header = document.getElementById('main-header');
+            
+            function updateHeader() {
+                const scrollY = window.scrollY;
+                const threshold = 300; // Start transition after scrolling 300px (near properties)
+                
+                if (scrollY > threshold) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            }
+            
+            window.addEventListener('scroll', updateHeader, { passive: true });
+            updateHeader(); // Initial check
+        })();
+    </script>
 </body>
 </html>

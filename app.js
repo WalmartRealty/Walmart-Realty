@@ -228,7 +228,7 @@ function getTypeLabel(type) {
     const labels = {
         land: 'Land',
         outlots: 'Outlots',
-        'dark-stores': 'Dark Stores',
+        'dark-stores': 'Vacant Stores',
         retail: 'Retail',
         warehouse: 'Warehouse',
         office: 'Office',
@@ -396,7 +396,7 @@ function setView(view) {
         gridBtn.setAttribute('aria-pressed', 'true');
         listBtn.className = 'p-2 bg-white text-gray-600 hover:bg-gray-100 focus-visible';
         listBtn.setAttribute('aria-pressed', 'false');
-        container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+        container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-6';
     } else {
         listBtn.className = 'p-2 bg-walmart-blue text-white focus-visible';
         listBtn.setAttribute('aria-pressed', 'true');
@@ -539,8 +539,119 @@ function filterByType(type) {
 
 // Filter by property type - called from footer links
 function filterByPropertyType(type) {
-    const propertyTypeSelect = document.getElementById('property-type');
-    propertyTypeSelect.value = type;
+    selectPropertyType(type);
+}
+
+// Select property type from hero icon tabs
+function selectPropertyType(type) {
+    // Update hidden input
+    const propertyTypeInput = document.getElementById('property-type');
+    propertyTypeInput.value = type;
+    
+    // Update tab styling
+    document.querySelectorAll('.property-type-tab').forEach(tab => {
+        tab.classList.remove('active');
+        tab.setAttribute('aria-pressed', 'false');
+    });
+    
+    const activeTabId = type ? `type-tab-${type}` : 'type-tab-all';
+    const activeTab = document.getElementById(activeTabId);
+    if (activeTab) {
+        activeTab.classList.add('active');
+        activeTab.setAttribute('aria-pressed', 'true');
+    }
+    
+    filterProperties();
+}
+
+// Use state abbreviations with styled display instead of inaccurate SVG paths
+// This provides a clean, professional look while we work on getting accurate state shapes
+const useStateAbbreviations = true;
+
+// All US state names for search
+const stateNames = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+    'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+    'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+    'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+    'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+    'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+    'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+    'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+    'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+    'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+    'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia'
+};
+
+// Populate states carousel with clean styled cards
+function populateStatesCarousel() {
+    const carousel = document.getElementById('states-carousel');
+    if (!carousel) return;
+    
+    // Get unique states and count properties
+    const stateCounts = {};
+    properties.forEach(p => {
+        stateCounts[p.state] = (stateCounts[p.state] || 0) + 1;
+    });
+    
+    // Sort alphabetically by state name
+    const sortedStates = Object.entries(stateCounts)
+        .sort((a, b) => {
+            const nameA = stateNames[a[0]] || a[0];
+            const nameB = stateNames[b[0]] || b[0];
+            return nameA.localeCompare(nameB);
+        });
+    
+    // Create "All" option first, then alphabetically sorted states
+    const allOption = `
+        <button onclick="filterByState('')" 
+                class="flex-shrink-0 group flex flex-col items-center justify-center w-24 py-4 rounded-xl hover:bg-blue-50 transition-all duration-200 focus-visible"
+                aria-label="View all properties">
+            <!-- All Badge -->
+            <div class="w-12 h-12 rounded-full bg-walmart-yellow flex items-center justify-center mb-2 group-hover:scale-105 transition-all duration-200 shadow-sm">
+                <span class="text-walmart-dark font-bold text-sm">All</span>
+            </div>
+            <!-- Label -->
+            <h4 class="font-semibold text-gray-900 group-hover:text-walmart-blue transition-colors text-xs text-center">All States</h4>
+            <!-- Property Count -->
+            <p class="text-xs text-gray-500 mt-0.5">${properties.length} Properties</p>
+        </button>
+    `;
+    
+    carousel.innerHTML = allOption + sortedStates.map(([state, count]) => {
+        const stateName = stateNames[state] || state;
+        
+        return `
+            <button onclick="filterByState('${state}')" 
+                    class="flex-shrink-0 group flex flex-col items-center justify-center w-24 py-4 rounded-xl hover:bg-blue-50 transition-all duration-200 focus-visible"
+                    aria-label="View ${count} properties in ${stateName}">
+                <!-- State Abbreviation Badge -->
+                <div class="w-12 h-12 rounded-full bg-walmart-blue flex items-center justify-center mb-2 group-hover:bg-walmart-dark group-hover:scale-105 transition-all duration-200 shadow-sm">
+                    <span class="text-white font-bold text-sm">${state}</span>
+                </div>
+                <!-- State Name -->
+                <h4 class="font-semibold text-gray-900 group-hover:text-walmart-blue transition-colors text-xs text-center">${stateName}</h4>
+                <!-- Property Count -->
+                <p class="text-xs text-gray-500 mt-0.5">${count} ${count === 1 ? 'Property' : 'Properties'}</p>
+            </button>
+        `;
+    }).join('');
+}
+
+// Scroll states carousel
+function scrollStates(direction) {
+    const carousel = document.getElementById('states-carousel');
+    if (!carousel) return;
+    const scrollAmount = 200;
+    carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+}
+
+// Filter by state - called from state cards
+function filterByState(state) {
+    const stateSelect = document.getElementById('state-filter');
+    stateSelect.value = state;
     filterProperties();
 }
 
@@ -653,11 +764,6 @@ function openPropertyModal(id) {
                    class="bg-walmart-blue hover:bg-walmart-dark text-white text-center font-semibold py-3 px-8 rounded-lg transition-colors focus-visible text-lg">
                     Contact About Property
                 </button>
-            </div>
-            
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                <p class="text-gray-600">${property.description}</p>
             </div>
             
             <div class="mb-6">
@@ -1103,7 +1209,7 @@ function openLOIModal(propertyId) {
             
             <div class="mt-6 pt-6 border-t">
                 <p class="text-sm text-gray-500 text-center">
-                    Need help choosing? Contact us at <a href="mailto:realestate@walmart.com" class="text-walmart-blue hover:underline">realestate@walmart.com</a>
+                    Need help choosing? Contact us at <a href="mailto:realestatedispositions@walmart.com" class="text-walmart-blue hover:underline">realestatedispositions@walmart.com</a>
                 </p>
             </div>
         </div>
@@ -1691,7 +1797,7 @@ function formatFileSize(bytes) {
 
 // Broker email mapping by state/region (to be configured)
 const brokerEmails = {
-    default: 'realestate@walmart.com',
+    default: 'realestatedispositions@walmart.com',
     // Add market-specific emails here later
     // 'TX': 'texas.broker@walmart.com',
     // 'AR': 'arkansas.broker@walmart.com',
@@ -2118,9 +2224,9 @@ function toggleMapView(view) {
     }
     
     if (view === 'map') {
-        // Standard map view
-        currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
+        // Standard map view - using ESRI World Street Map (Walmart proxy friendly)
+        currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri',
             maxZoom: 19
         }).addTo(mainMap);
         
@@ -2174,6 +2280,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initMainMap();
     updateSavedCount();
     populateStateFilter();
+    populateStatesCarousel();
     
     // Main search bar - Enter key support
     const searchInput = document.getElementById('search-input');
@@ -2498,7 +2605,7 @@ function updateAutocomplete(term) {
     
     const termLower = term.toLowerCase();
     
-    // Find matching states
+    // Find matching states (match both abbreviation and full name)
     const stateMatches = [];
     const stateCounts = {};
     properties.forEach(p => {
@@ -2507,11 +2614,14 @@ function updateAutocomplete(term) {
     });
     
     Object.keys(stateCounts).forEach(state => {
-        if (state.toLowerCase().includes(termLower)) {
-            stateMatches.push({ state, count: stateCounts[state] });
+        const fullName = stateNames[state] || state;
+        // Match against abbreviation OR full state name
+        if (state.toLowerCase().includes(termLower) || 
+            fullName.toLowerCase().includes(termLower)) {
+            stateMatches.push({ state, fullName, count: stateCounts[state] });
         }
     });
-    stateMatches.sort((a, b) => a.state.localeCompare(b.state));
+    stateMatches.sort((a, b) => a.fullName.localeCompare(b.fullName));
     
     // Find matching cities
     const cityMatches = [];
@@ -2554,7 +2664,7 @@ function updateAutocomplete(term) {
                     <svg class="h-4 w-4 text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                     </svg>
-                    <span class="font-medium text-gray-900">${item.state}</span>
+                    <span class="font-medium text-gray-900">${item.fullName} <span class="text-gray-400">(${item.state})</span></span>
                 </div>
                 <span class="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">${item.count} ${item.count === 1 ? 'property' : 'properties'}</span>
             </div>
