@@ -9494,7 +9494,7 @@ function addPropertyMarkers(propertiesToShow) {
                </div>`,
         iconSize: [32, 32],
         iconAnchor: [16, 16],
-        popupAnchor: [0, -16]
+        popupAnchor: [0, -20]
     });
     
     // Add markers for each property
@@ -9502,24 +9502,46 @@ function addPropertyMarkers(propertiesToShow) {
         const marker = L.marker([property.lat, property.lon], { icon: walmartIcon })
             .addTo(mainMap);
         
-        // Create popup content
+        // Build ESRI aerial image URL (free, no API key)
+        const delta = 0.004;
+        const bbox = `${property.lon - delta},${property.lat - delta},${property.lon + delta},${property.lat + delta}`;
+        const aerialUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=${bbox}&bboxSR=4326&imageSR=4326&size=300,160&format=png&f=image`;
+        
+        const price = property.price ? `$${Number(property.price).toLocaleString()}` : 'Contact for Pricing';
+        const acres = property.size_acres ? `${property.size_acres} acres` : '';
+        const address = property.address ? `${property.address}, ` : '';
+        
+        // Create popup content with aerial image
         const popupContent = `
-            <div class="property-popup" style="min-width: 220px;">
-                <img src="${property.image}" alt="${property.title}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;">
-                <h4 style="font-weight: bold; margin-bottom: 4px; font-size: 14px;">${property.title}</h4>
-                <p style="color: #666; font-size: 12px; margin-bottom: 4px;">${property.city}, ${property.state}</p>
-                <p style="color: #0071CE; font-weight: bold; font-size: 14px; margin-bottom: 8px;">Contact for Pricing</p>
-                <p style="color: #666; font-size: 12px; margin-bottom: 8px;">${property.lotSize}</p>
-                <button onclick="openPropertyModal(${property.id})" style="background-color: #0071CE; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600;">View Details</button>
+            <div class="property-popup" style="min-width: 240px; font-family: sans-serif;">
+                <div style="position:relative; margin-bottom: 8px; border-radius: 8px; overflow: hidden; height: 160px; background: #e5e7eb;">
+                    <img 
+                        src="${aerialUrl}" 
+                        alt="Aerial view of ${property.city}, ${property.state}"
+                        style="width:100%; height:160px; object-fit:cover; display:block;"
+                        onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:160px;color:#9ca3af;font-size:12px;\'>Aerial view unavailable</div>'"
+                    />
+                    <div style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:2px 6px; border-radius:4px;">🛰 Aerial View</div>
+                </div>
+                <h4 style="font-weight:700; margin-bottom:2px; font-size:14px; color:#111;">${address}${property.city}, ${property.state}</h4>
+                ${acres ? `<p style="color:#6b7280; font-size:12px; margin-bottom:4px;">📐 ${acres}</p>` : ''}
+                <p style="color:#0053e2; font-weight:700; font-size:14px; margin-bottom:8px;">${price}</p>
+                <button onclick="openPropertyModal(${property.id})" style="background:#0053e2; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; width:100%; font-weight:600; font-size:13px;">View Details</button>
             </div>
         `;
         
         marker.bindPopup(popupContent, { 
-            maxWidth: 280,
+            maxWidth: 300,
             autoPan: true,
             autoPanPadding: [50, 50],
             keepInView: true
         });
+        
+        // On click: zoom into the property
+        marker.on('click', function() {
+            mainMap.flyTo([property.lat, property.lon], 17, { duration: 1.2 });
+        });
+        
         mainMapMarkers.push(marker);
     });
 }
