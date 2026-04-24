@@ -28,9 +28,22 @@ let rawProperties = getStoredProperties() || [];
 let properties = [];
 let filteredProperties = [];
 
-// Load properties from properties.json file
+// Load properties from embedded data (bundled version) or properties.json file
 async function loadPropertiesFromFile() {
-    console.log('Attempting to load properties.json...');
+    console.log('Attempting to load properties...');
+    
+    // Check for embedded properties first (bundled version)
+    if (window.EMBEDDED_PROPERTIES && Array.isArray(window.EMBEDDED_PROPERTIES) && window.EMBEDDED_PROPERTIES.length > 0) {
+        console.log('Found', window.EMBEDDED_PROPERTIES.length, 'embedded properties (bundled mode)');
+        return window.EMBEDDED_PROPERTIES.map((p, i) => ({
+            ...p,
+            id: p.id || p.store_num || (i + 1),
+            listingType: 'sale',
+            status: 'available'
+        }));
+    }
+    
+    // Otherwise try fetching properties.json
     try {
         const response = await fetch('properties.json');
         console.log('Fetch response status:', response.status);

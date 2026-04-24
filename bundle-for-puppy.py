@@ -26,17 +26,26 @@ def get_spark_logo_data_url():
     return f'data:image/png;base64,{b64}'
 
 def bundle_main_page():
-    """Bundle index.html with inlined JavaScript."""
+    """Bundle index.html with inlined JavaScript and properties data."""
     html = read_file(PROJECT_DIR / 'index.html')
     app_js = read_file(PROJECT_DIR / 'app.js')
+    properties_json = read_file(PROJECT_DIR / 'properties.json')
     spark_logo_data_url = get_spark_logo_data_url()
     
     # Replace spark-logo.png references with data URL
     html = html.replace('src="spark-logo.png"', f'src="{spark_logo_data_url}"')
-    html = re.sub(r'src=["\']spark-logo\.png["\']', f'src="{spark_logo_data_url}"', html)
+    html = re.sub(r'src=["\']\.spark-logo\.png["\']', f'src="{spark_logo_data_url}"', html)
     
-    # Replace the external app.js reference with inline script
-    html = html.replace('<script src="app.js"></script>', f'<script>\n{app_js}\n</script>')
+    # Embed properties data as a global variable BEFORE the app.js code
+    embedded_properties_script = f'// Embedded properties for bundled version\nwindow.EMBEDDED_PROPERTIES = {properties_json};\n\n'
+    
+    # Replace the external app.js reference (with or without version query) with inline script
+    # Handle both: <script src="app.js"></script> and <script src="app.js?v=16"></script>
+    html = re.sub(
+        r'<script src="app\.js(\?v=\d+)?"></script>',
+        f'<script>\n{embedded_properties_script}{app_js}\n</script>',
+        html
+    )
     
     # Update relative paths for uploads to note they won't work
     # (Marketing materials PDFs referenced in properties-data.js)
