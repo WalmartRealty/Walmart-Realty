@@ -18,7 +18,59 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Validation job - runs BEFORE deployment
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Validate properties.json exists
+        run: |
+          if [ ! -f "properties.json" ]; then
+            echo "❌ ERROR: properties.json is missing!"
+            exit 1
+          fi
+          echo "✅ properties.json exists"
+      
+      - name: Validate properties.json is valid JSON
+        run: |
+          python3 -c "
+          import json
+          import sys
+          try:
+              with open('properties.json') as f:
+                  data = json.load(f)
+              if not isinstance(data, list):
+                  print('❌ ERROR: properties.json must be an array')
+                  sys.exit(1)
+              if len(data) == 0:
+                  print('❌ ERROR: properties.json is empty!')
+                  sys.exit(1)
+              print(f'✅ properties.json is valid with {len(data)} properties')
+          except json.JSONDecodeError as e:
+              print(f'❌ ERROR: Invalid JSON - {e}')
+              sys.exit(1)
+          "
+      
+      - name: Validate required files exist
+        run: |
+          for file in index.html app.js; do
+            if [ ! -f "$file" ]; then
+              echo "❌ ERROR: $file is missing!"
+              exit 1
+            fi
+            echo "✅ $file exists"
+          done
+      
+      - name: Check app.js has no syntax errors
+        run: |
+          node --check app.js || (echo "❌ JavaScript syntax error in app.js" && exit 1)
+          echo "✅ app.js has valid JavaScript syntax"
+
+  # Deploy job - only runs if validation passes
   deploy:
+    needs: validate  # Won't deploy if validation fails!
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -33,9 +85,13 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository (index.html, app.js, properties.json, etc.)
           path: '.'
       
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      
+      - name: Deployment Summary
+        run: |
+          echo "🎉 Successfully deployed to GitHub Pages!"
+          echo "🔗 Site URL: ${{ steps.deployment.outputs.page_url }}"

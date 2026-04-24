@@ -482,18 +482,60 @@ function createPropertyCard(property) {
     `;
 }
 
+// Show loading state
+function showLoadingState() {
+    const container = document.getElementById('property-grid');
+    if (container) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-16">
+                <div class="animate-spin h-12 w-12 border-4 border-walmart-blue border-t-transparent rounded-full mx-auto mb-4"></div>
+                <h3 class="text-xl font-semibold text-gray-600">Loading properties...</h3>
+            </div>
+        `;
+    }
+}
+
+// Show error state with retry button
+function showLoadError(errorMessage) {
+    const container = document.getElementById('property-grid');
+    if (container) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-16">
+                <svg class="h-16 w-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">Unable to load properties</h3>
+                <p class="text-gray-500 mb-4">${errorMessage || 'Please check your connection and try again.'}</p>
+                <button onclick="location.reload()" class="px-6 py-2 bg-walmart-blue text-white rounded-lg hover:bg-walmart-dark transition-colors">
+                    Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
 // Render properties
 function renderProperties() {
     const container = document.getElementById('property-grid');
     
+    if (filteredProperties.length === 0 && properties.length === 0) {
+        // No properties loaded at all - this is an error state
+        showLoadError('No properties could be loaded. Please try refreshing the page.');
+        return;
+    }
+    
     if (filteredProperties.length === 0) {
+        // Properties exist but filters returned nothing
         container.innerHTML = `
             <div class="col-span-full text-center py-16">
                 <svg class="h-16 w-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                 </svg>
                 <h3 class="text-xl font-semibold text-gray-600 mb-2">No properties found</h3>
-                <p class="text-gray-500">Try adjusting your search criteria</p>
+                <p class="text-gray-500 mb-4">Try adjusting your search criteria</p>
+                <button onclick="showAllProperties()" class="px-6 py-2 bg-walmart-blue text-white rounded-lg hover:bg-walmart-dark transition-colors">
+                    Show All Properties
+                </button>
             </div>
         `;
         return;
@@ -2335,11 +2377,30 @@ function populateStateFilter() {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', async () => {
-    // Fetch properties from API first
-    await fetchPropertiesFromAPI();
+    // Show loading state immediately
+    showLoadingState();
     
-    renderProperties();
-    initMainMap();
+    try {
+        // Fetch properties from API first
+        await fetchPropertiesFromAPI();
+        
+        // Check if we actually got properties
+        if (properties.length === 0) {
+            console.error('No properties loaded from any source!');
+            showLoadError('No properties available. Please contact support.');
+            return;
+        }
+        
+        console.log(`✅ Successfully loaded ${properties.length} properties`);
+        renderProperties();
+        initMainMap();
+    } catch (error) {
+        console.error('Fatal error loading properties:', error);
+        showLoadError('An error occurred while loading properties.');
+        return;
+    }
+    
+    // Continue with rest of initialization
     updateSavedCount();
     populateStateFilter();
     
