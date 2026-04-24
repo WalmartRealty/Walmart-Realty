@@ -1088,66 +1088,41 @@
         // ========== PROPERTIES ==========
         
         async function loadProperties() {
-            console.log('loadProperties called, STATIC_MODE:', STATIC_MODE);
+            console.log('loadProperties called');
             
-            // DEMO MODE: Load from properties.json
-            if (STATIC_MODE) {
-                try {
-                    console.log('Fetching properties.json...');
-                    const response = await fetch('properties.json');
-                    if (response.ok) {
-                        adminProperties = await response.json();
-                        adminProperties = adminProperties.map((p, i) => ({
-                            ...p,
-                            id: p.id || i + 1,
-                            type: p.property_type || p.type || 'land',
-                            listingType: p.listing_type || p.listingType || 'sale',
-                            status: p.status || 'available'
-                        }));
-                        console.log(`✅ Loaded ${adminProperties.length} properties from properties.json`);
-                    } else {
-                        console.error('Failed to fetch properties.json:', response.status);
-                        adminProperties = getDefaultProperties();
-                    }
-                } catch (error) {
-                    console.error('Error loading properties:', error);
-                    adminProperties = getDefaultProperties();
-                }
-                filteredProperties = [...adminProperties];
-                updateStats();
-                populateStateFilter();
-                renderPropertiesTable();
-                return;
-            }
-            
-            // SERVER MODE: Load from API
             try {
-                const response = await fetch(`${API_BASE}/api/properties`, {
-                    headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
-                });
+                // Always fetch from properties.json for demo/static mode
+                console.log('Fetching properties.json...');
+                const response = await fetch('properties.json');
+                console.log('Fetch response:', response.status);
+                
                 if (response.ok) {
-                    adminProperties = await response.json();
-                    // Map API fields to expected format
-                    adminProperties = adminProperties.map(p => ({
+                    const data = await response.json();
+                    console.log('Raw data length:', data.length);
+                    
+                    adminProperties = data.map((p, i) => ({
                         ...p,
-                        type: p.property_type || 'land',
-                        listingType: p.listing_type || 'sale',
-                        lon: p.lon || 0,
-                        lat: p.lat || 0
+                        id: p.id || i + 1,
+                        type: p.property_type || p.type || 'land',
+                        listingType: p.listing_type || p.listingType || 'sale',
+                        status: p.status || 'available'
                     }));
-                    console.log(`Loaded ${adminProperties.length} properties from API`);
+                    console.log('Processed properties:', adminProperties.length);
                 } else {
-                    console.error('Failed to load properties');
-                    adminProperties = [];
+                    console.error('Failed to fetch, using defaults');
+                    adminProperties = getDefaultProperties();
                 }
             } catch (error) {
                 console.error('Error loading properties:', error);
-                adminProperties = [];
+                adminProperties = getDefaultProperties();
             }
+            
             filteredProperties = [...adminProperties];
+            console.log('Calling updateStats, populateStateFilter, renderPropertiesTable');
             updateStats();
             populateStateFilter();
             renderPropertiesTable();
+            console.log('loadProperties complete');
         }
         
         function getDefaultProperties() {
