@@ -9476,10 +9476,10 @@ function initMainMap() {
     // Add markers for all properties
     addPropertyMarkers(properties);
     
-    // Fit bounds to show all markers
+    // Fit bounds to show all markers (zoomed in more)
     if (mainMapMarkers.length > 0) {
         const group = L.featureGroup(mainMapMarkers);
-        mainMap.fitBounds(group.getBounds().pad(0.1));
+        mainMap.fitBounds(group.getBounds().pad(0.02), { maxZoom: 6 });
     }
 }
 
