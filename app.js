@@ -2422,14 +2422,8 @@ function addPropertyMarkers(propertiesToShow) {
         
         marker.bindPopup(popupContent, { 
             maxWidth: 300,
-            autoPan: true,
-            autoPanPadding: [50, 50],
-            keepInView: true
-        });
-        
-        // On click: zoom into the property
-        marker.on('click', function() {
-            mainMap.flyTo([property.lat, property.lon], 17, { duration: 1.2 });
+            autoPan: false,
+            keepInView: false
         });
         
         mainMapMarkers.push(marker);
