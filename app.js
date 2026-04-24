@@ -384,10 +384,24 @@ function populateStateCarousel() {
     });
     
     const states = Object.keys(stateCounts).sort();
+    const totalProperties = properties.length;
     
-    carousel.innerHTML = states.map(state => `
+    // Create "All" button first, then state buttons
+    const allButton = `
+        <button onclick="filterByStateIcon('')" 
+                class="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-[#ffc22033] hover:ring-2 hover:ring-walmart-blue transition-all group focus:outline-none focus:ring-2 focus:ring-walmart-blue"
+                aria-label="View all properties">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-shadow">
+                ALL
+            </div>
+            <span class="text-sm font-medium text-gray-700 group-hover:text-walmart-blue">All States</span>
+            <span class="text-xs text-gray-500">${totalProperties} properties</span>
+        </button>
+    `;
+    
+    const stateButtons = states.map(state => `
         <button onclick="filterByStateIcon('${state}')" 
-                class="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-blue-50 transition-colors group focus:outline-none focus:ring-2 focus:ring-walmart-blue"
+                class="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-[#ffc22033] hover:ring-2 hover:ring-walmart-blue transition-all group focus:outline-none focus:ring-2 focus:ring-walmart-blue"
                 aria-label="View ${STATE_NAMES[state] || state} properties">
             <div class="w-16 h-16 rounded-full bg-gradient-to-br from-walmart-blue to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-shadow">
                 ${state}
@@ -396,16 +410,16 @@ function populateStateCarousel() {
             <span class="text-xs text-gray-500">${stateCounts[state]} ${stateCounts[state] === 1 ? 'property' : 'properties'}</span>
         </button>
     `).join('');
+    
+    carousel.innerHTML = allButton + stateButtons;
 }
 
-// Filter by clicking state icon
+// Filter by clicking state icon (no scroll)
 function filterByStateIcon(state) {
     const stateFilter = document.getElementById('state-filter');
     if (stateFilter) {
         stateFilter.value = state;
         filterProperties();
-        // Scroll to results
-        document.getElementById('main-content')?.scrollIntoView({ behavior: 'smooth' });
     }
 }
 
@@ -684,13 +698,28 @@ function filterProperties() {
     updateMapMarkers();
 }
 
+// Reverse lookup: full state name to abbreviation
+const STATE_ABBREVS = Object.fromEntries(
+    Object.entries(STATE_NAMES).map(([abbr, name]) => [name.toLowerCase(), abbr])
+);
+
 // Perform keyword search from the main search bar
 function performSearch() {
     const searchInput = document.getElementById('search-input');
-    const searchTerm = searchInput.value.toLowerCase().trim();
+    let searchTerm = searchInput.value.toLowerCase().trim();
     
     if (!searchTerm) {
         // If empty, just run the filter with current dropdown values
+        filterProperties();
+        return;
+    }
+    
+    // Check if search term is a full state name and convert to abbreviation
+    const stateAbbr = STATE_ABBREVS[searchTerm];
+    if (stateAbbr) {
+        // User searched for a full state name - set the state filter and clear search
+        document.getElementById('state-filter').value = stateAbbr;
+        searchInput.value = '';
         filterProperties();
         return;
     }
@@ -703,11 +732,13 @@ function performSearch() {
     const sizeRange = document.getElementById('size-range').value;
     
     filteredProperties = properties.filter(property => {
-        // Keyword search - check multiple fields
+        // Keyword search - check multiple fields including full state name
+        const fullStateName = STATE_NAMES[property.state] || '';
         const searchFields = [
             property.title,
             property.city,
             property.state,
+            fullStateName,
             property.address,
             property.description,
             property.zoning,
