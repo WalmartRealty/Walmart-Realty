@@ -386,12 +386,12 @@ function populateStateCarousel() {
     const states = Object.keys(stateCounts).sort();
     const totalProperties = properties.length;
     
-    // Create "All" button first, then state buttons
+    // Create "All" button first (Walmart Spark yellow), then state buttons
     const allButton = `
         <button onclick="filterByStateIcon('')" 
                 class="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-[#ffc22033] hover:ring-2 hover:ring-walmart-blue transition-all group focus:outline-none focus:ring-2 focus:ring-walmart-blue"
                 aria-label="View all properties">
-            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-shadow">
+            <div class="w-16 h-16 rounded-full bg-[#ffc220] flex items-center justify-center text-gray-900 font-bold text-lg shadow-md group-hover:shadow-lg transition-shadow">
                 ALL
             </div>
             <span class="text-sm font-medium text-gray-700 group-hover:text-walmart-blue">All States</span>
@@ -706,7 +706,8 @@ const STATE_ABBREVS = Object.fromEntries(
 // Perform keyword search from the main search bar
 function performSearch() {
     const searchInput = document.getElementById('search-input');
-    let searchTerm = searchInput.value.toLowerCase().trim();
+    let searchTerm = searchInput.value.trim();
+    let searchTermLower = searchTerm.toLowerCase();
     
     if (!searchTerm) {
         // If empty, just run the filter with current dropdown values
@@ -714,11 +715,21 @@ function performSearch() {
         return;
     }
     
-    // Check if search term is a full state name and convert to abbreviation
-    const stateAbbr = STATE_ABBREVS[searchTerm];
-    if (stateAbbr) {
-        // User searched for a full state name - set the state filter and clear search
-        document.getElementById('state-filter').value = stateAbbr;
+    // Check if search term is a full state name (e.g., "Texas", "Arkansas")
+    const stateAbbrFromName = STATE_ABBREVS[searchTermLower];
+    if (stateAbbrFromName) {
+        console.log('Found state by full name:', searchTermLower, '->', stateAbbrFromName);
+        document.getElementById('state-filter').value = stateAbbrFromName;
+        searchInput.value = '';
+        filterProperties();
+        return;
+    }
+    
+    // Check if search term is a state abbreviation (e.g., "TX", "AR")
+    const searchTermUpper = searchTerm.toUpperCase();
+    if (STATE_NAMES[searchTermUpper]) {
+        console.log('Found state by abbreviation:', searchTermUpper);
+        document.getElementById('state-filter').value = searchTermUpper;
         searchInput.value = '';
         filterProperties();
         return;
