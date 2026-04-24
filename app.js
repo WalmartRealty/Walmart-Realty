@@ -1,57 +1,19 @@
-// Real Walmart Property Data - Generated from Non-Earning Land Report
+// Real Walmart Property Data - Generated from Non-Earning Land Report 11-30-2025
 // Store numbers, cities, states, and sizes are REAL data
+// Prices are randomly generated for demonstration purposes
 // Coordinates are based on city centers - actual property locations may vary
 
 // Check for admin-managed properties in localStorage
 const STORAGE_KEY = 'walmartRealtyProperties';
 function getStoredProperties() {
-    try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            // Only use if it's a valid array with properties
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                console.log('Found', parsed.length, 'properties in localStorage');
-                return parsed;
-            }
-        }
-    } catch (e) {
-        console.error('Error reading localStorage:', e);
-        // Clear corrupted data
-        localStorage.removeItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+        return JSON.parse(stored);
     }
     return null;
 }
 
-// Will be populated from properties-data.js
-let rawProperties = getStoredProperties() || [];
-let properties = [];
-let filteredProperties = [];
-
-// Load properties from properties.json file
-async function loadPropertiesFromFile() {
-    console.log('Attempting to load properties.json...');
-    try {
-        const response = await fetch('properties.json');
-        console.log('Fetch response status:', response.status);
-        if (response.ok) {
-            const props = await response.json();
-            console.log('Parsed', props.length, 'properties from JSON');
-            return props.map((p, i) => ({
-                ...p,
-                id: p.id || p.store_num || (i + 1),
-                listingType: 'sale',
-                status: 'available'
-            }));
-        }
-    } catch (e) {
-        console.error('Failed to load properties from JSON:', e);
-    }
-    return null;
-}
-
-// Fallback properties if file load fails
-const fallbackProperties = [
+const rawProperties = getStoredProperties() || [
     { id: 51, city: "Rogers", state: "AR", address: "Near Mathis Airport Pkwy", size_acres: 33.38, type: "land", price: 7000000, lat: 36.3371533, lon: -94.2258899, listingType: "sale", status: "available", description: "Prime excess land parcel situated along major commercial corridor. 33.38 acres zoned retail with excellent visibility and traffic counts of 44,700 VPD on Peachtree Pkwy. Adjacent to Laurel Springs Golf Club with nearby retailers including Target, Home Depot, Lidl, CVS, and Five Guys.", features: ["High Traffic Location", "Retail Zoning", "Near Major Retailers", "Golf Course Adjacent", "Utilities Available"], store_number: "4686", broker: { name: "Minh Nguyen", email: "mnguyen@mnguyencre.com", phone: "(832) 555-0173", company: "Commercial Real Estate Broker" }, marketingMaterials: [{ name: "4686 Marketing Materials.pdf", url: "/uploads/4686 Marketing Materials.pdf", type: "application/pdf" }, { name: "Site Aerial Map.png", url: "/uploads/image3.png", type: "image/png" }, { name: "Broker Contact - Minh Nguyen.png", url: "/uploads/image5.png", type: "image/png" }, { name: "Aerial Site View.png", url: "/uploads/image6.png", type: "image/png" }], featured: true },
     { city: "Sherwood", state: "AR", size_acres: 2.43, type: "land", price: 500000, lat: 34.8151, lon: -92.2243 },
     { city: "Newport", state: "AR", size_acres: 1.12, type: "land", price: 300000, lat: 35.6045, lon: -91.2818 },
@@ -132,77 +94,64 @@ function getPropertyImage(index, type) {
 }
 
 // Transform raw data into full property objects
-function transformProperties(rawProps) {
-    return rawProps.map((p, index) => {
-        const isRetail = p.type === 'retail';
-        
-        // Get thumbnail image
-        const image = getPropertyImage(index, p.type);
-        
-        // Calculate price per acre for land
-        const pricePerAcre = p.size_acres ? Math.round((p.price || 0) / p.size_acres) : null;
-        
-        // If property already has full data, preserve it
-        if (p.id && p.marketingMaterials) {
-            return {
-                ...p,
-                title: p.title || (isRetail 
-                    ? `Former Retail Location - ${p.city}, ${p.state}`
-                    : `Development Land - ${p.city}, ${p.state}`),
-                pricePerAcre: pricePerAcre,
-                sizeAcres: p.size_acres,
-                image: image,
-                zip: p.zip || getZipForState(p.state),
-                lotSize: `${p.size_acres} acres`,
-                zoning: p.zoning || 'Commercial'
-            };
-        }
-        
+const properties = rawProperties.map((p, index) => {
+    const isRetail = p.type === 'retail';
+    
+    // Get thumbnail image
+    const image = getPropertyImage(index, p.type);
+    
+    // Calculate price per acre for land
+    const pricePerAcre = p.size_acres ? Math.round(p.price / p.size_acres) : null;
+    
+    // If property already has full data (like the Rogers demo property), preserve it
+    if (p.id && p.marketingMaterials) {
         return {
-            id: p.id || p.store_num || (index + 1),
-            store_num: p.store_num,
-            title: isRetail 
+            ...p,
+            title: p.title || (isRetail 
                 ? `Former Retail Location - ${p.city}, ${p.state}`
-                : `Development Land - ${p.city}, ${p.state}`,
-            type: p.type || 'land',
-            listingType: p.listingType || 'sale',
-            price: p.price,
+                : `Development Land - ${p.city}, ${p.state}`),
             pricePerAcre: pricePerAcre,
             sizeAcres: p.size_acres,
-            size: isRetail ? Math.round(p.size_acres * 43560 * 0.15) : null,
-            address: p.address || `Commercial Property`,
-            city: p.city,
-            state: p.state,
-            zip: p.zip || getZipForState(p.state),
-            lat: p.lat,
-            lon: p.lon,
             image: image,
-            description: p.description || (isRetail
-                ? `Former retail location in ${p.city}, ${p.state}. Prime commercial property with excellent visibility and established traffic patterns. ${p.size_acres} acre site ready for redevelopment or continued retail use.`
-                : `Development-ready land parcel in ${p.city}, ${p.state}. ${p.size_acres} acres of commercial-zoned land ideal for retail, restaurant, or service businesses. Excellent location with strong demographics.`),
+            zip: p.zip || getZipForState(p.state),
+            lotSize: `${p.size_acres} acres`,
+            zoning: p.zoning || 'Commercial'
+        };
+    }
+    
+    return {
+        id: p.id || (index + 1),
+        title: isRetail 
+            ? `Former Retail Location - ${p.city}, ${p.state}`
+            : `Development Land - ${p.city}, ${p.state}`,
+        type: p.type,
+        listingType: p.listingType || 'sale',
+        price: p.price,
+        pricePerAcre: pricePerAcre,
+        sizeAcres: p.size_acres,
+        size: isRetail ? Math.round(p.size_acres * 43560 * 0.15) : null,
+        address: p.address || `Commercial Property`,
+        city: p.city,
+        state: p.state,
+        zip: p.zip || getZipForState(p.state),
+        lat: p.lat,
+        lon: p.lon,
+        image: image,
+        description: p.description || (isRetail
+            ? `Former retail location in ${p.city}, ${p.state}. Prime commercial property with excellent visibility and established traffic patterns. ${p.size_acres} acre site ready for redevelopment or continued retail use.`
+            : `Development-ready land parcel in ${p.city}, ${p.state}. ${p.size_acres} acres of commercial-zoned land ideal for retail, restaurant, or service businesses. Excellent location with strong demographics.`),
         features: p.features || (isRetail
             ? [`${p.size_acres} Acre Site`, 'Established Location', 'High Traffic Area', 'Utilities In Place', 'Signalized Access']
             : [`${p.size_acres} Acres`, 'Commercial Zoning', 'Utilities Available', 'Pad-Ready', 'Strong Demographics']),
         yearBuilt: null,
         lotSize: `${p.size_acres} acres`,
         zoning: p.zoning || 'Commercial',
-        broker: p.broker || (p.broker_name ? {
-            name: p.broker_name,
-            email: p.broker_email,
-            phone: p.broker_phone,
-            company: p.broker_company || 'Walmart Realty'
-        } : null),
-        // Keep raw broker fields for fallback
-        broker_name: p.broker_name || null,
-        broker_email: p.broker_email || null,
-        broker_phone: p.broker_phone || null,
-        broker_company: p.broker_company || null,
+        broker: p.broker || null,
         marketingMaterials: p.marketingMaterials || null,
-        store_number: p.store_number || p.store_num || null,
+        store_number: p.store_number || null,
         featured: p.featured || false
     };
-    });
-}
+});
 
 // Helper function to generate plausible ZIP codes
 function getZipForState(state) {
@@ -217,63 +166,15 @@ function getZipForState(state) {
 
 // Current view state
 let currentView = 'grid';
+let filteredProperties = [];
 
-// Fetch properties from API, file, or localStorage
+// Fetch properties from API and initialize
 async function fetchPropertiesFromAPI() {
-    console.log('fetchPropertiesFromAPI called');
-    
-    // 1. Check localStorage first (admin-managed properties)
-    const stored = getStoredProperties();
-    if (stored && stored.length > 0) {
-        console.log(`Loading ${stored.length} properties from localStorage`);
-        rawProperties = stored;
-        properties.length = 0;
-        properties.push(...transformProperties(rawProperties));
-        filteredProperties = [...properties];
-        console.log('Properties loaded from localStorage:', properties.length);
-        return;
-    }
-    
-    // 2. Try loading from properties.json file (GitHub Pages)
-    console.log('No localStorage data, trying properties.json...');
-    try {
-        const fileProps = await loadPropertiesFromFile();
-        if (fileProps && fileProps.length > 0) {
-            console.log(`Loaded ${fileProps.length} properties from properties.json`);
-            rawProperties = fileProps;
-            properties.length = 0;
-            try {
-                const transformed = transformProperties(rawProperties);
-                console.log('Transformed', transformed.length, 'properties');
-                properties.push(...transformed);
-            } catch (transformError) {
-                console.error('Error in transformProperties:', transformError);
-                // Fallback: just use raw properties directly
-                properties.push(...rawProperties.map((p, i) => ({
-                    ...p,
-                    id: p.id || p.store_num || (i + 1),
-                    title: `Property in ${p.city}, ${p.state}`,
-                    image: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800&h=600&fit=crop',
-                    listingType: 'sale',
-                    status: 'available',
-                    sizeAcres: p.size_acres,
-                    lotSize: `${p.size_acres} acres`
-                })));
-            }
-            filteredProperties = [...properties];
-            console.log('Final properties count:', properties.length);
-            console.log('Final filteredProperties count:', filteredProperties.length);
-            return;
-        }
-    } catch (e) {
-        console.error('Error loading from file:', e);
-    }
-    
-    // 3. Try API (backend server mode)
     try {
         const response = await fetch(`${window.location.origin}/api/properties`);
         if (response.ok) {
             const apiProps = await response.json();
+            // Clear existing properties and populate from API
             properties.length = 0;
             apiProps.forEach(p => {
                 properties.push({
@@ -298,27 +199,15 @@ async function fetchPropertiesFromAPI() {
                 });
             });
             console.log(`Loaded ${properties.length} properties from API`);
-            filteredProperties = [...properties];
-            return;
         }
     } catch (error) {
-        console.log('API not available, using fallback');
+        console.error('Error fetching properties:', error);
     }
-    
-    // 4. Fallback to hardcoded properties
-    console.log(`Using ${fallbackProperties.length} fallback properties`);
-    rawProperties = fallbackProperties;
-    properties.length = 0;
-    properties.push(...transformProperties(rawProperties));
     filteredProperties = [...properties];
 }
 
 // Format price for display
 function formatPrice(price, listingType) {
-    // Handle null/undefined prices
-    if (price === null || price === undefined) {
-        return 'Contact for Pricing';
-    }
     if (listingType === 'lease') {
         return `$${price.toLocaleString()}/SF/YR`;
     }
@@ -339,7 +228,7 @@ function getTypeLabel(type) {
     const labels = {
         land: 'Land',
         outlots: 'Outlots',
-        'dark-stores': 'Dark Stores',
+        'dark-stores': 'Vacant Stores',
         retail: 'Retail',
         warehouse: 'Warehouse',
         office: 'Office',
@@ -507,7 +396,7 @@ function setView(view) {
         gridBtn.setAttribute('aria-pressed', 'true');
         listBtn.className = 'p-2 bg-white text-gray-600 hover:bg-gray-100 focus-visible';
         listBtn.setAttribute('aria-pressed', 'false');
-        container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+        container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-6';
     } else {
         listBtn.className = 'p-2 bg-walmart-blue text-white focus-visible';
         listBtn.setAttribute('aria-pressed', 'true');
@@ -650,8 +539,119 @@ function filterByType(type) {
 
 // Filter by property type - called from footer links
 function filterByPropertyType(type) {
-    const propertyTypeSelect = document.getElementById('property-type');
-    propertyTypeSelect.value = type;
+    selectPropertyType(type);
+}
+
+// Select property type from hero icon tabs
+function selectPropertyType(type) {
+    // Update hidden input
+    const propertyTypeInput = document.getElementById('property-type');
+    propertyTypeInput.value = type;
+    
+    // Update tab styling
+    document.querySelectorAll('.property-type-tab').forEach(tab => {
+        tab.classList.remove('active');
+        tab.setAttribute('aria-pressed', 'false');
+    });
+    
+    const activeTabId = type ? `type-tab-${type}` : 'type-tab-all';
+    const activeTab = document.getElementById(activeTabId);
+    if (activeTab) {
+        activeTab.classList.add('active');
+        activeTab.setAttribute('aria-pressed', 'true');
+    }
+    
+    filterProperties();
+}
+
+// Use state abbreviations with styled display instead of inaccurate SVG paths
+// This provides a clean, professional look while we work on getting accurate state shapes
+const useStateAbbreviations = true;
+
+// All US state names for search
+const stateNames = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+    'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+    'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+    'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+    'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+    'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+    'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+    'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+    'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+    'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+    'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia'
+};
+
+// Populate states carousel with clean styled cards
+function populateStatesCarousel() {
+    const carousel = document.getElementById('states-carousel');
+    if (!carousel) return;
+    
+    // Get unique states and count properties
+    const stateCounts = {};
+    properties.forEach(p => {
+        stateCounts[p.state] = (stateCounts[p.state] || 0) + 1;
+    });
+    
+    // Sort alphabetically by state name
+    const sortedStates = Object.entries(stateCounts)
+        .sort((a, b) => {
+            const nameA = stateNames[a[0]] || a[0];
+            const nameB = stateNames[b[0]] || b[0];
+            return nameA.localeCompare(nameB);
+        });
+    
+    // Create "All" option first, then alphabetically sorted states
+    const allOption = `
+        <button onclick="filterByState('')" 
+                class="flex-shrink-0 group flex flex-col items-center justify-center w-24 py-4 rounded-xl hover:bg-blue-50 transition-all duration-200 focus-visible"
+                aria-label="View all properties">
+            <!-- All Badge -->
+            <div class="w-12 h-12 rounded-full bg-walmart-yellow flex items-center justify-center mb-2 group-hover:scale-105 transition-all duration-200 shadow-sm">
+                <span class="text-walmart-dark font-bold text-sm">All</span>
+            </div>
+            <!-- Label -->
+            <h4 class="font-semibold text-gray-900 group-hover:text-walmart-blue transition-colors text-xs text-center">All States</h4>
+            <!-- Property Count -->
+            <p class="text-xs text-gray-500 mt-0.5">${properties.length} Properties</p>
+        </button>
+    `;
+    
+    carousel.innerHTML = allOption + sortedStates.map(([state, count]) => {
+        const stateName = stateNames[state] || state;
+        
+        return `
+            <button onclick="filterByState('${state}')" 
+                    class="flex-shrink-0 group flex flex-col items-center justify-center w-24 py-4 rounded-xl hover:bg-blue-50 transition-all duration-200 focus-visible"
+                    aria-label="View ${count} properties in ${stateName}">
+                <!-- State Abbreviation Badge -->
+                <div class="w-12 h-12 rounded-full bg-walmart-blue flex items-center justify-center mb-2 group-hover:bg-walmart-dark group-hover:scale-105 transition-all duration-200 shadow-sm">
+                    <span class="text-white font-bold text-sm">${state}</span>
+                </div>
+                <!-- State Name -->
+                <h4 class="font-semibold text-gray-900 group-hover:text-walmart-blue transition-colors text-xs text-center">${stateName}</h4>
+                <!-- Property Count -->
+                <p class="text-xs text-gray-500 mt-0.5">${count} ${count === 1 ? 'Property' : 'Properties'}</p>
+            </button>
+        `;
+    }).join('');
+}
+
+// Scroll states carousel
+function scrollStates(direction) {
+    const carousel = document.getElementById('states-carousel');
+    if (!carousel) return;
+    const scrollAmount = 200;
+    carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+}
+
+// Filter by state - called from state cards
+function filterByState(state) {
+    const stateSelect = document.getElementById('state-filter');
+    stateSelect.value = state;
     filterProperties();
 }
 
@@ -766,14 +766,6 @@ function openPropertyModal(id) {
                 </button>
             </div>
             
-            ${property.description ? `
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                <p class="text-gray-600">${property.description}</p>
-            </div>
-            ` : ''}
-            
-            ${property.features && property.features.length > 0 ? `
             <div class="mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-3">Features</h3>
                 <ul class="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -787,7 +779,6 @@ function openPropertyModal(id) {
                     `).join('')}
                 </ul>
             </div>
-            ` : ''}
             
             <!-- Marketing Materials Section -->
             <div id="marketing-materials-section" class="mb-6">
@@ -798,18 +789,10 @@ function openPropertyModal(id) {
             </div>
             
             <!-- Broker Contact Section -->
-            <div id="broker-contact-section" class="mb-8 p-8 bg-blue-50 rounded-xl border-2 border-blue-200 shadow-md text-center">
-                <h3 class="text-2xl font-bold text-gray-900 mb-6">Broker Contact</h3>
+            <div id="broker-contact-section" class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100 text-center">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Broker Contact</h3>
                 <div id="broker-contact-container">
-                    ${property.broker_name ? `
-                        <p class="font-bold text-gray-900 text-3xl mb-2">${property.broker_name}</p>
-                        <p class="text-xl text-gray-600 mb-4">${property.broker_company || 'Walmart Realty'}</p>
-                        ${property.broker_phone ? `<p class="mb-3"><a href="tel:${property.broker_phone.replace(/[^0-9+]/g, '')}" class="text-2xl font-bold text-walmart-blue hover:underline">${property.broker_phone}</a></p>` : ''}
-                        ${property.broker_email ? `<p><a href="mailto:${property.broker_email}" class="text-xl text-walmart-blue hover:underline font-medium">${property.broker_email}</a></p>` : ''}
-                    ` : `
-                        <p class="text-gray-600 text-lg">Contact us for information about this property.</p>
-                        <p class="mt-3"><a href="mailto:realestate@walmart.com" class="text-xl text-walmart-blue hover:underline">realestate@walmart.com</a></p>
-                    `}
+                    <p class="text-gray-500">Loading broker info...</p>
                 </div>
             </div>
         </div>
@@ -979,12 +962,8 @@ async function loadMarketingMaterials(propertyId) {
     
     container.innerHTML = '<p class="text-gray-500 col-span-2">Loading materials...</p>';
     
-    console.log('loadMarketingMaterials called with propertyId:', propertyId);
-    
     // First check if property has embedded marketing materials
-    const property = properties.find(p => p.id === propertyId || p.id === parseInt(propertyId));
-    console.log('Found property:', property ? 'yes' : 'no', 'marketingMaterials:', property?.marketingMaterials);
-    
+    const property = properties.find(p => p.id === propertyId);
     if (property && property.marketingMaterials && property.marketingMaterials.length > 0) {
         const materials = property.marketingMaterials;
         const images = materials.filter(m => m.type?.startsWith('image/'));
@@ -1017,38 +996,9 @@ async function loadMarketingMaterials(propertyId) {
             galleryDiv.appendChild(div);
         });
         
-        // Show PDFs with download link and try to render as images
+        // Render PDFs as images
         for (const pdf of pdfs) {
-            // First add a download link immediately
-            const pdfDiv = document.createElement('div');
-            pdfDiv.className = 'rounded-lg border border-gray-200 shadow-sm bg-white p-4';
-            pdfDiv.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <span class="text-3xl">📄</span>
-                        <div>
-                            <p class="font-medium text-gray-900">${pdf.name}</p>
-                            <p class="text-sm text-gray-500">PDF Document</p>
-                        </div>
-                    </div>
-                    <a href="${pdf.url}" target="_blank" class="bg-walmart-blue hover:bg-walmart-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                        </svg>
-                        Download PDF
-                    </a>
-                </div>
-            `;
-            galleryDiv.appendChild(pdfDiv);
-            
-            // Try to render PDF pages as images (if PDF.js is available)
-            try {
-                if (typeof pdfjsLib !== 'undefined') {
-                    await renderPdfAsImages(pdf.url, pdf.name, galleryDiv);
-                }
-            } catch (e) {
-                console.log('PDF rendering failed, download link shown instead:', e);
-            }
+            await renderPdfAsImages(pdf.url, pdf.name, galleryDiv);
         }
         
         container.appendChild(galleryDiv);
@@ -1160,48 +1110,49 @@ async function loadBrokerContact(state, propertyId) {
     const container = document.getElementById('broker-contact-container');
     if (!container) return;
     
-    console.log('loadBrokerContact called with state:', state, 'propertyId:', propertyId);
-    
     // First check if property has embedded broker info
     if (propertyId) {
-        const property = properties.find(p => p.id === propertyId || p.id === parseInt(propertyId));
-        console.log('Found property:', property ? 'yes' : 'no');
-        console.log('Property broker:', property?.broker);
-        console.log('Property broker_name:', property?.broker_name);
-        
-        // Check for broker object first
-        if (property && property.broker && property.broker.name) {
+        const property = properties.find(p => p.id === propertyId);
+        if (property && property.broker) {
             const b = property.broker;
             container.innerHTML = `
-                <div class="text-left">
-                    <p class="font-semibold text-gray-900 text-lg">${b.name}</p>
-                    <p class="text-sm text-gray-600 mb-2">${b.company || 'Walmart Realty'}</p>
-                    ${b.email ? `<p class="mb-1"><a href="mailto:${b.email}" class="text-walmart-blue hover:underline">${b.email}</a></p>` : ''}
-                    ${b.phone ? `<p class="text-gray-700">${b.phone}</p>` : ''}
-                </div>
-            `;
-            return;
-        }
-        
-        // Fallback: check for broker_name, broker_email, etc. fields directly
-        if (property && property.broker_name) {
-            container.innerHTML = `
-                <div class="text-left">
-                    <p class="font-semibold text-gray-900 text-lg">${property.broker_name}</p>
-                    <p class="text-sm text-gray-600 mb-2">${property.broker_company || 'Walmart Realty'}</p>
-                    ${property.broker_email ? `<p class="mb-1"><a href="mailto:${property.broker_email}" class="text-walmart-blue hover:underline">${property.broker_email}</a></p>` : ''}
-                    ${property.broker_phone ? `<p class="text-gray-700">${property.broker_phone}</p>` : ''}
+                <div>
+                    <p class="font-semibold text-gray-900">${b.name}</p>
+                    <p class="text-sm text-gray-600">${b.company || 'Walmart Real Estate'}</p>
+                    <a href="mailto:${b.email}" class="text-walmart-blue hover:underline text-sm">${b.email}</a>
+                    ${b.phone ? `<p class="text-sm text-gray-500">${b.phone}</p>` : ''}
                 </div>
             `;
             return;
         }
     }
     
-    // Fallback message for GitHub Pages (no API)
-    container.innerHTML = `
-        <p class="text-gray-600">Contact us for information about properties in ${state}.</p>
-        <p class="text-sm text-gray-500 mt-2">Email: <a href="mailto:realestate@walmart.com" class="text-walmart-blue hover:underline">realestate@walmart.com</a></p>
-    `;
+    // Fallback to API
+    try {
+        const response = await fetch(`${window.location.origin}/api/brokers/state/${state}`);
+        if (response.ok) {
+            const brokers = await response.json();
+            
+            if (brokers.length === 0) {
+                container.innerHTML = `
+                    <p class="text-gray-600">Contact us for information about properties in ${state}.</p>
+                `;
+            } else {
+                container.innerHTML = brokers.map(b => `
+                    <div class="${brokers.length > 1 ? 'mb-3 pb-3 border-b border-blue-100 last:border-0 last:mb-0 last:pb-0' : ''}">
+                        <p class="font-semibold text-gray-900">${b.name}</p>
+                        <p class="text-sm text-gray-600">${b.company || 'Walmart Real Estate'}</p>
+                        <a href="mailto:${b.email}" class="text-walmart-blue hover:underline text-sm">${b.email}</a>
+                        ${b.phone ? `<p class="text-sm text-gray-500">${b.phone}</p>` : ''}
+                    </div>
+                `).join('');
+            }
+        } else {
+            container.innerHTML = '<p class="text-gray-600">Contact us for more information.</p>';
+        }
+    } catch (error) {
+        container.innerHTML = '<p class="text-gray-600">Contact us for more information.</p>';
+    }
 }
 
 // LOI Documents available
@@ -1258,7 +1209,7 @@ function openLOIModal(propertyId) {
             
             <div class="mt-6 pt-6 border-t">
                 <p class="text-sm text-gray-500 text-center">
-                    Need help choosing? Contact us at <a href="mailto:realestate@walmart.com" class="text-walmart-blue hover:underline">realestate@walmart.com</a>
+                    Need help choosing? Contact us at <a href="mailto:realestatedispositions@walmart.com" class="text-walmart-blue hover:underline">realestatedispositions@walmart.com</a>
                 </p>
             </div>
         </div>
@@ -1846,7 +1797,7 @@ function formatFileSize(bytes) {
 
 // Broker email mapping by state/region (to be configured)
 const brokerEmails = {
-    default: 'realestate@walmart.com',
+    default: 'realestatedispositions@walmart.com',
     // Add market-specific emails here later
     // 'TX': 'texas.broker@walmart.com',
     // 'AR': 'arkansas.broker@walmart.com',
@@ -2273,9 +2224,9 @@ function toggleMapView(view) {
     }
     
     if (view === 'map') {
-        // Standard map view
-        currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
+        // Standard map view - using ESRI World Street Map (Walmart proxy friendly)
+        currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri',
             maxZoom: 19
         }).addTo(mainMap);
         
@@ -2329,6 +2280,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initMainMap();
     updateSavedCount();
     populateStateFilter();
+    populateStatesCarousel();
     
     // Main search bar - Enter key support
     const searchInput = document.getElementById('search-input');
@@ -2653,7 +2605,7 @@ function updateAutocomplete(term) {
     
     const termLower = term.toLowerCase();
     
-    // Find matching states
+    // Find matching states (match both abbreviation and full name)
     const stateMatches = [];
     const stateCounts = {};
     properties.forEach(p => {
@@ -2662,11 +2614,14 @@ function updateAutocomplete(term) {
     });
     
     Object.keys(stateCounts).forEach(state => {
-        if (state.toLowerCase().includes(termLower)) {
-            stateMatches.push({ state, count: stateCounts[state] });
+        const fullName = stateNames[state] || state;
+        // Match against abbreviation OR full state name
+        if (state.toLowerCase().includes(termLower) || 
+            fullName.toLowerCase().includes(termLower)) {
+            stateMatches.push({ state, fullName, count: stateCounts[state] });
         }
     });
-    stateMatches.sort((a, b) => a.state.localeCompare(b.state));
+    stateMatches.sort((a, b) => a.fullName.localeCompare(b.fullName));
     
     // Find matching cities
     const cityMatches = [];
@@ -2709,7 +2664,7 @@ function updateAutocomplete(term) {
                     <svg class="h-4 w-4 text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                     </svg>
-                    <span class="font-medium text-gray-900">${item.state}</span>
+                    <span class="font-medium text-gray-900">${item.fullName} <span class="text-gray-400">(${item.state})</span></span>
                 </div>
                 <span class="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">${item.count} ${item.count === 1 ? 'property' : 'properties'}</span>
             </div>
