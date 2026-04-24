@@ -836,8 +836,8 @@
                 setTimeout(() => {
                     document.getElementById('login-screen').classList.add('hidden');
                     document.getElementById('admin-dashboard').classList.remove('hidden');
-                    if (typeof loadProperties === 'function') loadProperties();
-                    if (typeof loadBrokers === 'function') loadBrokers();
+                    // Load data after showing dashboard
+                    initDashboard();
                 }, 500);
             } else {
                 err.innerHTML = '<span class="text-red-600">Wrong credentials! Use: admin / walmart2024</span>';
@@ -846,11 +846,30 @@
             }
         }
         
+        // Initialize dashboard - load all data
+        function initDashboard() {
+            console.log('Initializing dashboard...');
+            // Clear any stale localStorage data to ensure fresh load
+            localStorage.removeItem('walmartRealtyProperties');
+            localStorage.removeItem('walmartRealtyBrokers');
+            
+            if (typeof loadProperties === 'function') {
+                console.log('Loading properties...');
+                loadProperties();
+            }
+            if (typeof loadBrokers === 'function') {
+                console.log('Loading brokers...');
+                loadBrokers();
+            }
+        }
+        
         // Check if already logged in on page load
         document.addEventListener('DOMContentLoaded', function() {
             if (sessionStorage.getItem('authToken') === 'demo-token') {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('admin-dashboard').classList.remove('hidden');
+                // Wait for other scripts to load, then init
+                setTimeout(initDashboard, 100);
             }
         });
     </script>
@@ -1068,33 +1087,29 @@
         // ========== PROPERTIES ==========
         
         async function loadProperties() {
-            // DEMO MODE: Load from localStorage or fetch properties.json
+            console.log('loadProperties called, STATIC_MODE:', STATIC_MODE);
+            
+            // DEMO MODE: Load from properties.json
             if (STATIC_MODE) {
                 try {
-                    // First check localStorage
-                    const stored = localStorage.getItem(STORAGE_KEY);
-                    if (stored) {
-                        adminProperties = JSON.parse(stored);
-                        console.log(`Loaded ${adminProperties.length} properties from localStorage`);
+                    console.log('Fetching properties.json...');
+                    const response = await fetch('properties.json');
+                    if (response.ok) {
+                        adminProperties = await response.json();
+                        adminProperties = adminProperties.map((p, i) => ({
+                            ...p,
+                            id: p.id || i + 1,
+                            type: p.property_type || p.type || 'land',
+                            listingType: p.listing_type || p.listingType || 'sale',
+                            status: p.status || 'available'
+                        }));
+                        console.log(`✅ Loaded ${adminProperties.length} properties from properties.json`);
                     } else {
-                        // Fetch from properties.json
-                        const response = await fetch('properties.json');
-                        if (response.ok) {
-                            adminProperties = await response.json();
-                            adminProperties = adminProperties.map((p, i) => ({
-                                ...p,
-                                id: p.id || i + 1,
-                                type: p.property_type || p.type || 'land',
-                                listingType: p.listing_type || p.listingType || 'sale',
-                                status: p.status || 'available'
-                            }));
-                            // Save to localStorage for future edits
-                            savePropertiesToStorage();
-                            console.log(`Loaded ${adminProperties.length} properties from properties.json`);
-                        }
+                        console.error('Failed to fetch properties.json:', response.status);
+                        adminProperties = getDefaultProperties();
                     }
                 } catch (error) {
-                    console.error('Error loading properties in demo mode:', error);
+                    console.error('Error loading properties:', error);
                     adminProperties = getDefaultProperties();
                 }
                 filteredProperties = [...adminProperties];
