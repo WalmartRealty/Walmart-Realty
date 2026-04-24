@@ -2354,8 +2354,9 @@ function initMainMap() {
     const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
     const centerLon = lons.reduce((a, b) => a + b, 0) / lons.length;
     
-    // Create map centered on all properties (zoom 6 = USA fills map nicely)
-    mainMap = L.map('main-map').setView([centerLat, centerLon], 6);
+    // Create map centered on continental USA (zoom 6 = USA fills map nicely)
+    // Center point: near Lebanon, Kansas - geographic center of continental US
+    mainMap = L.map('main-map').setView([39.8, -98.5], 6);
     
     // Add default map tile layer (OpenStreetMap)
     currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
