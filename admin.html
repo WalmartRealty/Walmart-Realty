@@ -813,6 +813,11 @@
         // API base URL
         const API_BASE = window.location.origin;
         
+        // Detect static hosting (GitHub Pages, etc.) - no API available
+        const STATIC_MODE = window.location.hostname.includes('github.io') || 
+                            window.location.hostname.includes('pages.') ||
+                            window.location.protocol === 'file:';
+        
         // Auth token storage
         let authToken = sessionStorage.getItem('authToken');
         let currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
@@ -832,6 +837,29 @@
         
         // Check auth on load
         function checkAuth() {
+            // Show static mode message if on GitHub Pages
+            if (STATIC_MODE) {
+                const errorDiv = document.getElementById('login-error');
+                if (errorDiv) {
+                    errorDiv.innerHTML = `
+                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-left">
+                            <p class="font-semibold text-amber-800">⚠️ Static Hosting Detected</p>
+                            <p class="text-amber-700 text-sm mt-1">Admin features require the local server.</p>
+                            <p class="text-amber-700 text-sm mt-1">Run <code class="bg-amber-100 px-1 rounded">npm start</code> and visit <a href="http://localhost:3000/admin.html" class="underline">localhost:3000/admin.html</a></p>
+                        </div>
+                    `;
+                    errorDiv.classList.remove('hidden');
+                }
+                // Disable the login form
+                const loginBtn = document.getElementById('login-btn');
+                if (loginBtn) {
+                    loginBtn.disabled = true;
+                    loginBtn.textContent = 'Server Required';
+                    loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                return;
+            }
+            
             if (authToken && currentUser) {
                 fetch(`${API_BASE}/api/auth/me`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
@@ -850,6 +878,12 @@
         // Handle login
         async function handleLogin(event) {
             event.preventDefault();
+            
+            // Don't attempt login on static hosting
+            if (STATIC_MODE) {
+                return;
+            }
+            
             console.log('Login attempt started...');
             
             const username = document.getElementById('admin-username').value.trim();
