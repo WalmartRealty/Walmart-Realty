@@ -6,9 +6,17 @@
 // Check for admin-managed properties in localStorage
 const STORAGE_KEY = 'walmartRealtyProperties';
 function getStoredProperties() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-        return JSON.parse(stored);
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            // Only use localStorage if it has valid, non-empty data
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                return parsed;
+            }
+        }
+    } catch (e) {
+        console.warn('Invalid localStorage data, using embedded properties');
     }
     return null;
 }
@@ -168,43 +176,56 @@ function getZipForState(state) {
 let currentView = 'grid';
 let filteredProperties = [];
 
+// Detect static hosting (GitHub Pages, etc.) - no API available
+const STATIC_MODE = window.location.hostname.includes('github.io') || 
+                    window.location.hostname.includes('pages.') ||
+                    window.location.protocol === 'file:';
+
 // Fetch properties from API and initialize
 async function fetchPropertiesFromAPI() {
+    // Skip API call on static hosting - use embedded data
+    if (STATIC_MODE) {
+        console.log(`Static mode: Using ${properties.length} embedded properties`);
+        filteredProperties = [...properties];
+        return;
+    }
+    
     try {
         const response = await fetch(`${window.location.origin}/api/properties`);
         if (response.ok) {
             const apiProps = await response.json();
-            // Clear existing properties and populate from API
-            properties.length = 0;
-            apiProps.forEach(p => {
-                properties.push({
-                    id: p.id,
-                    city: p.city || '',
-                    state: p.state || '',
-                    address: p.address || '',
-                    size_acres: p.size_acres || 0,
-                    lotSize: p.size_acres ? `${p.size_acres} acres` : 'N/A',
-                    type: p.property_type || 'land',
-                    listingType: p.listing_type || 'sale',
-                    price: p.price || 0,
-                    status: p.status || 'available',
-                    description: p.description || `Marketable property in ${p.city}, ${p.state}`,
-                    lat: p.lat || 0,
-                    lon: p.lon || 0,
-                    store_number: p.store_number || '',
-                    broker_name: p.broker_name || '',
-                    features: ['Commercial Zoning', 'Utilities Available'],
-                    featured: false,
-                    zip: getZipForState(p.state)
+            // Only clear if we actually got valid data
+            if (Array.isArray(apiProps) && apiProps.length > 0) {
+                properties.length = 0;
+                apiProps.forEach(p => {
+                    properties.push({
+                        id: p.id,
+                        city: p.city || '',
+                        state: p.state || '',
+                        address: p.address || '',
+                        size_acres: p.size_acres || 0,
+                        lotSize: p.size_acres ? `${p.size_acres} acres` : 'N/A',
+                        type: p.property_type || 'land',
+                        listingType: p.listing_type || 'sale',
+                        price: p.price || 0,
+                        status: p.status || 'available',
+                        description: p.description || `Marketable property in ${p.city}, ${p.state}`,
+                        lat: p.lat || 0,
+                        lon: p.lon || 0,
+                        store_number: p.store_number || '',
+                        broker_name: p.broker_name || '',
+                        features: ['Commercial Zoning', 'Utilities Available'],
+                        featured: false,
+                        zip: getZipForState(p.state)
+                    });
                 });
-            });
-            console.log(`Loaded ${properties.length} properties from API`);
+                console.log(`Loaded ${properties.length} properties from API`);
+            }
         }
     } catch (error) {
-        console.error('Error fetching properties:', error);
+        console.error('Error fetching properties (using embedded data):', error);
     }
     filteredProperties = [...properties];
-}
 
 // Format price for display
 function formatPrice(price, listingType) {
