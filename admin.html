@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Admin Panel | Walmart Real Estate</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -92,14 +95,17 @@
                     <button onclick="switchTab('brokers')" id="tab-brokers" class="py-3 px-1 font-medium tab-inactive">
                         👥 Brokers
                     </button>
-                    <button onclick="switchTab('marketing')" id="tab-marketing" class="py-3 px-1 font-medium tab-inactive">
-                        📸 Marketing
+                    <button onclick="switchTab('inquiries')" id="tab-inquiries" class="py-3 px-1 font-medium tab-inactive">
+                        📬 Inquiries
                     </button>
                     <button onclick="switchTab('loi')" id="tab-loi" class="py-3 px-1 font-medium tab-inactive">
                         📄 LOI Submissions
                     </button>
                     <button onclick="switchTab('templates')" id="tab-templates" class="py-3 px-1 font-medium tab-inactive">
                         📝 LOI Templates
+                    </button>
+                    <button onclick="switchTab('marketing')" id="tab-marketing" class="py-3 px-1 font-medium tab-inactive">
+                        📸 Marketing Materials
                     </button>
                 </nav>
             </div>
@@ -281,6 +287,53 @@
                     </svg>
                     <p class="font-medium">No brokers found</p>
                     <p class="text-sm">Add brokers to receive LOI submissions</p>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Inquiries Tab Content -->
+        <main id="content-inquiries" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <p class="text-gray-500 text-sm">Total Inquiries</p>
+                    <p class="text-3xl font-bold text-gray-900" id="stat-inquiries-total">0</p>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <p class="text-gray-500 text-sm">New</p>
+                    <p class="text-3xl font-bold text-blue-600" id="stat-inquiries-new">0</p>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <p class="text-gray-500 text-sm">In Progress</p>
+                    <p class="text-3xl font-bold text-yellow-600" id="stat-inquiries-progress">0</p>
+                </div>
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <p class="text-gray-500 text-sm">Closed</p>
+                    <p class="text-3xl font-bold text-green-600" id="stat-inquiries-closed">0</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div class="p-6 border-b">
+                    <h2 class="text-xl font-bold text-gray-900">Contact Inquiries</h2>
+                    <p class="text-gray-500 text-sm">Inquiries submitted via the website contact form</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Email</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Property</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inquiries-table-body" class="divide-y divide-gray-100">
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </main>
@@ -494,20 +547,20 @@
             </div>
         </main>
         
-        <!-- Marketing Tab Content -->
+        <!-- Marketing Materials Tab Content -->
         <main id="content-marketing" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="bg-white rounded-xl shadow-sm border p-6">
+            <div class="bg-white rounded-xl shadow-sm p-6">
                 <div class="flex items-center justify-between mb-6">
                     <div>
                         <h2 class="text-xl font-bold text-gray-900">📸 Marketing Materials</h2>
-                        <p class="text-gray-500 mt-1">Upload PDF marketing materials - they'll be available for download on property pages</p>
+                        <p class="text-gray-500 mt-1">Upload PDF marketing materials - they'll automatically convert to viewable images</p>
                     </div>
                 </div>
                 
                 <!-- Property Selector -->
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Select Property</label>
-                    <select id="marketing-property-select" onchange="loadPropertyMarketingTab()" 
+                    <select id="marketing-property-select" onchange="loadPropertyMarketing()" 
                             class="w-full md:w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
                         <option value="">-- Select a property --</option>
                     </select>
@@ -523,10 +576,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                         </svg>
                         <p class="text-gray-600 mb-2">Drag & drop PDF or image files here</p>
-                        <p class="text-gray-400 text-sm mb-4">Files will be attached to this property</p>
+                        <p class="text-gray-400 text-sm mb-4">PDFs will be converted to images automatically</p>
                         <label class="inline-block bg-walmart-blue hover:bg-walmart-dark text-white font-medium py-2 px-6 rounded-lg cursor-pointer transition-colors">
                             Browse Files
-                            <input type="file" id="marketing-file-input" accept=".pdf,.png,.jpg,.jpeg" multiple onchange="handleMarketingFileUpload(event)" class="hidden">
+                            <input type="file" accept=".pdf,.png,.jpg,.jpeg" multiple onchange="handleMarketingUpload(event)" class="hidden">
                         </label>
                     </div>
                     
@@ -760,12 +813,13 @@
     </div>
 
     <script>
-        // Static site mode for GitHub Pages
-        const STATIC_MODE = true;
-        const STATIC_CREDENTIALS = { username: 'admin', password: 'admin123' };
-        
-        // API base URL (used when running with backend server)
+        // API base URL
         const API_BASE = window.location.origin;
+        
+        // Detect static hosting (GitHub Pages, etc.) - no API available
+        const STATIC_MODE = window.location.hostname.includes('github.io') || 
+                            window.location.hostname.includes('pages.') ||
+                            window.location.protocol === 'file:';
         
         // Auth token storage
         let authToken = sessionStorage.getItem('authToken');
@@ -786,79 +840,98 @@
         
         // Check auth on load
         function checkAuth() {
-            if (authToken && currentUser) {
-                if (STATIC_MODE) {
-                    // In static mode, just verify session exists
-                    showDashboard();
-                } else {
-                    fetch(`${API_BASE}/api/auth/me`, {
-                        headers: { 'Authorization': `Bearer ${authToken}` }
-                    })
-                    .then(res => {
-                        if (res.ok) {
-                            showDashboard();
-                        } else {
-                            handleLogout();
-                        }
-                    })
-                    .catch(() => handleLogout());
+            // Show static mode message if on GitHub Pages
+            if (STATIC_MODE) {
+                const errorDiv = document.getElementById('login-error');
+                if (errorDiv) {
+                    errorDiv.innerHTML = `
+                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-left">
+                            <p class="font-semibold text-amber-800">⚠️ Static Hosting Detected</p>
+                            <p class="text-amber-700 text-sm mt-1">Admin features require the local server.</p>
+                            <p class="text-amber-700 text-sm mt-1">Run <code class="bg-amber-100 px-1 rounded">npm start</code> and visit <a href="http://localhost:3000/admin.html" class="underline">localhost:3000/admin.html</a></p>
+                        </div>
+                    `;
+                    errorDiv.classList.remove('hidden');
                 }
+                // Disable the login form
+                const loginBtn = document.getElementById('login-btn');
+                if (loginBtn) {
+                    loginBtn.disabled = true;
+                    loginBtn.textContent = 'Server Required';
+                    loginBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                return;
+            }
+            
+            if (authToken && currentUser) {
+                fetch(`${API_BASE}/api/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                })
+                .then(res => {
+                    if (res.ok) {
+                        showDashboard();
+                    } else {
+                        handleLogout();
+                    }
+                })
+                .catch(() => handleLogout());
             }
         }
         
         // Handle login
         async function handleLogin(event) {
             event.preventDefault();
-            const username = document.getElementById('admin-username').value;
+            
+            // Don't attempt login on static hosting
+            if (STATIC_MODE) {
+                return;
+            }
+            
+            console.log('Login attempt started...');
+            
+            const username = document.getElementById('admin-username').value.trim();
             const password = document.getElementById('admin-password').value;
             const loginBtn = document.getElementById('login-btn');
             const errorDiv = document.getElementById('login-error');
+            
+            // Validate inputs
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
             
             loginBtn.disabled = true;
             loginBtn.textContent = 'Logging in...';
             errorDiv.classList.add('hidden');
             
-            // Static mode authentication (GitHub Pages)
-            if (STATIC_MODE) {
-                if (username === STATIC_CREDENTIALS.username && password === STATIC_CREDENTIALS.password) {
-                    authToken = 'static-auth-token';
-                    currentUser = { name: 'Admin', role: 'admin' };
-                    sessionStorage.setItem('authToken', authToken);
-                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    showToast('Welcome back, Admin!', 'success');
-                    showDashboard();
-                } else {
-                    errorDiv.textContent = 'Invalid credentials';
-                    errorDiv.classList.remove('hidden');
-                }
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Login';
-                return;
-            }
-            
-            // Backend server authentication
             try {
+                console.log('Sending login request to:', `${API_BASE}/api/auth/login`);
                 const response = await fetch(`${API_BASE}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
                 
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (response.ok) {
                     authToken = data.token;
                     currentUser = data.user;
                     sessionStorage.setItem('authToken', authToken);
                     sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    showToast(`Welcome back, ${currentUser.name}!`, 'success');
+                    showToast(`Welcome back, ${currentUser.name || 'Admin'}!`, 'success');
                     showDashboard();
                 } else {
-                    errorDiv.textContent = data.error || 'Invalid credentials';
+                    errorDiv.textContent = data.error || 'Invalid username or password';
                     errorDiv.classList.remove('hidden');
+                    console.error('Login failed:', data.error);
                 }
             } catch (error) {
-                errorDiv.textContent = 'Connection error. Please try again.';
+                console.error('Login error:', error);
+                errorDiv.textContent = 'Connection error: ' + error.message;
                 errorDiv.classList.remove('hidden');
             } finally {
                 loginBtn.disabled = false;
@@ -885,7 +958,7 @@
         
         // Tab switching
         function switchTab(tab) {
-            const tabs = ['properties', 'brokers', 'loi', 'templates', 'marketing'];
+            const tabs = ['properties', 'brokers', 'inquiries', 'loi', 'templates', 'marketing'];
             tabs.forEach(t => {
                 const tabBtn = document.getElementById(`tab-${t}`);
                 const content = document.getElementById(`content-${t}`);
@@ -900,22 +973,47 @@
                 }
             });
             
+            // Load inquiries data when switching to inquiries tab
+            if (tab === 'inquiries') {
+                loadInquiries();
+            }
+            
             // Load templates data when switching to templates tab
             if (tab === 'templates') {
                 loadLOITemplates();
+            }
+            
+            // Load marketing materials data when switching to marketing tab
+            if (tab === 'marketing') {
+                loadMarketingPropertyList();
             }
         }
         
         // ========== PROPERTIES ==========
         
         async function loadProperties() {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                adminProperties = JSON.parse(stored);
-            } else {
-                // Load from properties-data.js file
-                adminProperties = await fetchPropertiesData();
-                savePropertiesToStorage();
+            try {
+                const response = await fetch(`${API_BASE}/api/properties`, {
+                    headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
+                });
+                if (response.ok) {
+                    adminProperties = await response.json();
+                    // Map API fields to expected format
+                    adminProperties = adminProperties.map(p => ({
+                        ...p,
+                        type: p.property_type || 'land',
+                        listingType: p.listing_type || 'sale',
+                        lon: p.lon || 0,
+                        lat: p.lat || 0
+                    }));
+                    console.log(`Loaded ${adminProperties.length} properties from API`);
+                } else {
+                    console.error('Failed to load properties');
+                    adminProperties = [];
+                }
+            } catch (error) {
+                console.error('Error loading properties:', error);
+                adminProperties = [];
             }
             filteredProperties = [...adminProperties];
             updateStats();
@@ -923,36 +1021,11 @@
             renderPropertiesTable();
         }
         
-        async function fetchPropertiesData() {
-            try {
-                const response = await fetch('properties.json');
-                if (response.ok) {
-                    const props = await response.json();
-                    // Add id and normalize fields
-                    return props.map((p, i) => ({
-                        id: p.id || i + 1,
-                        city: p.city,
-                        state: p.state,
-                        address: p.address || '',
-                        size_acres: p.size_acres,
-                        type: p.type || 'land',
-                        price: p.price,
-                        lat: p.lat,
-                        lon: p.lon,
-                        description: p.description || '',
-                        features: p.features || [],
-                        broker: p.broker_name ? { name: p.broker_name, email: p.broker_email, phone: p.broker_phone } : null,
-                        store_num: p.store_num,
-                        listingType: 'sale',
-                        status: 'available'
-                    }));
-                }
-            } catch (e) {
-                console.error('Failed to load properties:', e);
-            }
-            // Fallback to minimal defaults
+        function getDefaultProperties() {
             return [
                 { id: 1, city: "Sherwood", state: "AR", size_acres: 2.43, type: "land", price: 500000, lat: 34.8151, lon: -92.2243, listingType: "sale", status: "available" },
+                { id: 2, city: "Newport", state: "AR", size_acres: 1.12, type: "land", price: 300000, lat: 35.6045, lon: -91.2818, listingType: "sale", status: "available" },
+                { id: 3, city: "Fort Scott", state: "KS", size_acres: 0.79, type: "land", price: 185000, lat: 37.8395, lon: -94.7085, listingType: "sale", status: "available" },
             ];
         }
         
@@ -1047,15 +1120,6 @@
         // ========== BROKERS ==========
         
         async function loadBrokers() {
-            // In static mode, use localStorage
-            if (STATIC_MODE) {
-                const stored = localStorage.getItem('walmartRealtyBrokers');
-                brokers = stored ? JSON.parse(stored) : [];
-                updateBrokerStats();
-                renderBrokersTable();
-                return;
-            }
-            
             try {
                 const response = await fetch(`${API_BASE}/api/brokers`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
@@ -1260,14 +1324,6 @@
         // ========== LOI SUBMISSIONS ==========
         
         async function loadLOISubmissions() {
-            // In static mode, use localStorage
-            if (STATIC_MODE) {
-                const stored = localStorage.getItem('walmartRealtyLOI');
-                loiSubmissions = stored ? JSON.parse(stored) : [];
-                renderLOITable();
-                return;
-            }
-            
             try {
                 const response = await fetch(`${API_BASE}/api/loi`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
@@ -1319,6 +1375,123 @@
             return classes[status] || 'bg-gray-100 text-gray-800';
         }
         
+        // ========== INQUIRIES ==========
+        
+        let inquiries = [];
+        
+        async function loadInquiries() {
+            try {
+                const response = await fetch(`${API_BASE}/api/contact`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (response.ok) {
+                    inquiries = await response.json();
+                    updateInquiryStats();
+                    renderInquiriesTable();
+                }
+            } catch (error) {
+                console.error('Failed to load inquiries:', error);
+            }
+        }
+        
+        function updateInquiryStats() {
+            document.getElementById('stat-inquiries-total').textContent = inquiries.length;
+            document.getElementById('stat-inquiries-new').textContent = inquiries.filter(i => i.status === 'new').length;
+            document.getElementById('stat-inquiries-progress').textContent = inquiries.filter(i => i.status === 'in_progress').length;
+            document.getElementById('stat-inquiries-closed').textContent = inquiries.filter(i => i.status === 'closed').length;
+        }
+        
+        function renderInquiriesTable() {
+            const tbody = document.getElementById('inquiries-table-body');
+            if (!inquiries.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No inquiries yet</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = inquiries.map(inq => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm text-gray-600">
+                        ${new Date(inq.created_at).toLocaleDateString()}
+                    </td>
+                    <td class="px-6 py-4">
+                        <p class="font-medium text-gray-900">${inq.name}</p>
+                        <p class="text-sm text-gray-500">${inq.phone || 'No phone'}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <a href="mailto:${inq.email}" class="text-walmart-blue hover:underline">${inq.email}</a>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-600">${inq.company || '-'}</td>
+                    <td class="px-6 py-4 text-sm">
+                        ${inq.property_title ? `<span class="text-gray-900">${inq.property_city}, ${inq.property_state}</span>` : '<span class="texy-400">General inquiry</span>'}
+                    </td>
+                    <td class="px-6 py-4">
+                        <select onchange="updateInquiryStatus(${inq.id}, this.value)" 
+                                class="text-sm rounded-lg border-gray-300 ${getInquiryStatusClass(inq.status)}">
+                            <option value="new" ${inq.status === 'new' ? 'selected' : ''}>New</option>
+                            <option value="in_progress" ${inq.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="closed" ${inq.status === 'closed' ? 'selected' : ''}>Closed</option>
+                        </select>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="viewInquiry(${inq.id})" class="text-walmart-blue hover:text-walmart-dark font-medium text-sm mr-3">View</button>
+                        <button onclick="deleteInquiry(${inq.id})" class="text-red-600 hover:text-red-800 font-medium text-sm">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function getInquiryStatusClass(status) {
+            const classes = {
+                new: 'bg-blue-100 text-blue-800',
+                in_progress: 'bg-yellow-100 text-yellow-800',
+                closed: 'bg-green-100 text-green-800'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800';
+        }
+        
+        async function updateInquiryStatus(id, status) {
+            try {
+                const response = await fetch(`${API_BASE}/api/contact/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+                if (response.ok) {
+                    showToast('Status updated');
+                    loadInquiries();
+                }
+            } catch (error) {
+                showToast('Failed to update status', 'error');
+            }
+        }
+        
+        function viewInquiry(id) {
+            const inq = inquiries.find(i => i.id === id);
+            if (!inq) return;
+            
+            alert(`INQUIRY FROM: ${inq.name}\n\nEmail: ${inq.email}\nPhone: ${inq.phone || 'Not provided'}\nCompany: ${inq.company || 'Not provided'}\n\nProperty: ${inq.property_title ? `${inq.property_city}, ${inq.property_state}` : 'General inquiry'}\n\nMESSAGE:\n${inq.message}\n\nSubmitted: ${new Date(inq.created_at).toLocaleString()}`);
+        }
+        
+        async function deleteInquiry(id) {
+            if (!confirm('Delete this inquiry?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/contact/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (response.ok) {
+                    showToast('Inquiry deleted');
+                    loadInquiries();
+                }
+            } catch (error) {
+                showToast('Failed to delete inquiry', 'error');
+            }
+        }
+        
         // ========== LOI TEMPLATES ==========
         
         const loiTemplateNames = {
@@ -1333,26 +1506,6 @@
         };
         
         async function loadLOITemplates() {
-            // In static mode, use localStorage or just show defaults
-            if (STATIC_MODE) {
-                const stored = localStorage.getItem('walmartRealtyTemplates');
-                if (stored) {
-                    const templates = JSON.parse(stored);
-                    templates.forEach(t => {
-                        const fileEl = document.getElementById(`template-file-${t.id}`);
-                        const statusEl = document.getElementById(`template-status-${t.id}`);
-                        if (fileEl) fileEl.textContent = `Current: ${t.file_name}`;
-                        if (statusEl) {
-                            statusEl.textContent = t.is_active ? 'Active' : 'Inactive';
-                            statusEl.className = t.is_active 
-                                ? 'px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700'
-                                : 'px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700';
-                        }
-                    });
-                }
-                return;
-            }
-            
             try {
                 const response = await fetch(`${API_BASE}/api/loi-templates`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
@@ -1379,27 +1532,6 @@
         async function uploadLOITemplate(event, templateId, templateName) {
             const file = event.target.files[0];
             if (!file) return;
-            
-            // In static mode, just show a message
-            if (STATIC_MODE) {
-                showToast('Template upload requires server. File saved locally for reference.', 'success');
-                const fileEl = document.getElementById(`template-file-${templateId}`);
-                if (fileEl) fileEl.textContent = `Current: ${file.name}`;
-                
-                // Save to localStorage
-                const stored = localStorage.getItem('walmartRealtyTemplates');
-                let templates = stored ? JSON.parse(stored) : [];
-                const existing = templates.find(t => t.id === templateId);
-                if (existing) {
-                    existing.file_name = file.name;
-                    existing.is_active = true;
-                } else {
-                    templates.push({ id: templateId, name: templateName, file_name: file.name, is_active: true });
-                }
-                localStorage.setItem('walmartRealtyTemplates', JSON.stringify(templates));
-                event.target.value = '';
-                return;
-            }
             
             const formData = new FormData();
             formData.append('template', file);
@@ -1436,6 +1568,165 @@
             
             // Clear the input
             event.target.value = '';
+        }
+        
+        // ========== MARKETING MATERIALS ==========
+        
+        let selectedMarketingPropertyId = null;
+        
+        function loadMarketingPropertyList() {
+            const select = document.getElementById('marketing-property-select');
+            select.innerHTML = '<option value="">-- Select a property --</option>';
+            
+            // Use adminProperties if available, otherwise use default
+            const props = adminProperties.length > 0 ? adminProperties : getDefaultProperties();
+            
+            props.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = `${p.city}, ${p.state} - ${p.size_acres} acres (ID: ${p.id})`;
+                select.appendChild(option);
+            });
+        }
+        
+        function loadPropertyMarketing() {
+            const select = document.getElementById('marketing-property-select');
+            const propertyId = select.value;
+            
+            const uploadSection = document.getElementById('marketing-upload-section');
+            const noPropertyMsg = document.getElementById('no-property-selected');
+            
+            if (!propertyId) {
+                uploadSection.classList.add('hidden');
+                noPropertyMsg.classList.remove('hidden');
+                selectedMarketingPropertyId = null;
+                return;
+            }
+            
+            selectedMarketingPropertyId = propertyId;
+            uploadSection.classList.remove('hidden');
+            noPropertyMsg.classList.add('hidden');
+            
+            loadMarketingMaterialsForProperty(propertyId);
+        }
+        
+        async function loadMarketingMaterialsForProperty(propertyId) {
+            const grid = document.getElementById('marketing-materials-grid');
+            grid.innerHTML = '<p class="text-gray-500 col-span-full">Loading materials...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/properties/${propertyId}/marketing`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const materials = await response.json();
+                    
+                    if (materials.length === 0) {
+                        grid.innerHTML = '<p class="text-gray-500 col-span-full">No marketing materials uploaded yet. Upload PDFs or images above.</p>';
+                    } else {
+                        grid.innerHTML = materials.map(m => {
+                            const isImage = m.file_type?.startsWith('image/');
+                            const isPdf = m.file_type?.includes('pdf');
+                            
+                            return `
+                                <div class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                                    ${isImage ? `
+                                        <img src="${m.file_url}" alt="${m.file_name}" class="w-full h-40 object-cover">
+                                    ` : `
+                                        <div class="w-full h-40 bg-gray-100 flex items-center justify-center">
+                                            <span class="text-4xl">${isPdf ? '\ud83d\udcc4' : '\ud83d\udcce'}</span>
+                                        </div>
+                                    `}
+                                    <div class="p-3">
+                                        <p class="text-sm font-medium text-gray-900 truncate" title="${m.file_name}">${m.file_name}</p>
+                                        <p class="text-xs text-gray-500">${isPdf ? 'PDF Document' : isImage ? 'Image' : 'File'}</p>
+                                        <div class="flex gap-2 mt-2">
+                                            <a href="${m.file_url}" target="_blank" class="text-xs text-walmart-blue hover:underline">View</a>
+                                            <button onclick="deleteMarketingMaterial(${m.id})" classt-xs text-red-600 hover:underline">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                } else {
+                    grid.innerHTML = '<p class="text-gray-500 col-span-full">Failed to load materials.</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load marketing materials:', error);
+                grid.innerHTML = '<p class="text-gray-500 col-span-full">Failed to load materials.</p>';
+            }
+        }
+        
+        function handleMarketingDrop(event) {
+            event.preventDefault();
+            const files = event.dataTransfer.files;
+            uploadMarketingFiles(files);
+        }
+        
+        function handleMarketingUpload(event) {
+            const files = event.target.files;
+            uploadMarketingFiles(files);
+            event.target.value = '';
+        }
+        
+        async function uploadMarketingFiles(files) {
+            if (!selectedMarketingPropertyId) {
+                showToast('Please select a property first', 'error');
+                return;
+            }
+            
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('property_id', selectedMarketingPropertyId);
+                
+                try {
+                    showToast(`Uploading ${file.name}...`);
+                    
+                    const response = await fetch(`${API_BASE}/api/marketing/upload`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${authToken}` },
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        showToast(`${file.name} uploaded successfully!`);
+                    } else {
+                        const error = await response.json();
+                        showToast(error.error || `Failed to upload ${file.name}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Upload failed:', error);
+                    showToast(`Failed to upload ${file.name}`, 'error');
+                }
+            }
+            
+            // Reload the materials grid
+            loadMarketingMaterialsForProperty(selectedMarketingPropertyId);
+        }
+        
+        async function deleteMarketingMaterial(id) {
+            if (!confirm('Are you sure you want to delete this marketing material?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/marketing/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    showToast('Marketing material deleted');
+                    loadMarketingMaterialsForProperty(selectedMarketingPropertyId);
+                } else {
+                    showToast('Failed to delete material', 'error');
+                }
+            } catch (error) {
+                console.error('Delete failed:', error);
+                showToast('Failed to delete material', 'error');
+            }
         }
         
         // ========== PROPERTY CRUD ==========
@@ -1695,146 +1986,6 @@
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
-        
-        // ========== MARKETING TAB FUNCTIONS ==========
-        
-        let currentMarketingPropertyId = null;
-        
-        function populateMarketingPropertySelect() {
-            const select = document.getElementById('marketing-property-select');
-            if (!select) return;
-            
-            select.innerHTML = '<option value="">-- Select a property --</option>';
-            adminProperties.forEach(p => {
-                select.innerHTML += `<option value="${p.id}">${p.city}, ${p.state} - ${p.address || 'No address'}</option>`;
-            });
-        }
-        
-        function loadPropertyMarketingTab() {
-            const select = document.getElementById('marketing-property-select');
-            const propertyId = select.value;
-            const uploadSection = document.getElementById('marketing-upload-section');
-            const noPropertyMsg = document.getElementById('no-property-selected');
-            
-            if (!propertyId) {
-                uploadSection.classList.add('hidden');
-                noPropertyMsg.classList.remove('hidden');
-                currentMarketingPropertyId = null;
-                return;
-            }
-            
-            currentMarketingPropertyId = parseInt(propertyId);
-            uploadSection.classList.remove('hidden');
-            noPropertyMsg.classList.add('hidden');
-            
-            loadMarketingMaterialsGrid();
-        }
-        
-        function loadMarketingMaterialsGrid() {
-            const grid = document.getElementById('marketing-materials-grid');
-            const property = adminProperties.find(p => p.id === currentMarketingPropertyId);
-            
-            if (!property || !property.marketingMaterials || property.marketingMaterials.length === 0) {
-                grid.innerHTML = '<p class="text-gray-500 col-span-full">No marketing materials uploaded yet. Upload PDFs or images above.</p>';
-                return;
-            }
-            
-            grid.innerHTML = property.marketingMaterials.map((m, index) => `
-                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="text-3xl">${m.type?.includes('pdf') ? '📄' : '🖼️'}</span>
-                            <div>
-                                <p class="font-medium text-gray-900 text-sm">${m.name}</p>
-                                <p class="text-xs text-gray-500">${m.type?.includes('pdf') ? 'PDF Document' : 'Image'}</p>
-                            </div>
-                        </div>
-                        <button onclick="removeMarketingMaterial(${index})" class="text-red-500 hover:text-red-700 text-sm">
-                            Remove
-                        </button>
-                    </div>
-                    <div class="mt-3">
-                        <a href="${m.url}" target="_blank" class="text-walmart-blue hover:underline text-sm">View File →</a>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        function handleMarketingDrop(event) {
-            event.preventDefault();
-            const files = event.dataTransfer.files;
-            if (files.length > 0) {
-                handleMarketingFiles(files);
-            }
-        }
-        
-        function handleMarketingFileUpload(event) {
-            const files = event.target.files;
-            if (files.length > 0) {
-                handleMarketingFiles(files);
-            }
-            event.target.value = '';
-        }
-        
-        function handleMarketingFiles(files) {
-            if (!currentMarketingPropertyId) {
-                showToast('Please select a property first', 'error');
-                return;
-            }
-            
-            const property = adminProperties.find(p => p.id === currentMarketingPropertyId);
-            if (!property) return;
-            
-            if (!property.marketingMaterials) {
-                property.marketingMaterials = [];
-            }
-            
-            Array.from(files).forEach(file => {
-                // Create a URL for the file (in production this would upload to server)
-                const fileName = file.name;
-                const fileType = file.type;
-                
-                // For GitHub Pages, we'll save the file reference
-                // In a real app, you'd upload to a server
-                const newMaterial = {
-                    name: fileName,
-                    url: `uploads/${fileName}`,
-                    type: fileType
-                };
-                
-                property.marketingMaterials.push(newMaterial);
-                showToast(`Added: ${fileName}`);
-            });
-            
-            // Save to localStorage
-            savePropertiesToStorage();
-            loadMarketingMaterialsGrid();
-        }
-        
-        function removeMarketingMaterial(index) {
-            if (!currentMarketingPropertyId) return;
-            
-            const property = adminProperties.find(p => p.id === currentMarketingPropertyId);
-            if (!property || !property.marketingMaterials) return;
-            
-            property.marketingMaterials.splice(index, 1);
-            savePropertiesToStorage();
-            loadMarketingMaterialsGrid();
-            showToast('Marketing material removed');
-        }
-        
-        function savePropertiesToStorage() {
-            localStorage.setItem('walmartRealtyProperties', JSON.stringify(adminProperties));
-        }
-        
-        // Populate marketing select when switching to marketing tab
-        const originalSwitchTab = switchTab;
-        switchTab = function(tab) {
-            originalSwitchTab(tab);
-            if (tab === 'marketing') {
-                populateMarketingPropertySelect();
-            }
-        };
         
         // Initialize
         checkAuth();
