@@ -9467,9 +9467,9 @@ function initMainMap() {
     // Create map centered on all properties
     mainMap = L.map('main-map').setView([centerLat, centerLon], 5);
     
-    // Add default satellite tile layer
-    currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri',
+    // Add default map tile layer (OpenStreetMap)
+    currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
         maxZoom: 19
     }).addTo(mainMap);
     
