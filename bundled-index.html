@@ -9464,8 +9464,8 @@ function initMainMap() {
     const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
     const centerLon = lons.reduce((a, b) => a + b, 0) / lons.length;
     
-    // Create map centered on all properties (zoom 4 = USA fills map)
-    mainMap = L.map('main-map').setView([centerLat, centerLon], 4);
+    // Create map centered on all properties (zoom 6 = USA fills map nicely)
+    mainMap = L.map('main-map').setView([centerLat, centerLon], 6);
     
     // Add default map tile layer (OpenStreetMap)
     currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -9473,14 +9473,8 @@ function initMainMap() {
         maxZoom: 19
     }).addTo(mainMap);
     
-    // Add markers for all properties
+    // Add markers for all properties (no fitBounds - keep zoom level 6)
     addPropertyMarkers(properties);
-    
-    // Fit bounds but keep zoom level 4 minimum (USA fills map)
-    if (mainMapMarkers.length > 0) {
-        const group = L.featureGroup(mainMapMarkers);
-        mainMap.fitBounds(group.getBounds().pad(0.01), { maxZoom: 4 });
-    }
 }
 
 // Add markers for properties
