@@ -9464,8 +9464,8 @@ function initMainMap() {
     const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
     const centerLon = lons.reduce((a, b) => a + b, 0) / lons.length;
     
-    // Create map centered on continental USA, zoomed to fill the map
-    mainMap = L.map('main-map').setView([39.5, -98.5], 4);
+    // Create map centered on all properties
+    mainMap = L.map('main-map').setView([centerLat, centerLon], 5);
     
     // Add default map tile layer (OpenStreetMap)
     currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -9475,7 +9475,12 @@ function initMainMap() {
     
     // Add markers for all properties
     addPropertyMarkers(properties);
-}
+    
+    // Fit bounds to show all markers (zoomed in more)
+    if (mainMapMarkers.length > 0) {
+        const group = L.featureGroup(mainMapMarkers);
+        mainMap.fitBounds(group.getBounds().pad(0.02), { maxZoom: 6 });
+    }
 }
 
 // Add markers for properties
