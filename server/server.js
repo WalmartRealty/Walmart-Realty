@@ -12,6 +12,7 @@ const path = require('path');
 const fs = require('fs');
 
 const { db, initializeDatabase, PROPERTY_STATUSES, PROPERTY_TYPES, LISTING_TYPES } = require('./database');
+const { ipAllowlist } = require('./middlewares/ip-allowlist');
 
 // ── Fail-fast: refuse to boot without a real JWT secret ──────────────────────
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -21,6 +22,11 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Trust the first reverse-proxy hop (Azure App Gateway / nginx).
+// This makes req.ip reflect the real client IP from X-Forwarded-For
+// rather than the load-balancer's internal address.
+app.set('trust proxy', 1);
 
 // ── Allowed origins (comma-separated in ALLOWED_ORIGINS env var) ──────────────
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3001')
@@ -155,6 +161,12 @@ function logActivity(userId, action, entityType, entityId, details) {
 
 // Apply global API rate limiter to all /api/* routes
 app.use('/api/', apiLimiter);
+
+// ── Network-layer guard: admin panel + auth only reachable on Walmart network ────
+// Applies BEFORE auth middleware — off-network requests never reach login logic.
+// Set ALLOWED_ADMIN_CIDRS in .env with your Eagle WiFi / VPN CIDR blocks.
+app.use('/admin',    ipAllowlist);
+app.use('/api/auth', ipAllowlist);
 
 app.post('/api/auth/login', loginLimiter, (req, res) => {
     const { username, password } = req.body;
@@ -481,7 +493,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal server error' });
 });
 
-// Serve admin dashboard
+// Serve admin dashboard — ipAllowlist already applied via app.use('/admin') above
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'admin.html'));
 });
