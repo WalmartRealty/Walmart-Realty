@@ -1,5 +1,22 @@
+# Dependencies
 node_modules/
+
+# Environment secrets — NEVER commit
 .env
-*.log
-.DS_Store
+.env.*
+!.env.example
+
+# Database files — contain live data, excluded from VCS
+*.db
+*.sqlite
 *.db-journal
+database/*.db
+server/*.db
+
+# Uploaded files — served at runtime, not tracked in git
+uploads/
+!uploads/.gitkeep
+
+# OS / editor noise
+.DS_Store
+*.log

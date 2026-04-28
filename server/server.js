@@ -1,6 +1,10 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const xssClean = require('xss-clean');
+const hpp = require('hpp');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
@@ -9,14 +13,63 @@ const fs = require('fs');
 
 const { db, initializeDatabase, PROPERTY_STATUSES, PROPERTY_TYPES, LISTING_TYPES } = require('./database');
 
+// ── Fail-fast: refuse to boot without a real JWT secret ──────────────────────
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    console.error('FATAL: JWT_SECRET env var is missing or too short (need 32+ chars). Refusing to start.');
+    process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// ── Allowed origins (comma-separated in ALLOWED_ORIGINS env var) ──────────────
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3001')
+    .split(',')
+    .map(o => o.trim());
+
+// ── Security headers (Helmet) ─────────────────────────────────────────────────
+app.use(helmet());
+
+// ── CORS — restrict to known origins only ────────────────────────────────────
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow server-to-server (no origin) and listed origins
+        if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS: origin '${origin}' not allowed`));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+}));
+
+// ── Rate limiters ─────────────────────────────────────────────────────────────
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5,
+    message: { error: 'Too many login attempts. Try again in 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 100,
+    message: { error: 'Rate limit exceeded. Slow down!' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// ── Body parsing, XSS sanitisation, HTTP-param pollution prevention ───────────
+app.use(express.json({ limit: '1mb' }));
+app.use(xssClean());
+app.use(hpp());
+
+// ── Static files ──────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '..')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// /uploads served by authenticated route only — NOT as open static middleware
 
 // Create uploads directory
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -24,29 +77,56 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Multer configuration for file uploads
+// ── File upload configuration ───────────────────────────────────────────────────
+const ALLOWED_MIME_TYPES = new Set([
+    'image/jpeg', 'image/png', 'image/gif',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
+const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.doc', '.docx']);
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadsDir),
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
+        // Preserve only the whitelisted extension, never trust originalname directly
+        const ext = path.extname(file.originalname).toLowerCase();
+        cb(null, uniqueSuffix + ext);
+    },
 });
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
+
+function fileFilter(req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (ALLOWED_MIME_TYPES.has(file.mimetype) && ALLOWED_EXTENSIONS.has(ext)) {
+        cb(null, true);
+    } else {
+        cb(new Error(`File type not allowed: ${file.mimetype} / ${ext}`), false);
+    }
+}
+
+const upload = multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: 10 * 1024 * 1024, files: 5 }, // 10 MB, max 5 files
+});
 
 // Initialize database
 initializeDatabase();
 
-// Create default admin user if not exists
+// ── Seed default admin — credentials MUST come from env, no hardcoded fallback ──────────
 function createDefaultAdmin() {
+    if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
+        console.warn('WARNING: ADMIN_USERNAME / ADMIN_PASSWORD not set. Skipping default admin seed.');
+        return;
+    }
     const stmt = db.prepare('SELECT * FROM admin_users WHERE username = ?');
-    const existing = stmt.get(process.env.ADMIN_USERNAME || 'admin');
-    
+    const existing = stmt.get(process.env.ADMIN_USERNAME);
     if (!existing) {
-        const hash = bcrypt.hashSync(process.env.ADMIN_PASSWORD || 'admin123', 10);
+        const hash = bcrypt.hashSync(process.env.ADMIN_PASSWORD, 12);
         const insert = db.prepare('INSERT INTO admin_users (username, password_hash, name, role) VALUES (?, ?, ?, ?)');
-        insert.run(process.env.ADMIN_USERNAME || 'admin', hash, 'Administrator', 'super_admin');
-        console.log('Default admin user created');
+        insert.run(process.env.ADMIN_USERNAME, hash, 'Administrator', 'super_admin');
+        console.log('Default admin user created from env config.');
     }
 }
 createDefaultAdmin();
@@ -71,9 +151,12 @@ function logActivity(userId, action, entityType, entityId, details) {
     stmt.run(userId, action, entityType, entityId, JSON.stringify(details));
 }
 
-// ============ AUTH ROUTES ============
+// ── AUTH ROUTES ─────────────────────────────────────────────────────────────
 
-app.post('/api/auth/login', (req, res) => {
+// Apply global API rate limiter to all /api/* routes
+app.use('/api/', apiLimiter);
+
+app.post('/api/auth/login', loginLimiter, (req, res) => {
     const { username, password } = req.body;
     
     const stmt = db.prepare('SELECT * FROM admin_users WHERE username = ?');
@@ -359,19 +442,43 @@ app.get('/api/reference', (req, res) => {
     });
 });
 
-// ============ FILE UPLOAD ============
+// ── FILE UPLOAD (admin-only) ───────────────────────────────────────────────────────
 
 app.post('/api/upload', authenticateToken, upload.single('file'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
     }
-    
     res.json({
         filename: req.file.filename,
-        url: `/uploads/${req.file.filename}`,
+        url: `/api/uploads/${req.file.filename}`,
         originalName: req.file.originalname,
-        size: req.file.size
+        size: req.file.size,
     });
+});
+
+// Serve uploaded files — requires a valid JWT (files are internal-only)
+app.get('/api/uploads/:filename', authenticateToken, (req, res) => {
+    // Prevent path traversal: strip any directory separators from the param
+    const filename = path.basename(req.params.filename);
+    const filePath = path.join(uploadsDir, filename);
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+    res.sendFile(filePath);
+});
+
+// ── Multer error handler ───────────────────────────────────────────────────────────
+// Must have 4 params to be treated as an error handler by Express
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+    if (err.name === 'MulterError' || err.message?.startsWith('File type not allowed')) {
+        return res.status(400).json({ error: err.message });
+    }
+    if (err.message?.startsWith('CORS')) {
+        return res.status(403).json({ error: err.message });
+    }
+    console.error('Unhandled server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
 });
 
 // Serve admin dashboard

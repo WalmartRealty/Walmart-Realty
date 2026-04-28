@@ -4,6 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | Walmart Real Estate</title>
+    <!--
+      SECURITY NOTE — Tailwind Play CDN:
+      cdn.tailwindcss.com is a JIT (Just-In-Time) CDN that generates CSS at runtime.
+      It cannot carry a Subresource Integrity (SRI) hash because its output is dynamic.
+
+      PRODUCTION ACTION REQUIRED:
+        ✔ Use 'bundled-admin.html' for deployment — it is fully self-contained with
+          no external CDN dependencies and is the approved artifact for Azure hosting.
+        ✔ This file (admin/index.html) is for local development ONLY.
+    -->
+    <!-- CSP: restrict script/style sources even in dev -->
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://localhost:3001;">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
