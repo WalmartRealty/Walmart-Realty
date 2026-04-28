@@ -817,16 +817,6 @@
         // API base URL
         const API_BASE = window.location.origin;
         
-        // Detect static/demo hosting - includes localhost for demo mode
-        const STATIC_MODE = window.location.hostname.includes('github.io') || 
-                            window.location.hostname.includes('pages.') ||
-                            window.location.hostname === 'localhost' ||
-                            window.location.hostname === '127.0.0.1' ||
-                            window.location.protocol === 'file:';
-        
-        // Demo credentials
-        const DEMO_USER = 'admin';
-        const DEMO_PASS = 'walmart2024';
         
         // Auth token storage
         let authToken = sessionStorage.getItem('authToken');
@@ -847,27 +837,6 @@
         
         // Check auth on load
         function checkAuth() {
-            // In STATIC/DEMO mode, check if already logged in
-            if (STATIC_MODE) {
-                if (authToken === 'demo-token' && currentUser) {
-                    showDashboard();
-                    return;
-                }
-                // Show demo mode hint
-                const errorDiv = document.getElementById('login-error');
-                if (errorDiv) {
-                    errorDiv.innerHTML = `
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-                            <p class="font-semibold text-blue-800">📋 Demo Mode</p>
-                            <p class="text-blue-700 text-sm mt-1">Username: <code class="bg-blue-100 px-1 rounded">admin</code></p>
-                            <p class="text-blue-700 text-sm mt-1">Password: <code class="bg-blue-100 px-1 rounded">walmart2024</code></p>
-                        </div>
-                    `;
-                    errorDiv.classList.remove('hidden');
-                }
-                return;
-            }
-            
             if (authToken && currentUser) {
                 fetch(`${API_BASE}/api/auth/me`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
@@ -902,25 +871,7 @@
             loginBtn.disabled = true;
             loginBtn.textContent = 'Logging in...';
             
-            // DEMO MODE: Check demo credentials
-            if (STATIC_MODE) {
-                if (username === DEMO_USER && password === DEMO_PASS) {
-                    authToken = 'demo-token';
-                    currentUser = { name: 'Demo Admin', email: 'admin@walmart.com', role: 'admin' };
-                    sessionStorage.setItem('authToken', authToken);
-                    sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    showToast('Welcome to Demo Mode!', 'success');
-                    showDashboard();
-                } else {
-                    errorDiv.innerHTML = '<span class="text-red-600">Invalid credentials. Use: admin / walmart2024</span>';
-                    errorDiv.classList.remove('hidden');
-                }
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Login';
-                return;
-            }
-            
-            // SERVER MODE: API login
+            // API login
             errorDiv.classList.add('hidden');
             
             try {
@@ -1010,36 +961,6 @@
         // ========== PROPERTIES ==========
         
         async function loadProperties() {
-            // DEMO MODE: Load from properties.json
-            if (STATIC_MODE) {
-                try {
-                    const response = await fetch('properties.json');
-                    if (response.ok) {
-                        adminProperties = await response.json();
-                        adminProperties = adminProperties.map((p, i) => ({
-                            ...p,
-                            id: p.id || i + 1,
-                            type: p.property_type || p.type || 'land',
-                            listingType: p.listing_type || p.listingType || 'sale',
-                            status: p.status || 'available'
-                        }));
-                        console.log(`Loaded ${adminProperties.length} properties from properties.json`);
-                    } else {
-                        console.error('Failed to load properties.json');
-                        adminProperties = getDefaultProperties();
-                    }
-                } catch (error) {
-                    console.error('Error loading properties:', error);
-                    adminProperties = getDefaultProperties();
-                }
-                filteredProperties = [...adminProperties];
-                updateStats();
-                populateStateFilter();
-                renderPropertiesTable();
-                return;
-            }
-            
-            // SERVER MODE: Load from API
             try {
                 const response = await fetch(`${API_BASE}/api/properties`, {
                     headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
