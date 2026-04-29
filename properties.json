@@ -2515,7 +2515,14 @@
     "broker_phone": null,
     "store_number": "891",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-04-08 16:01:13"
+    "updated_at": "2026-04-08 16:01:13",
+    "marketingMaterials": [
+      {
+        "name": "IL_Sterling_Store891_Flyer.pdf",
+        "url": "marketing/IL_Sterling_Store891_Flyer.pdf",
+        "type": "application/pdf"
+      }
+    ]
   },
   {
     "id": 178,
