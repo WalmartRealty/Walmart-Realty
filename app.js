@@ -427,9 +427,10 @@ function filterByStateIcon(state) {
 function getTypeLabel(type) {
     const labels = {
         land: 'Land',
+        buildings: 'Buildings',
         outlots: 'Outlots',
-        'dark-stores': 'Dark Stores',
-        retail: 'Retail',
+        'dark-stores': 'Buildings',
+        retail: 'Buildings',
         warehouse: 'Warehouse',
         office: 'Office',
         industrial: 'Industrial'
@@ -663,6 +664,12 @@ function filterProperties() {
             if (propertyType === 'land' && property.type !== 'land') return false;
             if (propertyType === 'outlots' && (property.type !== 'land' || acres >= 5)) return false;
             if (propertyType === 'dark-stores' && property.type !== 'retail') return false;
+            if (propertyType === 'buildings') {
+                // Buildings = outlots (small land pads) + vacant stores (retail)
+                const isOutlot = property.type === 'land' && acres < 5;
+                const isDarkStore = property.type === 'retail';
+                if (!isOutlot && !isDarkStore) return false;
+            }
         }
         
         // Listing type filter
@@ -809,8 +816,29 @@ function filterByType(type) {
 
 // Filter by property type - called from footer links
 function filterByPropertyType(type) {
-    const propertyTypeSelect = document.getElementById('property-type');
-    propertyTypeSelect.value = type;
+    selectPropertyType(type);
+}
+
+// Select a property type tab — updates UI active state + runs filter
+function selectPropertyType(type) {
+    const input = document.getElementById('property-type');
+    if (input) input.value = type;
+
+    // Swap active styling across all tabs
+    document.querySelectorAll('.property-type-tab').forEach(btn => {
+        btn.classList.remove('active', 'bg-white/90', 'border-white', 'text-gray-800');
+        btn.classList.add('bg-white/20', 'border-white/40', 'text-white', 'hover:bg-white/30');
+        btn.setAttribute('aria-pressed', 'false');
+    });
+
+    const activeId = type === '' ? 'type-tab-all' : `type-tab-${type}`;
+    const activeBtn = document.getElementById(activeId);
+    if (activeBtn) {
+        activeBtn.classList.remove('bg-white/20', 'border-white/40', 'text-white', 'hover:bg-white/30');
+        activeBtn.classList.add('active', 'bg-white/90', 'border-white', 'text-gray-800');
+        activeBtn.setAttribute('aria-pressed', 'true');
+    }
+
     filterProperties();
 }
 
