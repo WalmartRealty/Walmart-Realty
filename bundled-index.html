@@ -510,6 +510,8 @@
                 <div id="states-carousel" class="states-scroll flex justify-start gap-8 overflow-x-auto pt-4 pb-4 px-10">
                     <!-- State cards will be populated by JavaScript -->
                 </div>
+                <!-- Selected state chips -->
+                <div id="state-chips-bar" class="hidden px-4 pb-4 pt-1"></div>
             </div>
         </div>
     </section>
@@ -7101,6 +7103,7 @@ function getStoredProperties() {
 let rawProperties = getStoredProperties() || [];
 let properties = [];
 let filteredProperties = [];
+let selectedStates = new Set();
 
 // Load properties from embedded data (bundled version) or properties.json file
 async function loadPropertiesFromFile() {
@@ -7448,53 +7451,110 @@ function scrollStates(direction) {
 function populateStateCarousel() {
     const carousel = document.getElementById('states-carousel');
     if (!carousel) return;
-    
-    // Get unique states from properties with counts
+
     const stateCounts = {};
     properties.forEach(p => {
-        if (p.state) {
-            stateCounts[p.state] = (stateCounts[p.state] || 0) + 1;
-        }
+        if (p.state) stateCounts[p.state] = (stateCounts[p.state] || 0) + 1;
     });
-    
     const states = Object.keys(stateCounts).sort();
     const totalProperties = properties.length;
-    
-    // Create "All" button first (Walmart Spark yellow) - inverted hover colors
+
     const allButton = `
-        <button onclick="filterByStateIcon('')" 
+        <button onclick="filterByStateIcon('')"
+                id="state-btn-all" data-state="all"
                 class="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-blue-50 hover:ring-2 hover:ring-[#ffc220] transition-all group focus:outline-none focus:ring-2 focus:ring-[#ffc220]"
                 aria-label="View all properties">
-            <div class="w-16 h-16 rounded-full bg-[#ffc220] flex items-center justify-center text-gray-900 font-bold text-lg shadow-md group-hover:shadow-lg transition-shadow">
+            <div class="state-circle w-16 h-16 rounded-full bg-[#ffc220] flex items-center justify-center text-gray-900 font-bold text-lg shadow-md group-hover:shadow-lg transition-all">
                 ALL
             </div>
             <span class="text-sm font-medium text-gray-700 group-hover:text-walmart-blue">All States</span>
             <span class="text-xs text-gray-500">${totalProperties} properties</span>
-        </button>
-    `;
-    
-    const stateButtons = states.map(state => `
-        <button onclick="filterByStateIcon('${state}')" 
+        </button>`;
+
+    const stateButtons = states.map(state => {
+        const isActive = selectedStates.has(state);
+        const circleClass = isActive
+            ? 'state-circle w-16 h-16 rounded-full bg-gradient-to-br from-[#ffc220] to-yellow-400 flex items-center justify-center text-gray-900 font-bold text-lg shadow-md ring-4 ring-white scale-110 transition-all'
+            : 'state-circle w-16 h-16 rounded-full bg-gradient-to-br from-walmart-blue to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md transition-all';
+        return `
+        <button onclick="filterByStateIcon('${state}')"
+                id="state-btn-${state}" data-state="${state}"
                 class="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-[#ffc22033] hover:ring-2 hover:ring-walmart-blue transition-all group focus:outline-none focus:ring-2 focus:ring-walmart-blue"
-                aria-label="View ${STATE_NAMES[state] || state} properties">
-            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-walmart-blue to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md group-hover:shadow-lg transition-shadow">
-                ${state}
-            </div>
+                aria-label="View ${STATE_NAMES[state] || state} properties" aria-pressed="${isActive}">
+            <div class="${circleClass}">${state}</div>
             <span class="text-sm font-medium text-gray-700 group-hover:text-walmart-blue">${STATE_NAMES[state] || state}</span>
             <span class="text-xs text-gray-500">${stateCounts[state]} ${stateCounts[state] === 1 ? 'property' : 'properties'}</span>
-        </button>
-    `).join('');
-    
+        </button>`;
+    }).join('');
+
     carousel.innerHTML = allButton + stateButtons;
+    renderStateChips();
 }
 
-// Filter by clicking state icon (no scroll)
 function filterByStateIcon(state) {
-    const stateFilter = document.getElementById('state-filter');
-    if (stateFilter) {
-        stateFilter.value = state;
-        filterProperties();
+    if (state === '') {
+        selectedStates.clear();
+    } else {
+        if (selectedStates.has(state)) {
+            selectedStates.delete(state);
+        } else {
+            selectedStates.add(state);
+        }
     }
+    updateCarouselButtonStyles();
+    syncStateDropdown();
+    renderStateChips();
+    filterProperties();
+}
+
+function updateCarouselButtonStyles() {
+    document.querySelectorAll('[data-state]').forEach(btn => {
+        const state = btn.dataset.state;
+        if (state === 'all') return;
+        const circle = btn.querySelector('.state-circle');
+        if (!circle) return;
+        const isActive = selectedStates.has(state);
+        btn.setAttribute('aria-pressed', isActive);
+        if (isActive) {
+            circle.className = 'state-circle w-16 h-16 rounded-full bg-gradient-to-br from-[#ffc220] to-yellow-400 flex items-center justify-center text-gray-900 font-bold text-lg shadow-md ring-4 ring-white scale-110 transition-all';
+        } else {
+            circle.className = 'state-circle w-16 h-16 rounded-full bg-gradient-to-br from-walmart-blue to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md transition-all';
+        }
+    });
+}
+
+function syncStateDropdown() {
+    const dropdown = document.getElementById('state-filter');
+    if (!dropdown) return;
+    if (selectedStates.size === 1) {
+        dropdown.value = [...selectedStates][0];
+    } else {
+        dropdown.value = '';
+    }
+}
+
+function renderStateChips() {
+    const bar = document.getElementById('state-chips-bar');
+    if (!bar) return;
+    if (selectedStates.size === 0) {
+        bar.innerHTML = '';
+        bar.classList.add('hidden');
+        return;
+    }
+    bar.classList.remove('hidden');
+    const chips = [...selectedStates].sort().map(state => `
+        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#0053e2] text-white text-sm font-medium shadow-sm">
+            ${STATE_NAMES[state] || state}
+            <button onclick="filterByStateIcon('${state}')" class="ml-1 hover:text-[#ffc220] transition-colors" aria-label="Remove ${state} filter">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </span>`).join('');
+    bar.innerHTML = `
+        <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm font-medium text-gray-600">Filtering by:</span>
+            ${chips}
+            <button onclick="filterByStateIcon('')" class="text-xs text-gray-500 underline hover:text-[#0053e2] transition-colors">Clear all</button>
+        </div>`;
 }
 
 // Get property type label
@@ -7727,10 +7787,9 @@ function setView(view) {
 function filterProperties() {
     const propertyType = document.getElementById('property-type').value;
     const listingType = document.getElementById('listing-type').value;
-    const stateFilter = document.getElementById('state-filter').value;
     const priceRange = document.getElementById('price-range').value;
     const sizeRange = document.getElementById('size-range').value;
-    
+
     filteredProperties = properties.filter(property => {
         // Property type filter - map dropdown values to data types
         if (propertyType) {
@@ -7742,8 +7801,8 @@ function filterProperties() {
         // Listing type filter
         if (listingType && property.listingType !== listingType) return false;
         
-        // State filter
-        if (stateFilter && property.state !== stateFilter) return false;
+        // State multi-filter
+        if (selectedStates.size > 0 && !selectedStates.has(property.state)) return false;
         
         // Price filter
         if (priceRange) {
@@ -7789,64 +7848,42 @@ function performSearch() {
         return;
     }
     
-    // Check if search term is a full state name (e.g., "Texas", "Arkansas")
     const stateAbbrFromName = STATE_ABBREVS[searchTermLower];
     if (stateAbbrFromName) {
-        console.log('Found state by full name:', searchTermLower, '->', stateAbbrFromName);
-        document.getElementById('state-filter').value = stateAbbrFromName;
+        filterByStateIcon(stateAbbrFromName);
         searchInput.value = '';
-        filterProperties();
         return;
     }
-    
-    // Check if search term is a state abbreviation (e.g., "TX", "AR")
+
     const searchTermUpper = searchTerm.toUpperCase();
     if (STATE_NAMES[searchTermUpper]) {
-        console.log('Found state by abbreviation:', searchTermUpper);
-        document.getElementById('state-filter').value = searchTermUpper;
+        filterByStateIcon(searchTermUpper);
         searchInput.value = '';
-        filterProperties();
         return;
     }
     
-    // Get current filter values
     const propertyType = document.getElementById('property-type').value;
     const listingType = document.getElementById('listing-type').value;
-    const stateFilter = document.getElementById('state-filter').value;
     const priceRange = document.getElementById('price-range').value;
     const sizeRange = document.getElementById('size-range').value;
-    
+
     filteredProperties = properties.filter(property => {
-        // Keyword search - check multiple fields including full state name
         const fullStateName = STATE_NAMES[property.state] || '';
         const searchFields = [
-            property.title,
-            property.city,
-            property.state,
-            fullStateName,
-            property.address,
-            property.description,
-            property.zoning,
-            String(property.price),
-            property.features?.join(' ')
+            property.title, property.city, property.state,
+            fullStateName, property.address, property.description,
+            property.zoning, String(property.price), property.features?.join(' ')
         ].filter(Boolean).join(' ').toLowerCase();
-        
         if (!searchFields.includes(searchTerm)) return false;
-        
-        // Apply other filters too
-        // Property type filter
+
         if (propertyType) {
             const acres = property.size_acres || property.sizeAcres || 0;
             if (propertyType === 'land' && property.type !== 'land') return false;
             if (propertyType === 'outlots' && (property.type !== 'land' || acres >= 5)) return false;
             if (propertyType === 'dark-stores' && property.type !== 'retail') return false;
         }
-        
-        // Listing type filter
         if (listingType && property.listingType !== listingType) return false;
-        
-        // State filter
-        if (stateFilter && property.state !== stateFilter) return false;
+        if (selectedStates.size > 0 && !selectedStates.has(property.state)) return false;
         
         // Price filter
         if (priceRange) {
@@ -9676,13 +9713,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         filterProperties();
     });
     
-    // Add change listeners to all filter dropdowns
-    ['property-type', 'listing-type', 'state-filter', 'price-range', 'size-range'].forEach(id => {
+    ['property-type', 'listing-type', 'price-range', 'size-range'].forEach(id => {
         const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener('change', filterProperties);
-        }
+        if (element) element.addEventListener('change', filterProperties);
     });
+
+    const stateDropdown = document.getElementById('state-filter');
+    if (stateDropdown) {
+        stateDropdown.addEventListener('change', () => {
+            const val = stateDropdown.value;
+            selectedStates.clear();
+            if (val) selectedStates.add(val);
+            updateCarouselButtonStyles();
+            renderStateChips();
+            filterProperties();
+        });
+    }
     
     document.getElementById('sort').addEventListener('change', () => {
         sortProperties();
@@ -10050,29 +10096,18 @@ function updateAutocomplete(term) {
     showAutocomplete();
 }
 
-// Select a state from autocomplete
 function selectStateSearch(state) {
     const searchInput = document.getElementById('search-input');
-    const stateFilter = document.getElementById('state-filter');
-    
-    // Set state filter dropdown
-    stateFilter.value = state;
+    filterByStateIcon(state);
     searchInput.value = '';
-    
     hideAutocomplete();
-    filterProperties();
     saveRecentSearch(state);
 }
 
-// Select a city from autocomplete
 function selectCitySearch(city, state) {
     const searchInput = document.getElementById('search-input');
-    const stateFilter = document.getElementById('state-filter');
-    
-    // Set state filter and search for city
-    stateFilter.value = state;
+    if (state && !selectedStates.has(state)) filterByStateIcon(state);
     searchInput.value = city;
-    
     hideAutocomplete();
     performSearch();
     saveRecentSearch(`${city}, ${state}`);
