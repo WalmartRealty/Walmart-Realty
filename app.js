@@ -2679,7 +2679,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         console.log(`✅ Successfully loaded ${properties.length} properties`);
-        renderProperties();
+        filterProperties(); // runs sortProperties() first — puts featured at top
         initMainMap();
     } catch (error) {
         console.error('Fatal error loading properties:', error);
