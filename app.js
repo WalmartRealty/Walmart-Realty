@@ -1042,61 +1042,32 @@ function openPropertyModal(id) {
                 </div>
             </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-                    <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-3 py-1.5">
-                        <p class="text-white text-xs font-bold uppercase tracking-wide">Lot Size</p>
-                    </div>
-                    <div class="p-4 text-center">
-                        <p class="text-xl font-bold text-gray-900 leading-tight">${property.lotSize}</p>
-                    </div>
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-gray-100 rounded-2xl shadow-md p-4 text-center">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Lot Size</p>
+                    <p class="text-xl font-bold text-gray-900 leading-tight">${property.lotSize}</p>
                 </div>
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-                    <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-3 py-1.5">
-                        <p class="text-white text-xs font-bold uppercase tracking-wide">Zoning</p>
-                    </div>
-                    <div class="p-4 text-center">
-                        <p class="text-xl font-bold text-gray-900 leading-tight">${property.zoning}</p>
-                    </div>
+                <div class="bg-gray-100 rounded-2xl shadow-md p-4 text-center">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">State</p>
+                    <p class="text-xl font-bold text-gray-900 leading-tight">${property.state}</p>
                 </div>
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-                    <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-3 py-1.5">
-                        <p class="text-white text-xs font-bold uppercase tracking-wide">State</p>
-                    </div>
-                    <div class="p-4 text-center">
-                        <p class="text-xl font-bold text-gray-900 leading-tight">${property.state}</p>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
-                    <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-3 py-1.5">
-                        <p class="text-white text-xs font-bold uppercase tracking-wide">Type</p>
-                    </div>
-                    <div class="p-4 text-center">
-                        <p class="text-xl font-bold text-[#0053e2] leading-tight">${property.type === 'retail' ? 'Retail' : 'Land'}</p>
-                    </div>
+                <div class="bg-gray-100 rounded-2xl shadow-md p-4 text-center">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Type</p>
+                    <p class="text-xl font-bold text-[#0053e2] leading-tight">${property.type === 'retail' ? 'Retail' : 'Land'}</p>
                 </div>
             </div>
 
-            <!-- Contact About Property Card -->
-            <div class="mb-6">
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
-                    <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-6 py-3.5">
-                        <h3 class="text-white font-bold text-base tracking-wide uppercase">Contact About Property</h3>
-                    </div>
-                    <div class="p-6 flex flex-col items-center text-center gap-3">
-                        <p class="text-gray-500 text-sm">Interested in this property? Submit a Letter of Intent or reach out to the broker directly.</p>
-                        <button onclick="openLOIModal(${property.id})"
-                           class="flex items-center gap-2 px-6 py-3 bg-[#0053e2] hover:bg-[#003eb0] text-white font-semibold rounded-xl transition-colors text-sm focus-visible">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                            Submit Letter of Intent
-                        </button>
-                    </div>
-                </div>
+            <!-- Contact About Property -->
+            <div class="flex justify-center mb-6">
+                <button onclick="openLOIModal(${property.id})"
+                   class="bg-[#0053e2] hover:bg-[#003eb0] text-white font-semibold py-3 px-8 rounded-xl transition-colors focus-visible text-base">
+                    Contact About Property
+                </button>
             </div>
             
             <!-- Marketing Materials Section -->
             <div id="marketing-materials-section" class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">📎 Marketing Materials</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Marketing Materials</h3>
                 <div id="marketing-materials-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <p class="text-gray-500">Loading materials...</p>
                 </div>
@@ -1125,7 +1096,7 @@ function openPropertyModal(id) {
                                 <p class="font-bold text-gray-900 text-lg">Walmart Realty</p>
                                 <p class="text-gray-400 text-sm mt-0.5">Commercial Real Estate</p>
                             </div>
-                            <a href="mailto:realestate@walmart.com" class="flex items-center gap-2 px-5 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Contact Us</a>
+                            <a href="mailto:realestatedispositions@walmart.com" class="flex items-center gap-2 px-5 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Contact Us</a>
                         `}
                     </div>
                 </div>
@@ -1539,7 +1510,7 @@ async function loadBrokerContact(state, propertyId) {
             <p class="font-bold text-gray-900 text-lg">Walmart Realty</p>
             <p class="text-gray-400 text-sm mt-0.5">Commercial Real Estate</p>
         </div>
-        <a href="mailto:realestate@walmart.com" class="flex items-center gap-2 px-5 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors">
+        <a href="mailto:realestatedispositions@walmart.com" class="flex items-center gap-2 px-5 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             Contact Us
         </a>
@@ -1548,12 +1519,12 @@ async function loadBrokerContact(state, propertyId) {
 
 // LOI Documents available
 const loiDocuments = [
-    { id: 1, name: 'Building Lease', file: 'loi-documents/Building Lease .docx', description: 'For leasing building space', icon: '🏢' },
-    { id: 2, name: 'Building Sale', file: 'loi-documents/Building Sale LOI docx.docx', description: 'For purchasing a building', icon: '🏪' },
-    { id: 3, name: 'Building Sublease', file: 'loi-documents/Building Sublease LOI.docx', description: 'For subleasing building space', icon: '🔄' },
-    { id: 6, name: 'Large Tract Land Sale', file: 'loi-documents/Large Tract Land Sale LOI.docx', description: 'For purchasing large land tracts', icon: '🌾' },
-    { id: 7, name: 'Outlot Ground Lease', file: 'loi-documents/Outlot Ground Lease LOI.docx', description: 'For ground lease on outlot parcels', icon: '📍' },
-    { id: 8, name: 'Outlot Land Sale', file: 'loi-documents/Outlot Land Sale LOI .docx', description: 'For purchasing outlot parcels', icon: '🏞️' }
+    { id: 1, name: 'Building Lease', file: 'loi-documents/Building Lease .docx', description: 'For leasing building space' },
+    { id: 2, name: 'Building Sale', file: 'loi-documents/Building Sale LOI docx.docx', description: 'For purchasing a building' },
+    { id: 3, name: 'Building Sublease', file: 'loi-documents/Building Sublease LOI.docx', description: 'For subleasing building space' },
+    { id: 6, name: 'Large Tract Land Sale', file: 'loi-documents/Large Tract Land Sale LOI.docx', description: 'For purchasing large land tracts' },
+    { id: 7, name: 'Outlot Ground Lease', file: 'loi-documents/Outlot Ground Lease LOI.docx', description: 'For ground lease on outlot parcels' },
+    { id: 8, name: 'Outlot Land Sale', file: 'loi-documents/Outlot Land Sale LOI .docx', description: 'For purchasing outlot parcels' }
 ];
 
 // Current property for LOI
@@ -1569,7 +1540,7 @@ function openLOIModal(propertyId) {
     content.innerHTML = `
         <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
             <div>
-                <h2 id="loi-modal-title" class="text-xl font-bold text-gray-900">Submit Letter of Intent</h2>
+                <h2 id="loi-modal-title" class="text-2xl font-bold text-gray-900">Submit Letter of Intent</h2>
                 <p class="text-sm text-gray-600">${property.city}, ${property.state} - ${property.lotSize}</p>
             </div>
             <button onclick="closeLOIModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Close modal">
@@ -1584,14 +1555,16 @@ function openLOIModal(propertyId) {
             
             <div class="grid gap-3">
                 ${loiDocuments.map(loi => `
-                    <button onclick="openLOIForm(${loi.id})" 
-                            class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-walmart-blue hover:bg-blue-50 transition-all text-left group">
-                        <div class="text-3xl">${loi.icon}</div>
-                        <div class="flex-1">
-                            <h3 class="font-semibold text-gray-900 group-hover:text-walmart-blue">${loi.name}</h3>
-                            <p class="text-sm text-gray-600">${loi.description}</p>
+                    <button onclick="openLOIForm(${loi.id})"
+                            class="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl hover:border-[#0053e2] hover:shadow-md transition-all text-left group">
+                        <div class="w-10 h-10 rounded-lg bg-gray-100 group-hover:bg-blue-50 flex items-center justify-center shrink-0 transition-colors">
+                            <svg class="h-5 w-5 text-gray-500 group-hover:text-[#0053e2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         </div>
-                        <svg class="h-5 w-5 text-gray-400 group-hover:text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-900 group-hover:text-[#0053e2] transition-colors">${loi.name}</h3>
+                            <p class="text-sm text-gray-500">${loi.description}</p>
+                        </div>
+                        <svg class="h-5 w-5 text-gray-300 group-hover:text-[#0053e2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
                     </button>
@@ -1600,7 +1573,9 @@ function openLOIModal(propertyId) {
             
             <div class="mt-6 pt-6 border-t">
                 <p class="text-sm text-gray-500 text-center">
-                    Need help choosing? Contact us at <a href="mailto:realestate@walmart.com" class="text-walmart-blue hover:underline">realestate@walmart.com</a>
+                    Need help choosing? ${property.broker_email
+                        ? `Contact the broker at <a href="mailto:${property.broker_email}" class="text-[#0053e2] hover:underline">${property.broker_email}</a>`
+                        : `Contact us at <a href="mailto:realestatedispositions@walmart.com" class="text-[#0053e2] hover:underline">realestatedispositions@walmart.com</a>`}
                 </p>
             </div>
         </div>
@@ -2188,7 +2163,7 @@ function formatFileSize(bytes) {
 
 // Broker email mapping by state/region (to be configured)
 const brokerEmails = {
-    default: 'realestate@walmart.com',
+    default: 'realestatedispositions@walmart.com',
     // Add market-specific emails here later
     // 'TX': 'texas.broker@walmart.com',
     // 'AR': 'arkansas.broker@walmart.com',
