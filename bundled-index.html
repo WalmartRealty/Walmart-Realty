@@ -8504,6 +8504,15 @@ async function loadMarketingMaterials(propertyId) {
     }
 }
 
+// Shared helper — renders photo or initials circle for broker card
+function brokerAvatarHtml(name, photoUrl) {
+    if (photoUrl) {
+        return `<img src="${photoUrl}" alt="${name}" class="w-16 h-16 rounded-full object-cover object-top shadow-md shrink-0 border-2 border-white">`;
+    }
+    const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    return `<div class="w-16 h-16 rounded-full bg-[#0053e2] flex items-center justify-center text-white text-xl font-bold shadow-md shrink-0">${initials}</div>`;
+}
+
 // Load broker contact info for a state (with optional propertyId for embedded data)
 async function loadBrokerContact(state, propertyId) {
     const container = document.getElementById('broker-contact-container');
@@ -8521,9 +8530,8 @@ async function loadBrokerContact(state, propertyId) {
         // Check for broker object first
         if (property && property.broker && property.broker.name) {
             const b = property.broker;
-            const initials = b.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
             container.innerHTML = `
-                <div class="w-16 h-16 rounded-full bg-[#0053e2] flex items-center justify-center text-white text-xl font-bold shadow-md shrink-0">${initials}</div>
+                ${brokerAvatarHtml(b.name, b.photo || null)}
                 <div>
                     <p class="font-bold text-gray-900 text-xl leading-tight">${b.name}</p>
                     <p class="text-gray-400 text-sm mt-0.5">${b.company || 'Walmart Realty'}</p>
@@ -8538,9 +8546,8 @@ async function loadBrokerContact(state, propertyId) {
         
         // Fallback: check for broker_name, broker_email, etc. fields directly
         if (property && property.broker_name) {
-            const initials = property.broker_name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
             container.innerHTML = `
-                <div class="w-16 h-16 rounded-full bg-[#0053e2] flex items-center justify-center text-white text-xl font-bold shadow-md shrink-0">${initials}</div>
+                ${brokerAvatarHtml(property.broker_name, property.broker_photo || null)}
                 <div>
                     <p class="font-bold text-gray-900 text-xl leading-tight">${property.broker_name}</p>
                     <p class="text-gray-400 text-sm mt-0.5">${property.broker_company || 'Walmart Realty'}</p>
