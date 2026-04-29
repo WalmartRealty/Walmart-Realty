@@ -2523,7 +2523,8 @@
         "type": "application/pdf"
       }
     ],
-    "broker_photo": "marketing/jim-sakanich.webp"
+    "broker_photo": "marketing/jim-sakanich.webp",
+    "featured": true
   },
   {
     "id": 178,

@@ -7363,8 +7363,8 @@ async function fetchPropertiesFromAPI() {
                         broker_company: p.broker_company || '',
                         broker_photo: p.broker_photo || null,
                         zoning: p.zoning || 'Commercial',
-                        features: ['Commercial Zoning', 'Utilities Available'],
-                        featured: false,
+                        features: p.features || ['Commercial Zoning', 'Utilities Available'],
+                        featured: p.featured === 1 || p.featured === true,
                         zip: getZipForState(p.state)
                     });
                 });
@@ -8025,6 +8025,9 @@ function sortProperties() {
                 return a.state.localeCompare(b.state);
             case 'newest':
             default:
+                // Featured properties always surface first
+                if (a.featured && !b.featured) return -1;
+                if (!a.featured && b.featured) return 1;
                 return b.id - a.id; // Higher ID = newer
         }
     });
