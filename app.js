@@ -1043,54 +1043,56 @@ function openPropertyModal(id) {
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-gray-50 p-4 rounded-lg text-center">
-                    <p class="text-2xl font-bold text-gray-900">${property.lotSize}</p>
-                    <p class="text-sm text-gray-500">Lot Size</p>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-3 py-1.5">
+                        <p class="text-white text-xs font-bold uppercase tracking-wide">Lot Size</p>
+                    </div>
+                    <div class="p-4 text-center">
+                        <p class="text-xl font-bold text-gray-900 leading-tight">${property.lotSize}</p>
+                    </div>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg text-center">
-                    <p class="text-2xl font-bold text-gray-900">${property.zoning}</p>
-                    <p class="text-sm text-gray-500">Zoning</p>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-3 py-1.5">
+                        <p class="text-white text-xs font-bold uppercase tracking-wide">Zoning</p>
+                    </div>
+                    <div class="p-4 text-center">
+                        <p class="text-xl font-bold text-gray-900 leading-tight">${property.zoning}</p>
+                    </div>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg text-center">
-                    <p class="text-2xl font-bold text-gray-900">${property.state}</p>
-                    <p class="text-sm text-gray-500">State</p>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-3 py-1.5">
+                        <p class="text-white text-xs font-bold uppercase tracking-wide">State</p>
+                    </div>
+                    <div class="p-4 text-center">
+                        <p class="text-xl font-bold text-gray-900 leading-tight">${property.state}</p>
+                    </div>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg text-center">
-                    <p class="text-2xl font-bold text-walmart-blue">${property.type === 'retail' ? 'Retail' : 'Land'}</p>
-                    <p class="text-sm text-gray-500">Property Type</p>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden">
+                    <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-3 py-1.5">
+                        <p class="text-white text-xs font-bold uppercase tracking-wide">Type</p>
+                    </div>
+                    <div class="p-4 text-center">
+                        <p class="text-xl font-bold text-[#0053e2] leading-tight">${property.type === 'retail' ? 'Retail' : 'Land'}</p>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Contact Button - Centered -->
-            <div class="flex justify-center mb-6">
-                <button onclick="openLOIModal(${property.id})" 
-                   class="bg-walmart-blue hover:bg-walmart-dark text-white text-center font-semibold py-3 px-8 rounded-lg transition-colors focus-visible text-lg">
-                    Contact About Property
-                </button>
-            </div>
-            
-            ${property.description ? `
+
+            <!-- Contact About Property Card -->
             <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                <p class="text-gray-600">${property.description}</p>
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-6 py-3.5">
+                        <h3 class="text-white font-bold text-base tracking-wide uppercase">Contact About Property</h3>
+                    </div>
+                    <div class="p-6 flex flex-col items-center text-center gap-3">
+                        <p class="text-gray-500 text-sm">Interested in this property? Submit a Letter of Intent or reach out to the broker directly.</p>
+                        <button onclick="openLOIModal(${property.id})"
+                           class="flex items-center gap-2 px-6 py-3 bg-[#0053e2] hover:bg-[#003eb0] text-white font-semibold rounded-xl transition-colors text-sm focus-visible">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            Submit Letter of Intent
+                        </button>
+                    </div>
+                </div>
             </div>
-            ` : ''}
-            
-            ${property.features && property.features.length > 0 ? `
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Features</h3>
-                <ul class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    ${property.features.map(feature => `
-                        <li class="flex items-center gap-2 text-gray-600">
-                            <svg class="h-5 w-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            ${feature}
-                        </li>
-                    `).join('')}
-                </ul>
-            </div>
-            ` : ''}
             
             <!-- Marketing Materials Section -->
             <div id="marketing-materials-section" class="mb-6">
