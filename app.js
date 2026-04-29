@@ -27,7 +27,10 @@ function getStoredProperties() {
 let rawProperties = getStoredProperties() || [];
 let properties = [];
 let filteredProperties = [];
-let selectedStates = new Set(); // tracks multi-state carousel selection
+let selectedStates = new Set();
+let selectedPrices = new Set();
+let selectedSizes = new Set();
+let selectedListingTypes = new Set();
 
 // Load properties from embedded data (bundled version) or properties.json file
 async function loadPropertiesFromFile() {
@@ -363,6 +366,60 @@ const STATE_NAMES = {
 };
 
 // Scroll the states carousel
+// Open/close a filter panel; close all others first
+function toggleFilterDropdown(panelId) {
+    document.querySelectorAll('.filter-panel').forEach(p => {
+        if (p.id !== panelId) p.classList.add('hidden');
+    });
+    document.getElementById(panelId)?.classList.toggle('hidden');
+}
+
+// Generic checkbox toggle for price / size / listing filters
+function toggleFilterCheck(filterType, value, checked) {
+    const map = { price: selectedPrices, size: selectedSizes, listing: selectedListingTypes };
+    const badgeMap = { price: 'price-filter-badge', size: 'size-filter-badge', listing: 'listing-filter-badge' };
+    const set = map[filterType];
+    if (!set) return;
+    checked ? set.add(value) : set.delete(value);
+    updateFilterBadge(badgeMap[filterType], set.size);
+    filterProperties();
+}
+
+// Show/hide the count badge on a filter button
+function updateFilterBadge(badgeId, count) {
+    const badge = document.getElementById(badgeId);
+    if (!badge) return;
+    if (count > 0) {
+        badge.textContent = count;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+// Clear all active filters and reset the UI
+function showAllProperties() {
+    selectedStates.clear();
+    selectedPrices.clear();
+    selectedSizes.clear();
+    selectedListingTypes.clear();
+    // Uncheck all filter checkboxes
+    document.querySelectorAll('.filter-panel input[type="checkbox"]').forEach(cb => cb.checked = false);
+    ['price-filter-badge','size-filter-badge','listing-filter-badge','state-filter-badge'].forEach(id => updateFilterBadge(id, 0));
+    updateCarouselButtonStyles();
+    syncStateDropdown();
+    renderStateChips();
+    filterProperties();
+}
+
+// Close all filter panels when clicking outside
+document.addEventListener('click', e => {
+    if (!e.target.closest('.filter-panel') && !e.target.closest('[onclick^="toggleFilterDropdown"]')) {
+        document.querySelectorAll('.filter-panel').forEach(p => p.classList.add('hidden'));
+    }
+});
+
+// Scroll the state carousel
 function scrollStates(direction) {
     const carousel = document.getElementById('states-carousel');
     if (carousel) {
@@ -451,15 +508,13 @@ function updateCarouselButtonStyles() {
     });
 }
 
-// Sync the state dropdown to reflect current selectedStates
+// Sync the state filter dropdown badge + carousel after external change
 function syncStateDropdown() {
-    const dropdown = document.getElementById('state-filter');
-    if (!dropdown) return;
-    if (selectedStates.size === 1) {
-        dropdown.value = [...selectedStates][0];
-    } else {
-        dropdown.value = '';
-    }
+    updateFilterBadge('state-filter-badge', selectedStates.size);
+    // Sync checkboxes in the state panel
+    document.querySelectorAll('#state-checkboxes input[type="checkbox"]').forEach(cb => {
+        cb.checked = selectedStates.has(cb.value);
+    });
 }
 
 // Render chips below the carousel showing which states are active
@@ -716,48 +771,46 @@ function setView(view) {
 // Filter properties
 function filterProperties() {
     const propertyType = document.getElementById('property-type').value;
-    const listingType = document.getElementById('listing-type').value;
-    const priceRange = document.getElementById('price-range').value;
-    const sizeRange = document.getElementById('size-range').value;
 
     filteredProperties = properties.filter(property => {
-        // Property type filter - map dropdown values to data types
+        // Property type
         if (propertyType) {
             const type = property.type;
-            // Land = all land parcels including outlots regardless of size
             if (propertyType === 'land' && type !== 'land') return false;
-            // Buildings = retail / dark-store buildings
             if (propertyType === 'buildings' && type !== 'retail') return false;
         }
-        
-        // Listing type filter
-        if (listingType && property.listingType !== listingType) return false;
-        
-        // State multi-filter
+
+        // Listing type (OR across selections)
+        if (selectedListingTypes.size > 0 && !selectedListingTypes.has(property.listingType)) return false;
+
+        // State (OR across selections)
         if (selectedStates.size > 0 && !selectedStates.has(property.state)) return false;
-        
-        // Price filter
-        if (priceRange) {
-            const [min, max] = priceRange.split('-').map(p => {
-                if (p.includes('+')) return Infinity;
-                return parseInt(p);
+
+        // Price (OR across selected ranges)
+        if (selectedPrices.size > 0) {
+            const price = property.price || 0;
+            const matchesPrice = [...selectedPrices].some(range => {
+                if (range.endsWith('+')) return price >= parseInt(range);
+                const [min, max] = range.split('-').map(Number);
+                return price >= min && price <= max;
             });
-            if (property.price < min || property.price > max) return false;
+            if (!matchesPrice) return false;
         }
-        
-        // Size filter (acres)
-        if (sizeRange) {
+
+        // Size (OR across selected ranges)
+        if (selectedSizes.size > 0) {
             const acres = property.size_acres || property.sizeAcres || 0;
-            if (sizeRange === '0-1' && acres >= 1) return false;
-            if (sizeRange === '1-5' && (acres < 1 || acres >= 5)) return false;
-            if (sizeRange === '5-20' && (acres < 5 || acres >= 20)) return false;
-            if (sizeRange === '20+' && acres < 20) return false;
+            const matchesSize = [...selectedSizes].some(range => {
+                if (range === '20+') return acres >= 20;
+                const [min, max] = range.split('-').map(Number);
+                return acres >= min && acres < max;
+            });
+            if (!matchesSize) return false;
         }
-        
+
         return true;
     });
-    
-    // Sort and render
+
     sortProperties();
     renderProperties();
     updateMapMarkers();
@@ -797,10 +850,8 @@ function performSearch() {
     }
     
     // Get current filter values
+    // Get current filter values
     const propertyType = document.getElementById('property-type').value;
-    const listingType = document.getElementById('listing-type').value;
-    const priceRange = document.getElementById('price-range').value;
-    const sizeRange = document.getElementById('size-range').value;
 
     filteredProperties = properties.filter(property => {
         // Keyword search
@@ -818,8 +869,26 @@ function performSearch() {
             if (propertyType === 'outlots' && (property.type !== 'land' || acres >= 5)) return false;
             if (propertyType === 'dark-stores' && property.type !== 'retail') return false;
         }
-        if (listingType && property.listingType !== listingType) return false;
+        if (selectedListingTypes.size > 0 && !selectedListingTypes.has(property.listingType)) return false;
         if (selectedStates.size > 0 && !selectedStates.has(property.state)) return false;
+        if (selectedPrices.size > 0) {
+            const price = property.price || 0;
+            const ok = [...selectedPrices].some(range => {
+                if (range.endsWith('+')) return price >= parseInt(range);
+                const [mn, mx] = range.split('-').map(Number);
+                return price >= mn && price <= mx;
+            });
+            if (!ok) return false;
+        }
+        if (selectedSizes.size > 0) {
+            const acres = property.size_acres || property.sizeAcres || 0;
+            const ok = [...selectedSizes].some(range => {
+                if (range === '20+') return acres >= 20;
+                const [mn, mx] = range.split('-').map(Number);
+                return acres >= mn && acres < mx;
+            });
+            if (!ok) return false;
+        }
         
         // Price filter
         if (priceRange) {
@@ -847,10 +916,17 @@ function performSearch() {
     updateMapMarkers();
 }
 
-// Filter by listing type (For Sale / For Lease) - called from nav links
+// Filter by listing type from nav links
 function filterByType(type) {
-    const listingTypeSelect = document.getElementById('listing-type');
-    listingTypeSelect.value = type;
+    if (type) {
+        selectedListingTypes.clear();
+        selectedListingTypes.add(type);
+        // Sync the checkbox in the panel
+        document.querySelectorAll('#listing-filter-panel input[type="checkbox"]').forEach(cb => {
+            cb.checked = cb.value === type;
+        });
+        updateFilterBadge('listing-filter-badge', selectedListingTypes.size);
+    }
     filterProperties();
 }
 
@@ -2538,24 +2614,26 @@ function updateMapMarkers() {
     }
 }
 
-// Populate state filter dropdown
+// Populate state filter checkbox panel
 function populateStateFilter() {
-    const stateFilter = document.getElementById('state-filter');
-    if (!stateFilter) return;
-    
-    // Get unique states from properties
-    const states = [...new Set(properties.map(p => p.state))].sort();
-    
-    // Clear existing options except the first one
-    stateFilter.innerHTML = '<option value="">All States</option>';
-    
-    // Add state options
-    states.forEach(state => {
-        const option = document.createElement('option');
-        option.value = state;
-        option.textContent = state;
-        stateFilter.appendChild(option);
-    });
+    const container = document.getElementById('state-checkboxes');
+    if (!container) return;
+    const states = [...new Set(properties.map(p => p.state).filter(Boolean))].sort();
+    container.innerHTML = states.map(state => `
+        <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+            <input type="checkbox" value="${state}" onchange="toggleStateCheck(this.value,this.checked)"
+                   class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]" ${selectedStates.has(state) ? 'checked' : ''}>
+            ${STATE_NAMES[state] || state} (${state})
+        </label>`).join('');
+}
+
+// Toggle a state from the filter dropdown panel
+function toggleStateCheck(state, checked) {
+    checked ? selectedStates.add(state) : selectedStates.delete(state);
+    updateFilterBadge('state-filter-badge', selectedStates.size);
+    updateCarouselButtonStyles();
+    renderStateChips();
+    filterProperties();
 }
 
 // Event listeners
@@ -2631,20 +2709,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (element) element.addEventListener('change', filterProperties);
     });
 
-    // State dropdown syncs selectedStates then filters
-    const stateDropdown = document.getElementById('state-filter');
-    if (stateDropdown) {
-        stateDropdown.addEventListener('change', () => {
-            const val = stateDropdown.value;
-            selectedStates.clear();
-            if (val) selectedStates.add(val);
-            updateCarouselButtonStyles();
-            renderStateChips();
-            filterProperties();
-        });
-    }
-    
-    document.getElementById('sort').addEventListener('change', () => {
+    // Change listeners removed — multi-select panels handle their own updates
+    // Kept only for sort dropdown which is still a standard select
+    document.getElementById('sort')?.addEventListener('change', () => {
         sortProperties();
         renderProperties();
     });

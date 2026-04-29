@@ -423,48 +423,107 @@
             <form id="search-form" class="grid grid-cols-2 md:grid-cols-4 gap-4" role="search">
                 <!-- Hidden Property Type (controlled by icon tabs) -->
                 <input type="hidden" id="property-type" value="">
-                
-                <!-- State -->
-                <div>
-                    <label for="state-filter" class="block text-sm font-medium text-gray-700 mb-1">State</label>
-                    <select id="state-filter" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                        <option value="">All States</option>
-                        <!-- Populated by JavaScript -->
-                    </select>
+
+                <!-- State Multi-Select -->
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                    <button type="button" onclick="toggleFilterDropdown('state-filter-panel')"
+                            class="w-full flex items-center justify-between px-4 py-2.5 border border-gray-300 rounded-lg bg-white hover:border-[#0053e2] focus:outline-none focus:ring-2 focus:ring-[#0053e2] text-sm text-gray-700 transition-colors">
+                        <span>All States</span>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span id="state-filter-badge" class="hidden px-1.5 py-0.5 rounded-full bg-[#0053e2] text-white text-xs font-bold"></span>
+                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </button>
+                    <div id="state-filter-panel" class="filter-panel hidden absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                        <div id="state-checkboxes" class="p-2 space-y-0.5">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- Price Range -->
-                <div>
-                    <label for="price-range" class="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
-                    <select id="price-range" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                        <option value="">Any Price</option>
-                        <option value="0-500000">Under $500K</option>
-                        <option value="500000-1000000">$500K - $1M</option>
-                        <option value="1000000-5000000">$1M - $5M</option>
-                        <option value="5000000-10000000">$5M - $10M</option>
-                        <option value="10000000+">$10M+</option>
-                    </select>
+
+                <!-- Price Range Multi-Select -->
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+                    <button type="button" onclick="toggleFilterDropdown('price-filter-panel')"
+                            class="w-full flex items-center justify-between px-4 py-2.5 border border-gray-300 rounded-lg bg-white hover:border-[#0053e2] focus:outline-none focus:ring-2 focus:ring-[#0053e2] text-sm text-gray-700 transition-colors">
+                        <span>Any Price</span>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span id="price-filter-badge" class="hidden px-1.5 py-0.5 rounded-full bg-[#0053e2] text-white text-xs font-bold"></span>
+                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </button>
+                    <div id="price-filter-panel" class="filter-panel hidden absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl">
+                        <div class="p-2 space-y-0.5">
+                            <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+                                <input type="checkbox" value="0-500000" onchange="toggleFilterCheck('price',this.value,this.checked)" class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]"> Under $500K
+                            </label>
+                            <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+                                <input type="checkbox" value="500000-1000000" onchange="toggleFilterCheck('price',this.value,this.checked)" class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]"> $500K &ndash; $1M
+                            </label>
+                            <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+                                <input type="checkbox" value="1000000-5000000" onchange="toggleFilterCheck('price',this.value,this.checked)" class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]"> $1M &ndash; $5M
+                            </label>
+                            <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+                                <input type="checkbox" value="5000000-10000000" onchange="toggleFilterCheck('price',this.value,this.checked)" class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]"> $5M &ndash; $10M
+                            </label>
+                            <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+                                <input type="checkbox" value="10000000+" onchange="toggleFilterCheck('price',this.value,this.checked)" class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]"> $10M+
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- Size Range -->
-                <div>
-                    <label for="size-range" class="block text-sm font-medium text-gray-700 mb-1">Size (Acres)</label>
-                    <select id="size-range" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                        <option value="">Any Size</option>
-                        <option value="0-1">Under 1 acre</option>
-                        <option value="1-5">1 - 5 acres</option>
-                        <option value="5-20">5 - 20 acres</option>
-                        <option value="20+">20+ acres</option>
-                    </select>
+
+                <!-- Size (Acres) Multi-Select -->
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Size (Acres)</label>
+                    <button type="button" onclick="toggleFilterDropdown('size-filter-panel')"
+                            class="w-full flex items-center justify-between px-4 py-2.5 border border-gray-300 rounded-lg bg-white hover:border-[#0053e2] focus:outline-none focus:ring-2 focus:ring-[#0053e2] text-sm text-gray-700 transition-colors">
+                        <span>Any Size</span>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span id="size-filter-badge" class="hidden px-1.5 py-0.5 rounded-full bg-[#0053e2] text-white text-xs font-bold"></span>
+                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </button>
+                    <div id="size-filter-panel" class="filter-panel hidden absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl">
+                        <div class="p-2 space-y-0.5">
+                            <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+                                <input type="checkbox" value="0-1" onchange="toggleFilterCheck('size',this.value,this.checked)" class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]"> Under 1 acre
+                            </label>
+                            <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+                                <input type="checkbox" value="1-5" onchange="toggleFilterCheck('size',this.value,this.checked)" class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]"> 1 &ndash; 5 acres
+                            </label>
+                            <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+                                <input type="checkbox" value="5-20" onchange="toggleFilterCheck('size',this.value,this.checked)" class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]"> 5 &ndash; 20 acres
+                            </label>
+                            <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+                                <input type="checkbox" value="20+" onchange="toggleFilterCheck('size',this.value,this.checked)" class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]"> 20+ acres
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- Listing Type -->
-                <div>
-                    <label for="listing-type" class="block text-sm font-medium text-gray-700 mb-1">Listing Type</label>
-                    <select id="listing-type" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                        <option value="">All Properties</option>
-                        <option value="sale">For Sale</option>
-                    </select>
+
+                <!-- Listing Type Multi-Select -->
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Listing Type</label>
+                    <button type="button" onclick="toggleFilterDropdown('listing-filter-panel')"
+                            class="w-full flex items-center justify-between px-4 py-2.5 border border-gray-300 rounded-lg bg-white hover:border-[#0053e2] focus:outline-none focus:ring-2 focus:ring-[#0053e2] text-sm text-gray-700 transition-colors">
+                        <span>All Types</span>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span id="listing-filter-badge" class="hidden px-1.5 py-0.5 rounded-full bg-[#0053e2] text-white text-xs font-bold"></span>
+                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </button>
+                    <div id="listing-filter-panel" class="filter-panel hidden absolute z-50 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl">
+                        <div class="p-2 space-y-0.5">
+                            <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+                                <input type="checkbox" value="sale" onchange="toggleFilterCheck('listing',this.value,this.checked)" class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]"> For Sale
+                            </label>
+                            <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+                                <input type="checkbox" value="lease" onchange="toggleFilterCheck('listing',this.value,this.checked)" class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]"> For Lease
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
