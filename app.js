@@ -268,6 +268,7 @@ async function fetchPropertiesFromAPI() {
                         broker_email: p.broker_email || '',
                         broker_phone: p.broker_phone || '',
                         broker_company: p.broker_company || '',
+                        broker_photo: p.broker_photo || null,
                         zoning: p.zoning || 'Commercial',
                         features: ['Commercial Zoning', 'Utilities Available'],
                         featured: false,
@@ -1082,7 +1083,9 @@ function openPropertyModal(id) {
                     </div>
                     <div id="broker-contact-container" class="p-7 flex flex-col items-center text-center gap-4">
                         ${property.broker_name ? `
-                            <div class="w-16 h-16 rounded-full bg-[#0053e2] flex items-center justify-center text-white text-xl font-bold shadow-md shrink-0">${property.broker_name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}</div>
+                            ${property.broker_photo
+                                ? `<img src="${property.broker_photo}" alt="${property.broker_name}" class="w-16 h-16 rounded-full object-cover object-top shadow-md shrink-0 border-2 border-white">`
+                                : `<div class="w-16 h-16 rounded-full bg-[#0053e2] flex items-center justify-center text-white text-xl font-bold shadow-md shrink-0">${property.broker_name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}</div>`}
                             <div>
                                 <p class="font-bold text-gray-900 text-xl leading-tight">${property.broker_name}</p>
                                 <p class="text-gray-400 text-sm mt-0.5">${property.broker_company || 'Walmart Realty'}</p>
