@@ -238,21 +238,53 @@ let currentView = 'grid';
 // Fetch properties from API, file, or localStorage
 async function fetchPropertiesFromAPI() {
     console.log('fetchPropertiesFromAPI called');
-    
-    // 1. Check localStorage first (admin-managed properties)
-    const stored = getStoredProperties();
-    if (stored && stored.length > 0) {
-        console.log(`Loading ${stored.length} properties from localStorage`);
-        rawProperties = stored;
-        properties.length = 0;
-        properties.push(...transformProperties(rawProperties));
-        filteredProperties = [...properties];
-        console.log('Properties loaded from localStorage:', properties.length);
-        return;
+
+    // 1. Try the live API first — source of truth when server is running.
+    //    This ensures DB ids are always used so marketing materials, broker
+    //    info, and other relational data match up correctly.
+    try {
+        const response = await fetch(`${window.location.origin}/api/properties`, { cache: 'no-store' });
+        if (response.ok) {
+            const apiProps = await response.json();
+            if (apiProps && apiProps.length > 0) {
+                properties.length = 0;
+                apiProps.forEach(p => {
+                    properties.push({
+                        id: p.id,
+                        city: p.city || '',
+                        state: p.state || '',
+                        address: p.address || '',
+                        size_acres: p.size_acres || 0,
+                        lotSize: p.size_acres ? `${p.size_acres} acres` : 'N/A',
+                        type: p.property_type || 'land',
+                        listingType: p.listing_type || 'sale',
+                        price: p.price || 0,
+                        status: p.status || 'available',
+                        description: p.description || `Marketable property in ${p.city}, ${p.state}`,
+                        lat: p.lat || 0,
+                        lon: p.lon || 0,
+                        store_number: p.store_number || '',
+                        broker_name: p.broker_name || '',
+                        broker_email: p.broker_email || '',
+                        broker_phone: p.broker_phone || '',
+                        broker_company: p.broker_company || '',
+                        zoning: p.zoning || 'Commercial',
+                        features: ['Commercial Zoning', 'Utilities Available'],
+                        featured: false,
+                        zip: getZipForState(p.state)
+                    });
+                });
+                console.log(`Loaded ${properties.length} properties from API`);
+                filteredProperties = [...properties];
+                return;
+            }
+        }
+    } catch (error) {
+        console.log('API not available, falling back to static sources:', error.message);
     }
-    
-    // 2. Try loading from properties.json file (GitHub Pages)
-    console.log('No localStorage data, trying properties.json...');
+
+    // 2. Fall back to properties.json (GitHub Pages / static hosting)
+    console.log('Trying properties.json...');
     try {
         const fileProps = await loadPropertiesFromFile();
         if (fileProps && fileProps.length > 0) {
@@ -260,17 +292,13 @@ async function fetchPropertiesFromAPI() {
             rawProperties = fileProps;
             properties.length = 0;
             try {
-                const transformed = transformProperties(rawProperties);
-                console.log('Transformed', transformed.length, 'properties');
-                properties.push(...transformed);
+                properties.push(...transformProperties(rawProperties));
             } catch (transformError) {
                 console.error('Error in transformProperties:', transformError);
-                // Fallback: just use raw properties directly
                 properties.push(...rawProperties.map((p, i) => ({
                     ...p,
                     id: p.id || p.store_num || (i + 1),
                     title: `Property in ${p.city}, ${p.state}`,
-                    image: 'https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800&h=600&fit=crop',
                     listingType: 'sale',
                     status: 'available',
                     sizeAcres: p.size_acres,
@@ -278,48 +306,21 @@ async function fetchPropertiesFromAPI() {
                 })));
             }
             filteredProperties = [...properties];
-            console.log('Final properties count:', properties.length);
-            console.log('Final filteredProperties count:', filteredProperties.length);
             return;
         }
     } catch (e) {
-        console.error('Error loading from file:', e);
+        console.error('Error loading from properties.json:', e);
     }
-    
-    // 3. Try API (backend server mode)
-    try {
-        const response = await fetch(`${window.location.origin}/api/properties`);
-        if (response.ok) {
-            const apiProps = await response.json();
-            properties.length = 0;
-            apiProps.forEach(p => {
-                properties.push({
-                    id: p.id,
-                    city: p.city || '',
-                    state: p.state || '',
-                    address: p.address || '',
-                    size_acres: p.size_acres || 0,
-                    lotSize: p.size_acres ? `${p.size_acres} acres` : 'N/A',
-                    type: p.property_type || 'land',
-                    listingType: p.listing_type || 'sale',
-                    price: p.price || 0,
-                    status: p.status || 'available',
-                    description: p.description || `Marketable property in ${p.city}, ${p.state}`,
-                    lat: p.lat || 0,
-                    lon: p.lon || 0,
-                    store_number: p.store_number || '',
-                    broker_name: p.broker_name || '',
-                    features: ['Commercial Zoning', 'Utilities Available'],
-                    featured: false,
-                    zip: getZipForState(p.state)
-                });
-            });
-            console.log(`Loaded ${properties.length} properties from API`);
-            filteredProperties = [...properties];
-            return;
-        }
-    } catch (error) {
-        console.log('API not available, using fallback');
+
+    // 3. Last resort: localStorage (used when no server and no static file)
+    const stored = getStoredProperties();
+    if (stored && stored.length > 0) {
+        console.log(`Loading ${stored.length} properties from localStorage`);
+        rawProperties = stored;
+        properties.length = 0;
+        properties.push(...transformProperties(rawProperties));
+        filteredProperties = [...properties];
+        return;
     }
     
     // 4. Fallback to hardcoded properties
