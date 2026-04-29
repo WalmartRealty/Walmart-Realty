@@ -345,7 +345,7 @@
                     </div>
                     <span class="text-sm font-bold">Land</span>
                 </button>
-                <button onclick="selectPropertyType('vacant-stores')" id="type-tab-vacant-stores" 
+                <button onclick="selectPropertyType('buildings')" id="type-tab-buildings" 
                         class="property-type-tab flex flex-col items-center gap-2 px-4 sm:px-6 py-3 rounded-xl bg-white/20 backdrop-blur-md border-2 border-white/40 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 hover:bg-white/30 transition-all duration-200 focus-visible"
                         aria-pressed="false">
                     <div class="p-2 rounded-lg bg-white/20 shadow-inner">
@@ -353,7 +353,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
                     </div>
-                    <span class="text-sm font-bold">Vacant Stores</span>
+                    <span class="text-sm font-bold">Buildings</span>
                 </button>
             </div>
             
@@ -642,7 +642,7 @@
                     <h4 class="font-semibold mb-4">Property Types</h4>
                     <ul class="space-y-2 text-gray-400 text-sm">
                         <li><a href="#" onclick="filterByPropertyType('land'); return false;" class="hover:text-walmart-yellow transition-colors">Land</a></li>
-                        <li><a href="#" onclick="filterByPropertyType('vacant-stores'); return false;" class="hover:text-walmart-yellow transition-colors">Vacant Stores</a></li>
+                        <li><a href="#" onclick="filterByPropertyType('buildings'); return false;" class="hover:text-walmart-yellow transition-colors">Buildings</a></li>
                     </ul>
                 </div>
                 
@@ -7501,10 +7501,10 @@ function filterByStateIcon(state) {
 function getTypeLabel(type) {
     const labels = {
         land: 'Land',
-        'vacant-stores': 'Vacant Stores',
+        'buildings': 'Buildings',
         outlots: 'Land',
-        'dark-stores': 'Vacant Stores',
-        retail: 'Vacant Stores',
+        'dark-stores': 'Buildings',
+        retail: 'Buildings',
         warehouse: 'Warehouse',
         office: 'Office',
         industrial: 'Industrial'
@@ -7736,7 +7736,7 @@ function filterProperties() {
         if (propertyType) {
             const type = property.type;
             if (propertyType === 'land' && type !== 'land') return false;
-            if (propertyType === 'vacant-stores' && type !== 'retail') return false;
+            if (propertyType === 'buildings' && type !== 'retail') return false;
         }
         
         // Listing type filter

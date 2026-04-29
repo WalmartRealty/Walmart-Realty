@@ -427,10 +427,10 @@ function filterByStateIcon(state) {
 function getTypeLabel(type) {
     const labels = {
         land: 'Land',
-        'vacant-stores': 'Vacant Stores',
+        'buildings': 'Buildings',
         outlots: 'Land',
-        'dark-stores': 'Vacant Stores',
-        retail: 'Vacant Stores',
+        'dark-stores': 'Buildings',
+        retail: 'Buildings',
         warehouse: 'Warehouse',
         office: 'Office',
         industrial: 'Industrial'
@@ -663,8 +663,8 @@ function filterProperties() {
             const type = property.type;
             // Land = all land parcels including outlots regardless of size
             if (propertyType === 'land' && type !== 'land') return false;
-            // Vacant Stores = retail / dark-store buildings
-            if (propertyType === 'vacant-stores' && type !== 'retail') return false;
+            // Buildings = retail / dark-store buildings
+            if (propertyType === 'buildings' && type !== 'retail') return false;
         }
         
         // Listing type filter
