@@ -545,6 +545,18 @@ function renderStateChips() {
 }
 
 // Get property type label
+// Get status badge HTML — drives the card and modal badges
+function getStatusBadge(status, size = 'sm') {
+    const pad = size === 'lg' ? 'px-4 py-2 text-sm' : 'px-2 py-0.5 text-xs';
+    const s = (status || 'available').toLowerCase().replace(/\s+/g, '-');
+    if (s === 'under-contract' || s === 'under_contract') {
+        return `<span class="${pad} rounded-full font-semibold bg-yellow-400 text-yellow-900">Under Contract</span>`;
+    } else if (s === 'sold') {
+        return `<span class="${pad} rounded-full font-semibold bg-red-600 text-white">SOLD</span>`;
+    }
+    return `<span class="${pad} rounded-full font-semibold bg-green-500 text-white">Available</span>`;
+}
+
 function getTypeLabel(type) {
     const labels = {
         land: 'Land',
@@ -619,12 +631,12 @@ function getSatelliteThumbUrl(lat, lon) {
 }
 
 function createPropertyCard(property) {
-    const priceDisplay = formatPrice(property.price, property.listingType);
-    const listingLabel = property.listingType === 'sale' ? 'For Sale' : 'For Lease';
     const satelliteUrl = getSatelliteThumbUrl(property.lat, property.lon);
-    
+    const status = (property.status || 'available').toLowerCase();
+    const isSold = status === 'sold';
+
     return `
-        <article class="property-card bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg" 
+        <article class="property-card bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg${isSold ? ' opacity-75' : ''}" 
                  onclick="openPropertyModal(${property.id})"
                  tabindex="0"
                  role="button"
@@ -642,12 +654,7 @@ function createPropertyCard(property) {
                         </div>
                         <div>
                             <div class="flex gap-2 mb-1">
-                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${getListingBadgeClass(property.listingType)}">
-                                    ${listingLabel}
-                                </span>
-                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-                                    ${getTypeLabel(property.type)}
-                                </span>
+                                ${getStatusBadge(status)}
                             </div>
                             <h4 class="text-lg font-bold text-gray-900 line-clamp-1">${property.city}, ${property.state}</h4>
                         </div>
@@ -665,7 +672,7 @@ function createPropertyCard(property) {
             <div class="p-5 bg-gray-50">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-lg font-semibold text-walmart-blue">View Details</p>
+                        <p class="text-lg font-semibold text-walmart-blue">${isSold ? '' : 'View Details'}</p>
                     </div>
                     <button class="p-2 rounded-full hover:bg-white transition-colors focus-visible shadow-sm bg-white" 
                             aria-label="${isPropertySaved(property.id) ? 'Remove from saved' : 'Save property'}"
@@ -739,7 +746,13 @@ function renderProperties() {
         return;
     }
     
-    container.innerHTML = filteredProperties.map(createPropertyCard).join('');
+    // Sold properties always go to the bottom
+    const sorted = [...filteredProperties].sort((a, b) => {
+        const aS = (a.status || '').toLowerCase() === 'sold' ? 1 : 0;
+        const bS = (b.status || '').toLowerCase() === 'sold' ? 1 : 0;
+        return aS - bS;
+    });
+    container.innerHTML = sorted.map(createPropertyCard).join('');
     
     // Update results count
     const countEl = document.getElementById('results-count');
@@ -995,8 +1008,7 @@ function openPropertyModal(id) {
     
     const modal = document.getElementById('property-modal');
     const content = document.getElementById('modal-content');
-    const priceDisplay = formatPrice(property.price, property.listingType);
-    const listingLabel = property.listingType === 'sale' ? 'For Sale' : 'For Lease';
+    const isSold = (property.status || '').toLowerCase() === 'sold';
     
     // Google Maps embed URL for satellite view (free, no API key needed)
     const mapsLink = `https://www.google.com/maps/@${property.lat},${property.lon},500m/data=!3m1!1e3`;
@@ -1013,12 +1025,7 @@ function openPropertyModal(id) {
                 </svg>
             </button>
             <div class="absolute bottom-4 left-4 flex gap-2 z-10">
-                <span class="px-4 py-2 rounded-full text-sm font-semibold ${getListingBadgeClass(property.listingType)}">
-                    ${listingLabel}
-                </span>
-                <span class="px-4 py-2 rounded-full text-sm font-semibold bg-gray-800 text-white">
-                    ${getTypeLabel(property.type)}
-                </span>
+                ${getStatusBadge(property.status, 'lg')}
             </div>
             <a href="${mapsLink}" target="_blank" rel="noopener noreferrer" 
                class="absolute bottom-4 right-4 px-4 py-2 rounded-full text-sm font-semibold bg-white text-gray-800 hover:bg-gray-100 transition-colors z-10 flex items-center gap-2">
@@ -1042,7 +1049,7 @@ function openPropertyModal(id) {
                     <p class="text-gray-400 text-sm mt-1">Coordinates: ${property.lat}, ${property.lon}</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-2xl font-bold text-walmart-blue">Contact for Pricing</p>
+                    ${isSold ? '' : '<p class="text-2xl font-bold text-walmart-blue">Contact for Pricing</p>'}
                 </div>
             </div>
             
