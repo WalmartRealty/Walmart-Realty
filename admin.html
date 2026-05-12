@@ -276,15 +276,15 @@
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    Import from CSV
-                    <input type="file" accept=".csv" onchange="importBrokersCSV(event)" class="hidden">
+                    Import Excel / CSV
+                    <input type="file" accept=".xlsx,.xls,.csv" onchange="importBrokersExcel(event)" class="hidden">
                 </label>
                 <button onclick="downloadBrokerTemplate()" 
                         class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                     </svg>
-                    Download CSV Template
+                    Download Template
                 </button>
                 <button onclick="syncToGitHub()"
                         class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
@@ -1474,34 +1474,69 @@
         }
         
         // CSV Import for Brokers
-        function importBrokersCSV(event) {
+        async function importBrokersExcel(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
+            event.target.value = '';
+
+            if (typeof XLSX === 'undefined') {
+                showToast('Excel library not loaded — refresh the page and try again.', 'error');
+                return;
+            }
+
+            showToast('Reading file…');
+
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
-                    const csv = e.target.result;
-                    const lines = csv.split('\n').filter(line => line.trim());
-                    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-                    
-                    const brokersList = [];
-                    for (let i = 1; i < lines.length; i++) {
-                        const values = lines[i].split(',').map(v => v.trim());
-                        const broker = {};
-                        headers.forEach((h, idx) => {
-                            broker[h] = values[idx] || '';
-                        });
-                        if (broker.name && broker.email && broker.states) {
-                            brokersList.push(broker);
-                        }
-                    }
-                    
-                    if (brokersList.length === 0) {
-                        showToast('No valid brokers found in CSV', 'error');
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    // raw: true keeps numbers as numbers; defval keeps empty cells as ''
+                    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+                    if (rows.length === 0) {
+                        showToast('No rows found — make sure row 1 has column headers.', 'error');
                         return;
                     }
-                    
+
+                    const normalise = str => String(str).toLowerCase()
+                        .replace(/[\n\r]/g, ' ')
+                        .replace(/\(.*?\)/g, '')
+                        .replace(/[\s_\-\/]+/g, '');
+
+                    function getField(row, aliases) {
+                        for (const key of Object.keys(row)) {
+                            if (aliases.includes(normalise(key))) return String(row[key]).trim();
+                        }
+                        return '';
+                    }
+
+                    const brokersList = [];
+                    const errors = [];
+
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        const name    = getField(row, ['name','fullname','brokername']);
+                        const email   = getField(row, ['email','emailaddress']);
+                        const phone   = getField(row, ['phone','phonenumber','cell','mobile']);
+                        const company = getField(row, ['company','firm','brokerage','companyname']);
+                        const states  = getField(row, ['states','state','territories','markets']);
+
+                        if (!name || !email) {
+                            if (name || email) errors.push(`Row ${i + 2}: missing name or email — skipped`);
+                            continue;
+                        }
+
+                        brokersList.push({ name, email, phone, company, states });
+                    }
+
+                    if (brokersList.length === 0) {
+                        showToast(`⚠️ No valid brokers found. Every row needs at least name + email.`, 'error');
+                        if (errors.length) console.warn('Broker import issues:', errors);
+                        return;
+                    }
+
                     const response = await fetch(`${API_BASE}/api/brokers/import`, {
                         method: 'POST',
                         headers: {
@@ -1510,29 +1545,37 @@
                         },
                         body: JSON.stringify({ brokers: brokersList })
                     });
-                    
+
                     const result = await response.json();
-                    showToast(`Imported ${result.imported} brokers!`);
-                    loadBrokers();
+                    if (response.ok) {
+                        showToast(`✅ Imported ${result.imported} broker${result.imported !== 1 ? 's' : ''}!`);
+                        loadBrokers();
+                    } else {
+                        showToast(result.error || 'Import failed on the server.', 'error');
+                    }
+                    if (errors.length) console.warn('Broker import row issues:', errors);
+
                 } catch (err) {
-                    showToast('Error reading CSV file', 'error');
+                    console.error('Broker import error:', err);
+                    showToast('Failed to parse file: ' + err.message, 'error');
                 }
             };
-            reader.readAsText(file);
-            event.target.value = '';
+            reader.readAsArrayBuffer(file);
         }
-        
+
         function downloadBrokerTemplate() {
-            const csv = 'name,email,phone,company,states\nJohn Smith,john@example.com,555-123-4567,ABC Realty,"TX,OK,AR"\nJane Doe,jane@example.com,555-987-6543,XYZ Properties,"CA,AZ,NV"';
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'broker-import-template.csv';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            if (typeof XLSX === 'undefined') {
+                showToast('Excel library not loaded — refresh the page and try again.', 'error');
+                return;
+            }
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([
+                ['name', 'email', 'phone', 'company', 'states']
+            ]);
+            ws['!cols'] = [{wch:25},{wch:30},{wch:16},{wch:25},{wch:20}];
+            XLSX.utils.book_append_sheet(wb, ws, 'Brokers');
+            XLSX.writeFile(wb, 'walmart-realty-broker-template.xlsx');
+            showToast('Template downloaded!');
         }
         
         // ========== LOI SUBMISSIONS ==========
