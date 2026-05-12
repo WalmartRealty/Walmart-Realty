@@ -1957,24 +1957,13 @@
 
         function downloadPropertyTemplate() {
             const wb = XLSX.utils.book_new();
-
-            const rows = [
-                // Row 1: machine-readable headers (must match exactly)
-                ['city','state','property_type','listing_type','size_acres','price','lat','lon','status','address','description'],
-                // Row 2-4: example rows so the format is clear
-                ['Rogers',        'AR','land',      'sale',         '33.38', '7000000', '36.3371',  '-94.2258',  'available',      'Near Mathis Airport Pkwy',   'Prime commercial land parcel'],
-                ['Niskayuna',     'NY','buildings', 'lease',        '2.5',   '612308',  '42.7733',  '-73.8953',  'available',      '123 Balltown Rd',            'Former Neighborhood Market available for sublease'],
-                ['Pinellas Park', 'FL','buildings', 'ground_lease', '3.1',   '410000',  '27.8428',  '-82.7193',  'available',      '4600 Park Blvd',             'Former Neighborhood Market available for ground lease'],
-            ];
-
-            const ws = XLSX.utils.aoa_to_sheet(rows);
-
-            // Column widths
+            const ws = XLSX.utils.aoa_to_sheet([
+                ['city','state','property_type','listing_type','size_acres','price','lat','lon','status','address','description']
+            ]);
             ws['!cols'] = [
                 {wch:20},{wch:8},{wch:16},{wch:16},{wch:12},
                 {wch:16},{wch:12},{wch:12},{wch:16},{wch:30},{wch:50}
             ];
-
             XLSX.utils.book_append_sheet(wb, ws, 'Properties');
             XLSX.writeFile(wb, 'walmart-realty-import-template.xlsx');
             showToast('Template downloaded!');
