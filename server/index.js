@@ -542,23 +542,25 @@ app.post('/api/properties', authenticateToken, (req, res) => {
     const {
         city, state, address, size_acres, price,
         type, property_type,          // accept both; 'type' from admin form
+        listing_type,
         status, description, lat, lon,
         image, image_url,             // accept both
         broker_name, broker_email, broker_phone
     } = req.body;
 
-    const resolvedType  = property_type || type || 'land';
-    const resolvedImage = image_url || image || null;
+    const resolvedType    = property_type || type || 'land';
+    const resolvedListing = listing_type || 'sale';
+    const resolvedImage   = image_url || image || null;
 
     const result = db.prepare(`
         INSERT INTO properties
             (city, state, address, size_acres, price, property_type, listing_type,
              status, description, lat, lon, image_url, broker_name, broker_email, broker_phone)
-        VALUES (?, ?, ?, ?, ?, ?, 'sale', ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
         city, state, address || null,
         size_acres || null, price || null,
-        resolvedType,
+        resolvedType, resolvedListing,
         status || 'available',
         description || null,
         lat || null, lon || null,

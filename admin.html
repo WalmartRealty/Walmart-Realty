@@ -1957,15 +1957,12 @@
 
         function downloadPropertyTemplate() {
             const headers = ['city','state','property_type','listing_type','size_acres','price','lat','lon','status','address','description'];
-            const example = ['Rogers','AR','land','sale','33.38','7000000','36.3371','-94.2258','available','Near Mathis Airport Pkwy','Prime commercial land parcel'];
+            const example1 = ['Rogers','AR','land','sale','33.38','7000000','36.3371','-94.2258','available','Near Mathis Airport Pkwy','Prime commercial land parcel'];
             const example2 = ['Niskayuna','NY','buildings','ground_lease','2.5','150000','42.7733','-73.8953','available','123 Main St','Former retail building for ground lease'];
 
             const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet([headers, example, example2]);
-
-            // Column widths
-            ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length + 4, 16) }));
-
+            const ws = XLSX.utils.aoa_to_sheet([headers, example1, example2]);
+            ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length + 4, 18) }));
             XLSX.utils.book_append_sheet(wb, ws, 'Properties');
             XLSX.writeFile(wb, 'walmart-realty-property-template.xlsx');
             showToast('Template downloaded!');
@@ -1974,7 +1971,12 @@
         async function importPropertiesExcel(event) {
             const file = event.target.files[0];
             if (!file) return;
-            event.target.value = ''; // reset so same file can be re-imported
+            event.target.value = '';
+
+            if (typeof XLSX === 'undefined') {
+                showToast('Excel library not loaded — check your internet connection and refresh.', 'error');
+                return;
+            }
 
             showToast('Reading file...');
 
@@ -1987,24 +1989,28 @@
                     const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
                     if (rows.length === 0) {
-                        showToast('No rows found in file.', 'error');
+                        showToast('No rows found in file — make sure row 1 has column headers.', 'error');
                         return;
                     }
 
-                    // Flexible column name mapping (handles spaces, caps, underscores)
-                    const normalise = str => String(str).toLowerCase().replace(/[\s_-]+/g, '');
+                    // Strip newlines, parens, spaces, dashes, underscores before matching
+                    const normalise = str => String(str).toLowerCase()
+                        .replace(/[\n\r]/g, ' ')
+                        .replace(/\(.*?\)/g, '')     // strip (anything in parens)
+                        .replace(/[\s_\-\/]+/g, ''); // strip spaces, _, -, /
+
                     const COL_MAP = {
-                        city:         ['city'],
-                        state:        ['state'],
-                        property_type:['propertytype','type'],
-                        listing_type: ['listingtype','listing'],
-                        size_acres:   ['sizeacres','acres','size'],
-                        price:        ['price','annualrate','rate'],
-                        lat:          ['lat','latitude'],
-                        lon:          ['lon','lng','longitude'],
-                        status:       ['status'],
-                        address:      ['address'],
-                        description:  ['description','desc']
+                        city:          ['city'],
+                        state:         ['state'],
+                        property_type: ['propertytype','type'],
+                        listing_type:  ['listingtype','listing'],
+                        size_acres:    ['sizeacres','acres','size'],
+                        price:         ['price','annualrate','rate'],
+                        lat:           ['lat','latitude'],
+                        lon:           ['lon','lng','longitude'],
+                        status:        ['status'],
+                        address:       ['address'],
+                        description:   ['description','desc','notes','note']
                     };
 
                     function getField(row, fieldKey) {
@@ -2015,9 +2021,13 @@
                         return '';
                     }
 
-                    const VALID_TYPES    = ['land','buildings'];
-                    const VALID_LISTING  = ['sale','lease','ground_lease'];
-                    const VALID_STATUS   = ['available','under_contract','sold'];
+                    // Log what columns were detected to help debug
+                    const detectedCols = Object.keys(rows[0]).map(k => `"${k}" → "${normalise(k)}"`);
+                    console.log('Import: detected columns:', detectedCols.join(', '));
+
+                    const VALID_TYPES   = ['land','buildings'];
+                    const VALID_LISTING = ['sale','lease','ground_lease'];
+                    const VALID_STATUS  = ['available','under_contract','sold'];
 
                     let imported = 0, skipped = 0, errors = [];
 
@@ -2026,16 +2036,20 @@
                         const city  = String(getField(row,'city')).trim();
                         const state = String(getField(row,'state')).trim().toUpperCase();
 
-                        if (!city || !state) { skipped++; continue; }
+                        if (!city || !state || city.length > 100) { skipped++; continue; }
 
-                        const type        = VALID_TYPES.includes(String(getField(row,'property_type')).toLowerCase()) ? String(getField(row,'property_type')).toLowerCase() : 'land';
-                        const listing     = VALID_LISTING.includes(String(getField(row,'listing_type')).toLowerCase()) ? String(getField(row,'listing_type')).toLowerCase() : 'sale';
-                        const status      = VALID_STATUS.includes(String(getField(row,'status')).toLowerCase()) ? String(getField(row,'status')).toLowerCase() : 'available';
-                        const size_acres  = parseFloat(getField(row,'size_acres')) || null;
-                        const price       = parseFloat(getField(row,'price')) || null;
-                        const lat         = parseFloat(getField(row,'lat')) || null;
-                        const lon         = parseFloat(getField(row,'lon')) || null;
-                        const address     = String(getField(row,'address')).trim() || null;
+                        const rawType    = String(getField(row,'property_type')).toLowerCase().trim();
+                        const rawListing = String(getField(row,'listing_type')).toLowerCase().trim();
+                        const rawStatus  = String(getField(row,'status')).toLowerCase().trim();
+
+                        const type        = VALID_TYPES.includes(rawType)    ? rawType    : 'buildings';
+                        const listing     = VALID_LISTING.includes(rawListing) ? rawListing : 'sale';
+                        const status      = VALID_STATUS.includes(rawStatus)  ? rawStatus  : 'available';
+                        const size_acres  = parseFloat(getField(row,'size_acres'))  || null;
+                        const price       = parseFloat(getField(row,'price'))       || null;
+                        const lat         = parseFloat(getField(row,'lat'))         || null;
+                        const lon         = parseFloat(getField(row,'lon'))         || null;
+                        const address     = String(getField(row,'address')).trim()     || null;
                         const description = String(getField(row,'description')).trim() || null;
 
                         try {
@@ -2044,14 +2058,27 @@
                                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
                                 body: JSON.stringify({ city, state, type, listing_type: listing, size_acres, price, lat, lon, status, address, description })
                             });
-                            if (res.ok) { imported++; } else { skipped++; errors.push(`Row ${i+2}: ${city}, ${state}`); }
-                        } catch { skipped++; errors.push(`Row ${i+2}: network error`); }
+                            if (res.ok) {
+                                imported++;
+                            } else {
+                                const errBody = await res.json().catch(() => ({}));
+                                skipped++;
+                                errors.push(`Row ${i+2} (${city}, ${state}): ${errBody.error || res.status}`);
+                            }
+                        } catch (netErr) {
+                            skipped++;
+                            errors.push(`Row ${i+2} (${city}, ${state}): network error`);
+                        }
                     }
 
                     await loadProperties();
-                    const msg = `✅ Imported ${imported} properties${skipped ? `, skipped ${skipped}` : ''}.`;
-                    showToast(msg);
-                    if (errors.length) console.warn('Import issues:', errors);
+
+                    if (imported === 0 && skipped > 0) {
+                        showToast(`⚠️ Nothing imported — ${skipped} rows skipped. Check the console (F12) for details.`, 'error');
+                    } else {
+                        showToast(`✅ Imported ${imported} properties${skipped ? `, skipped ${skipped}` : ''}!`);
+                    }
+                    if (errors.length) console.warn('Import row errors:', errors);
 
                 } catch (err) {
                     console.error('Import error:', err);
