@@ -548,8 +548,8 @@ function renderStateChips() {
 // Get status badge HTML — drives the card and modal badges
 function getStatusBadge(status, size = 'sm') {
     const pad = size === 'lg' ? 'px-4 py-2 text-sm' : 'px-2 py-0.5 text-xs';
-    const s = (status || 'available').toLowerCase().replace(/\s+/g, '-');
-    if (s === 'under-contract' || s === 'under_contract') {
+    const s = (status || 'available').toLowerCase();
+    if (s === 'under-contract' || s === 'under_contract' || s === 'pending') {
         return `<span class="${pad} rounded-full font-semibold bg-yellow-400 text-yellow-900">Under Contract</span>`;
     } else if (s === 'sold') {
         return `<span class="${pad} rounded-full font-semibold bg-red-600 text-white">SOLD</span>`;

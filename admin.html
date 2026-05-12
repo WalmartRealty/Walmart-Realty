@@ -736,7 +736,7 @@
                     <select id="property-status"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
                         <option value="available">Available</option>
-                        <option value="pending">Under Contract</option>
+                        <option value="under_contract">Under Contract</option>
                         <option value="sold">Sold</option>
                     </select>
                 </div>
@@ -1857,37 +1857,68 @@
             document.getElementById('property-modal').classList.remove('flex');
         }
         
-        function saveProperty(event) {
+        async function saveProperty(event) {
             event.preventDefault();
-            
+
             const id = document.getElementById('property-id').value;
             const propertyData = {
-                city: document.getElementById('property-city').value,
-                state: document.getElementById('property-state').value.toUpperCase(),
-                type: document.getElementById('property-type').value,
-                listingType: document.getElementById('property-listing-type').value,
-                size_acres: parseFloat(document.getElementById('property-size').value),
-                price: parseInt(document.getElementById('property-price').value),
-                lat: parseFloat(document.getElementById('property-lat').value),
-                lon: parseFloat(document.getElementById('property-lon').value),
-                status: document.getElementById('property-status').value
+                city:         document.getElementById('property-city').value,
+                state:        document.getElementById('property-state').value.toUpperCase(),
+                type:         document.getElementById('property-type').value,
+                listing_type: document.getElementById('property-listing-type').value,
+                size_acres:   parseFloat(document.getElementById('property-size').value) || null,
+                price:        parseInt(document.getElementById('property-price').value) || null,
+                lat:          parseFloat(document.getElementById('property-lat').value) || null,
+                lon:          parseFloat(document.getElementById('property-lon').value) || null,
+                status:       document.getElementById('property-status').value
             };
-            
-            if (id) {
-                const index = adminProperties.findIndex(p => p.id === parseInt(id));
-                if (index !== -1) {
-                    adminProperties[index] = { ...adminProperties[index], ...propertyData };
+
+            try {
+                if (id) {
+                    // UPDATE existing property
+                    const res = await fetch(`${API_BASE}/api/properties/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify(propertyData)
+                    });
+                    if (!res.ok) throw new Error(await res.text());
+
+                    // Reflect in local array so the table updates instantly
+                    const idx = adminProperties.findIndex(p => p.id === parseInt(id));
+                    if (idx !== -1) {
+                        adminProperties[idx] = {
+                            ...adminProperties[idx],
+                            ...propertyData,
+                            listingType: propertyData.listing_type
+                        };
+                    }
                     showToast('Property updated!');
+                } else {
+                    // CREATE new property
+                    const res = await fetch(`${API_BASE}/api/properties`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify(propertyData)
+                    });
+                    if (!res.ok) throw new Error(await res.text());
+                    const created = await res.json();
+                    adminProperties.push({ id: created.id, ...propertyData, listingType: propertyData.listing_type });
+                    showToast('Property added!');
                 }
-            } else {
-                const newId = Math.max(...adminProperties.map(p => p.id), 0) + 1;
-                adminProperties.push({ id: newId, ...propertyData });
-                showToast('Property added!');
+
+                savePropertiesToStorage();
+                closePropertyModal();
+                loadProperties();
+            } catch (err) {
+                console.error('saveProperty error:', err);
+                showToast('Save failed — is the server running? ' + err.message, 'error');
             }
-            
-            savePropertiesToStorage();
-            closePropertyModal();
-            loadProperties();
         }
         
         function deleteProperty(id) {
@@ -1901,10 +1932,18 @@
         
         async function confirmDelete() {
             if (deleteType === 'property') {
-                adminProperties = adminProperties.filter(p => p.id !== deleteTarget);
-                savePropertiesToStorage();
-                showToast('Property deleted');
-                loadProperties();
+                try {
+                    await fetch(`${API_BASE}/api/properties/${deleteTarget}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    adminProperties = adminProperties.filter(p => p.id !== deleteTarget);
+                    savePropertiesToStorage();
+                    showToast('Property deleted');
+                    loadProperties();
+                } catch (err) {
+                    showToast('Delete failed — ' + err.message, 'error');
+                }
             } else if (deleteType === 'broker') {
                 try {
                     await fetch(`${API_BASE}/api/brokers/${deleteTarget}`, {
