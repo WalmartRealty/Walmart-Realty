@@ -310,12 +310,23 @@ db.exec(`
 `);
 
 // Create default admin if none exists
+// Also re-hashes the password if ADMIN_PASSWORD env var has changed.
 const adminCount = db.prepare('SELECT COUNT(*) as count FROM admins').get();
+const defaultUsername = process.env.ADMIN_USERNAME || 'admin';
+const defaultPassword = process.env.ADMIN_PASSWORD || 'admin123';
 if (adminCount.count === 0) {
-    const hashedPassword = bcrypt.hashSync('admin123', 10);
+    const hashedPassword = bcrypt.hashSync(defaultPassword, BCRYPT_ROUNDS);
     db.prepare('INSERT INTO admins (username, password, name, email, role) VALUES (?, ?, ?, ?, ?)')
-        .run('admin', hashedPassword, 'Administrator', 'admin@walmart.com', 'super_admin');
-    console.log('Default admin created: username=admin, password=admin123');
+        .run(defaultUsername, hashedPassword, 'Administrator', 'admin@walmart.com', 'super_admin');
+    console.log(`Default admin created: username=${defaultUsername}, password=${defaultPassword}`);
+} else if (process.env.ADMIN_PASSWORD) {
+    // If env var is set, update the stored hash so it stays in sync.
+    const existing = db.prepare('SELECT id, password FROM admins WHERE username = ?').get(defaultUsername);
+    if (existing && !bcrypt.compareSync(defaultPassword, existing.password)) {
+        const hashedPassword = bcrypt.hashSync(defaultPassword, BCRYPT_ROUNDS);
+        db.prepare('UPDATE admins SET password = ? WHERE id = ?').run(hashedPassword, existing.id);
+        console.log(`Admin password updated from ADMIN_PASSWORD env var.`);
+    }
 }
 
 // Auth Middleware - Secure JWT verification
