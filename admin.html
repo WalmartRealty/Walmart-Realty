@@ -1485,15 +1485,22 @@
             }
 
             showToast('Reading file…');
-
+            const isCSV = file.name.toLowerCase().endsWith('.csv');
             const reader = new FileReader();
+
             reader.onload = async (e) => {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    let workbook;
+                    if (isCSV) {
+                        // CSV: read as text so SheetJS parses it correctly
+                        workbook = XLSX.read(e.target.result, { type: 'string' });
+                    } else {
+                        // Excel: read as binary array
+                        workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    }
+
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    // raw: true keeps numbers as numbers; defval keeps empty cells as ''
-                    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                    const rows  = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
                     if (rows.length === 0) {
                         showToast('No rows found — make sure row 1 has column headers.', 'error');
@@ -1516,7 +1523,7 @@
                     const errors = [];
 
                     for (let i = 0; i < rows.length; i++) {
-                        const row = rows[i];
+                        const row     = rows[i];
                         const name    = getField(row, ['name','fullname','brokername']);
                         const email   = getField(row, ['email','emailaddress']);
                         const phone   = getField(row, ['phone','phonenumber','cell','mobile']);
@@ -1527,12 +1534,11 @@
                             if (name || email) errors.push(`Row ${i + 2}: missing name or email — skipped`);
                             continue;
                         }
-
                         brokersList.push({ name, email, phone, company, states });
                     }
 
                     if (brokersList.length === 0) {
-                        showToast(`⚠️ No valid brokers found. Every row needs at least name + email.`, 'error');
+                        showToast('⚠️ No valid brokers found. Every row needs at least name + email.', 'error');
                         if (errors.length) console.warn('Broker import issues:', errors);
                         return;
                     }
@@ -1560,7 +1566,13 @@
                     showToast('Failed to parse file: ' + err.message, 'error');
                 }
             };
-            reader.readAsArrayBuffer(file);
+
+            // Use the right reader for each file type
+            if (isCSV) {
+                reader.readAsText(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
         }
 
         function downloadBrokerTemplate() {
@@ -2023,12 +2035,17 @@
             }
 
             showToast('Reading file...');
-
+            const isCSV = file.name.toLowerCase().endsWith('.csv');
             const reader = new FileReader();
+
             reader.onload = async (e) => {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    let workbook;
+                    if (isCSV) {
+                        workbook = XLSX.read(e.target.result, { type: 'string' });
+                    } else {
+                        workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    }
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
@@ -2131,7 +2148,11 @@
                     showToast('Failed to parse file: ' + err.message, 'error');
                 }
             };
-            reader.readAsArrayBuffer(file);
+            if (isCSV) {
+                reader.readAsText(file);
+            } else {
+                reader.readAsArrayBuffer(file);
+            }
         }
 
         function openAddModal() {
