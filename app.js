@@ -2307,40 +2307,53 @@ ${data.additionalComments || 'None provided'}
                     company: data.company
                 }
             );
-            
-            showSuccessModal(data, loi, property);
+            showSuccessModal(data, loi, property, loiDetails, brokerEmail);
         } else {
-            // Fallback: Open email client with pre-filled data
-            const subject = `LOI Submission: ${loi.name} - ${property.city}, ${property.state}`;
-            const mailtoLink = `mailto:${brokerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(loiDetails)}`;
-            
-            // Open mailto
-            window.location.href = mailtoLink;
-            
-            // Show success after a delay
+            // Reliable submission: show full LOI in modal + open slim email
+            showSuccessModal(data, loi, property, loiDetails, brokerEmail);
+
+            // Open email with concise body (avoids mailto length limits)
+            const subject = encodeURIComponent(`LOI: ${loi.name} — ${property.city}, ${property.state}`);
+            const slimBody = encodeURIComponent(
+                `LOI Type: ${loi.name}\nProperty: ${property.city}, ${property.state}\n` +
+                `From: ${data.firstName} ${data.lastName} (${data.company})\n` +
+                `Email: ${data.email} | Phone: ${data.phone}\n\n` +
+                `[Full LOI details were displayed on-screen — please request from submitter if needed]`
+            );
+            // CC the dispositions team on every submission
+            const cc = encodeURIComponent('realestatedispositions@walmart.com');
             setTimeout(() => {
-                showSuccessModal(data, loi, property);
-            }, 500);
+                window.open(`mailto:${brokerEmail}?cc=${cc}&subject=${subject}&body=${slimBody}`, '_blank');
+            }, 300);
         }
     } catch (error) {
         console.error('Error submitting LOI:', error);
-        
-        // Fallback to mailto
-        const subject = `LOI Submission: ${loi.name} - ${property.city}, ${property.state}`;
-        const mailtoLink = `mailto:${brokerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(loiDetails)}`;
-        window.location.href = mailtoLink;
-        
-        setTimeout(() => {
-            showSuccessModal(data, loi, property);
-        }, 500);
+        showSuccessModal(data, loi, property, loiDetails, brokerEmail);
     }
 }
 
 // Show success modal after submission
-function showSuccessModal(data, loi, property) {
+function showSuccessModal(data, loi, property, loiDetails, brokerEmail) {
     const modal = document.getElementById('loi-form-modal');
     const content = document.getElementById('loi-form-content');
-    
+
+    const copyId = 'loi-copy-area-' + Date.now();
+
+    function copyLOI() {
+        const el = document.getElementById(copyId);
+        if (!el) return;
+        navigator.clipboard.writeText(el.value).then(() => {
+            const btn = document.getElementById('copy-loi-btn');
+            if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => { btn.textContent = '📋 Copy LOI Details'; }, 2000); }
+        }).catch(() => {
+            el.select();
+            document.execCommand('copy');
+        });
+    }
+    window._copyLOI = copyLOI;   // expose for onclick
+
+    const gmailLink = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(brokerEmail)}&cc=${encodeURIComponent('realestatedispositions@walmart.com')}&su=${encodeURIComponent(`LOI: ${loi.name} — ${property.city}, ${property.state}`)}`;
+
     content.innerHTML = `
         <div class="p-8 text-center">
             <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
@@ -2349,56 +2362,49 @@ function showSuccessModal(data, loi, property) {
                 </svg>
             </div>
             
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">LOI Submitted Successfully!</h2>
-            <p class="text-gray-600 mb-6">Your Letter of Intent has been sent to our broker team.</p>
-            
-            <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-                <h4 class="font-semibold text-gray-900 mb-3">Submission Summary</h4>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">LOI Type:</span>
-                        <span class="font-medium">${loi.name}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Property:</span>
-                        <span class="font-medium">${property.city}, ${property.state}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Submitted By:</span>
-                        <span class="font-medium">${data.firstName} ${data.lastName}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Company:</span>
-                        <span class="font-medium">${data.company}</span>
-                    </div>
-                    ${uploadedLOIFile ? `
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Attached File:</span>
-                        <span class="font-medium text-green-600">✓ ${uploadedLOIFile.name}</span>
-                    </div>
-                    ` : ''}
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">LOI Submitted!</h2>
+            <p class="text-gray-600 mb-4">Your Letter of Intent has been prepared. Please complete the steps below.</p>
+
+            <!-- Broker email info -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-left">
+                <p class="text-sm font-semibold text-blue-900 mb-1">📧 Send this LOI to your broker:</p>
+                <p class="text-blue-800 font-mono text-sm break-all">${brokerEmail}</p>
+                <p class="text-xs text-blue-600 mt-1">CC: realestatedispositions@walmart.com</p>
+            </div>
+
+            <!-- LOI details to copy -->
+            <div class="mb-4 text-left">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm font-semibold text-gray-700">Full LOI Details — copy and paste into your email:</p>
+                    <button id="copy-loi-btn" onclick="window._copyLOI()" 
+                            class="text-xs bg-walmart-blue text-white px-3 py-1 rounded-lg hover:bg-walmart-dark transition-colors">
+                        📋 Copy LOI Details
+                    </button>
                 </div>
+                <textarea id="${copyId}" readonly rows="8"
+                    class="w-full text-xs font-mono border border-gray-200 rounded-lg p-3 bg-gray-50 resize-none"
+                    onclick="this.select()"
+                >${loiDetails ? loiDetails.replace(/</g, '&lt;') : ''}</textarea>
             </div>
-            
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p class="text-sm text-blue-800">
-                    <strong>What's Next?</strong><br>
-                    A broker will review your LOI and contact you within 1-2 business days at <strong>${data.email}</strong> or <strong>${data.phone}</strong>.
-                </p>
-            </div>
-            
-            <div class="flex flex-col sm:flex-row gap-3">
+
+            <!-- Email action buttons -->
+            <div class="flex flex-col gap-3 mb-4">
+                <a href="${gmailLink}" target="_blank" rel="noopener"
+                   class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors">
+                    📧 Open Gmail to Send
+                </a>
                 <button onclick="closeAllModals()" 
-                        class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors">
-                    Back to Properties
+                        class="w-full bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    ← Back to Properties
                 </button>
-                <button onclick="window.print()" 
-                        class="flex-1 border-2 border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                    </svg>
-                    Print Confirmation
-                </button>
+            </div>
+
+            <!-- What's next -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-left">
+                <p class="text-xs text-yellow-800">
+                    <strong>What’s Next?</strong> Copy the LOI details above, paste into an email to the broker,
+                    and send. A broker will respond within 1–2 business days at <strong>${data.email}</strong>.
+                </p>
             </div>
         </div>
     `;

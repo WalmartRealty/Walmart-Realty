@@ -9,8 +9,10 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const net = require('net');
+const os = require('os');
 const fs = require('fs');
 const crypto = require('crypto');
+const { execSync } = require('child_process');
 const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -1075,7 +1077,168 @@ app.get('/api/admin/activity', authenticateToken, (req, res) => {
     res.json(activities);
 });
 
-// ============= PORT CHECKING & SERVER START =============
+// ============= ADMIN SYNC & EXPORT ROUTES =============
+
+// Sync properties from DB → properties.json → git push (admin only)
+app.post('/api/admin/sync-github', authenticateToken, (req, res) => {
+    try {
+        const repoRoot = path.join(__dirname, '..');
+        const propsFile = path.join(repoRoot, 'properties.json');
+
+        // Pull current DB properties
+        const dbProps = db.prepare('SELECT * FROM properties ORDER BY id').all();
+
+        // Merge with existing properties.json to preserve extra fields
+        // (broker_company, marketingMaterials, store_num, etc.)
+        let existingProps = [];
+        try {
+            existingProps = JSON.parse(fs.readFileSync(propsFile, 'utf8'));
+        } catch (_) { /* file missing or invalid — start fresh */ }
+
+        const existingById = {};
+        existingProps.forEach(p => { existingById[p.id || p.store_num] = p; });
+
+        const merged = dbProps.map(p => {
+            const base = existingById[p.id] || {};
+            return {
+                ...base,          // preserve extra fields (broker_company, etc.)
+                id: p.id,
+                city: p.city,
+                state: p.state,
+                address: p.address,
+                size_acres: p.size_acres,
+                size_sqft: p.size_sqft || null,
+                property_type: p.type || p.property_type || 'land',
+                listing_type: p.listing_type || 'sale',
+                price: p.price,
+                status: p.status || 'available',
+                description: p.description,
+                lat: p.lat,
+                lon: p.lon,
+                image_url: p.image || p.image_url || null,
+                broker_name: p.broker_name,
+                broker_email: p.broker_email,
+                broker_phone: p.broker_phone,
+                store_number: p.store_number || base.store_number || null,
+                updated_at: new Date().toISOString()
+            };
+        });
+
+        fs.writeFileSync(propsFile, JSON.stringify(merged, null, 2), 'utf8');
+        console.log(`[sync-github] Wrote ${merged.length} properties to properties.json`);
+
+        // Attempt git commit + push
+        try {
+            execSync('git add properties.json', { cwd: repoRoot, stdio: 'pipe' });
+            execSync(
+                `git commit -m "Admin: Update ${merged.length} properties from admin panel [skip ci]" --no-verify`,
+                { cwd: repoRoot, stdio: 'pipe' }
+            );
+            execSync('git push', { cwd: repoRoot, stdio: 'pipe' });
+            logActivity(req.user.id, 'SYNC_GITHUB', 'properties', null, { count: merged.length });
+            res.json({
+                success: true,
+                message: `✅ Synced ${merged.length} properties to GitHub Pages! Live in ~60 seconds.`,
+                count: merged.length
+            });
+        } catch (gitErr) {
+            // JSON written OK, but git push failed
+            const gitMsg = gitErr.stderr?.toString() || gitErr.message || 'git error';
+            console.error('[sync-github] git error:', gitMsg);
+            res.json({
+                success: true,
+                warning: 'properties.json updated locally but git push failed. Run: git add properties.json && git push',
+                gitError: gitMsg,
+                count: merged.length
+            });
+        }
+    } catch (err) {
+        console.error('[sync-github] error:', err);
+        res.status(500).json({ error: 'Sync failed: ' + err.message });
+    }
+});
+
+// Export all LOI submissions as CSV (admin only)
+app.get('/api/admin/export-loi', authenticateToken, (req, res) => {
+    const rows = db.prepare(`
+        SELECT l.*, p.city, p.state, p.address
+        FROM loi_submissions l
+        LEFT JOIN properties p ON l.property_id = p.id
+        ORDER BY l.created_at DESC
+    `).all();
+
+    const headers = [
+        'id', 'created_at', 'status', 'loi_type',
+        'first_name', 'last_name', 'email', 'phone', 'company',
+        'city', 'state', 'address'
+    ];
+    const csvRows = rows.map(r =>
+        headers.map(h => JSON.stringify(r[h] ?? '')).join(',')
+    );
+    const csv = [headers.join(','), ...csvRows].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="loi-submissions-${Date.now()}.csv"`);
+    res.send(csv);
+});
+
+// Seed DB from properties.json (admin + auto-run on startup when empty)
+function seedFromPropertiesJson() {
+    const count = db.prepare('SELECT COUNT(*) as n FROM properties').get().n;
+    if (count > 0) return;
+
+    const propsFile = path.join(__dirname, '..', 'properties.json');
+    if (!fs.existsSync(propsFile)) {
+        console.log('[seed] properties.json not found — skipping seed.');
+        return;
+    }
+    try {
+        const props = JSON.parse(fs.readFileSync(propsFile, 'utf8'));
+        const stmt = db.prepare(`
+            INSERT OR IGNORE INTO properties
+                (id, city, state, address, size_acres, price, type, listing_type,
+                 status, description, lat, lon, image, broker_name, broker_email, broker_phone)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        const insertMany = db.transaction((list) => {
+            let n = 0;
+            for (const p of list) {
+                stmt.run(
+                    p.id || null,
+                    p.city, p.state, p.address || null,
+                    p.size_acres || null, p.price || null,
+                    p.property_type || p.type || 'land',
+                    p.listing_type || 'sale',
+                    p.status || 'available',
+                    p.description || null,
+                    p.lat || null, p.lon || null,
+                    p.image_url || p.image || null,
+                    p.broker_name || null, p.broker_email || null, p.broker_phone || null
+                );
+                n++;
+            }
+            return n;
+        });
+        const n = insertMany(props);
+        console.log(`[seed] Imported ${n} properties from properties.json into local database.`);
+    } catch (err) {
+        console.error('[seed] Failed to seed from properties.json:', err.message);
+    }
+}
+
+
+
+/** Returns all local IPv4 addresses for LAN access display */
+function getLocalIPs() {
+    const ifaces = os.networkInterfaces();
+    const ips = [];
+    for (const iface of Object.values(ifaces)) {
+        for (const addr of iface) {
+            if (addr.family === 'IPv4' && !addr.internal) ips.push(addr.address);
+        }
+    }
+    return ips;
+}
 
 function isPortInUse(port) {
     return new Promise((resolve) => {
@@ -1152,18 +1315,34 @@ async function findAvailablePort(startPort) {
 
 async function startServer() {
     try {
+        // Auto-seed from properties.json if DB is empty
+        seedFromPropertiesJson();
+
         const port = await findAvailablePort(DEFAULT_PORT);
-        
-        app.listen(port, () => {
-            console.log('\n============================================');
-            console.log('   WALMART REAL ESTATE SERVER');
-            console.log('============================================');
-            console.log(`   🚀 Server running on: http://localhost:${port}`);
-            console.log(`   📊 Admin panel: http://localhost:${port}/admin.html`);
-            console.log(`   🏠 Public site: http://localhost:${port}/index.html`);
-            console.log('============================================');
-            console.log('   Default admin: username=admin, password=admin123');
-            console.log('============================================\n');
+        const lanIPs = getLocalIPs();
+
+        // Bind to all interfaces so team devices on the same WiFi can connect
+        app.listen(port, '0.0.0.0', () => {
+            const adminPw = process.env.ADMIN_PASSWORD || 'admin123';
+            console.log('\n================================================');
+            console.log('   🏪  WALMART REAL ESTATE — ICSC SERVER');
+            console.log('================================================');
+            console.log(`   ✅  Server running on port: ${port}`);
+            console.log('');
+            console.log('   💻  YOUR DEVICE (this laptop):');
+            console.log(`       Admin:  http://localhost:${port}/admin.html`);
+            console.log(`       Public: http://localhost:${port}/index.html`);
+            if (lanIPs.length > 0) {
+                console.log('');
+                console.log('   📱  TEAM DEVICES (same WiFi/hotspot):');
+                lanIPs.forEach(ip => {
+                    console.log(`       Admin:  http://${ip}:${port}/admin.html`);
+                    console.log(`       Public: http://${ip}:${port}/index.html`);
+                });
+            }
+            console.log('');
+            console.log('   🔑  Admin login:  admin / ' + adminPw);
+            console.log('================================================\n');
         });
     } catch (error) {
         console.error('Failed to start server:', error.message);

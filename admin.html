@@ -142,6 +142,13 @@
                     </svg>
                     Add New Property
                 </button>
+                <button onclick="syncToGitHub()" id="sync-github-btn"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    🚀 Publish to GitHub Pages
+                </button>
                 <button onclick="exportProperties()" 
                         class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,6 +163,10 @@
                     Import Data
                     <input type="file" accept=".json" onchange="importProperties(event)" class="hidden">
                 </label>
+                <button onclick="changeServerUrl()" title="Change backend server URL"
+                        class="border-2 border-gray-300 hover:b500 text-gray-500 hover:text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors flex items-center gap-1 text-sm">
+                    ⚙️ Server
+                </button>
             </div>
             
             <!-- Search & Filter -->
@@ -813,9 +824,80 @@
     </div>
 
     <script>
-        // API base URL
-        const API_BASE = window.location.origin;
-        
+        // ── API Base URL ─────────────────────────────────────────────────────────
+        // When accessed from GitHub Pages, the origin won't have a backend.
+        // We check localStorage for a saved server URL so the team can configure
+        // it once (e.g. http://192.168.1.x:3000) and it persists.
+        const GH_PAGES_ORIGIN = 'https://walmartrealty.github.io';
+        const savedApiBase = localStorage.getItem('adminApiBase');
+        const API_BASE = savedApiBase ||
+            (window.location.origin.includes('github.io') ? null : window.location.origin);
+
+        // Show configuration overlay if we don't have a backend URL yet
+        if (!API_BASE) {
+            document.addEventListener('DOMContentLoaded', () => showServerConfigOverlay());
+        }
+
+        function showServerConfigOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'server-config-overlay';
+            overlay.innerHTML = `
+                <div style="position:fixed;inset:0;background:rgba(0,0,53,0.92);z-index:9999;
+                            display:flex;align-items:center;justify-content:center;">
+                    <div style="background:white;border-radius:12px;padding:36px;max-width:460px;
+                                width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+                        <div style="text-align:center;margin-bottom:24px;">
+                            <div style="font-size:48px;margin-bottom:8px">🏪</div>
+                            <h2 style="color:#0053e2;font-size:22px;font-weight:700;margin:0 0 8px">
+                                Connect to Backend Server
+                            </h2>
+                            <p style="color:#666;font-size:14px;margin:0;">
+                                The admin panel needs the local server URL.<br>
+                                Run <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">start-icsc.sh</code>
+                                on the laptop and enter the IP shown.
+                            </p>
+                        </div>
+                        <input id="server-url-input" type="url"
+                            placeholder="e.g. http://192.168.1.42:3000"
+                            value="http://localhost:3000"
+                            style="width:100%;border:2px solid #ddd;border-radius:8px;
+                                   padding:12px;font-size:15px;box-sizing:border-box;
+                                   margin-bottom:16px;outline:none;"
+                            onfocus="this.style.borderColor='#0053e2'"
+                            onblur="this.style.borderColor='#ddd'"
+                        />
+                        <button onclick="applyServerConfig()"
+                            style="width:100%;background:#0053e2;color:white;border:none;
+                                   border-radius:8px;padding:14px;font-size:16px;
+                                   font-weight:600;cursor:pointer;">
+                            Connect →
+                        </button>
+                        <p style="text-align:center;color:#999;font-size:12px;margin:12px 0 0">
+                            This setting is saved in your browser.
+                        </p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function applyServerConfig() {
+            const input = document.getElementById('server-url-input');
+            const url = input.value.trim().replace(/\/$/, '');
+            if (!url.startsWith('http')) {
+                input.style.borderColor = 'red';
+                return;
+            }
+            localStorage.setItem('adminApiBase', url);
+            window.location.reload();
+        }
+
+        function changeServerUrl() {
+            localStorage.removeItem('adminApiBase');
+            window.location.reload();
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         
         // Auth token storage
         let authToken = sessionStorage.getItem('authToken');
@@ -1917,6 +1999,34 @@
             URL.revokeObjectURL(url);
             showToast('Properties exported!');
         }
+
+        async function syncToGitHub() {
+            if (!authToken) { showToast('Please log in first', 'error'); return; }
+            const btn = document.getElementById('sync-github-btn');
+            btn.disabled = true;
+            btn.innerHTML = `⏳ Syncing…`;
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/sync-github`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || '✅ Synced to GitHub Pages!');
+                    if (data.warning) {
+                        setTimeout(() => showToast('⚠️ ' + data.warning, 'warning'), 1500);
+                    }
+                } else {
+                    showToast(data.error || 'Sync failed', 'error');
+                }
+            } catch (err) {
+                showToast('Cannot reach server — is it running?', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `🚀 Publish to GitHub Pages`;
+            }
+        }
+
         
         function importProperties(event) {
             const file = event.target.files[0];
