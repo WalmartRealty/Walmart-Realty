@@ -1956,15 +1956,10 @@
         // ========== BULK IMPORT ==========
 
         function downloadPropertyTemplate() {
-            const headers = ['city','state','property_type','listing_type','size_acres','price','lat','lon','status','address','description'];
-            const example1 = ['Rogers','AR','land','sale','33.38','7000000','36.3371','-94.2258','available','Near Mathis Airport Pkwy','Prime commercial land parcel'];
-            const example2 = ['Niskayuna','NY','buildings','ground_lease','2.5','150000','42.7733','-73.8953','available','123 Main St','Former retail building for ground lease'];
-
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet([headers, example1, example2]);
-            ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length + 4, 18) }));
-            XLSX.utils.book_append_sheet(wb, ws, 'Properties');
-            XLSX.writeFile(wb, 'walmart-realty-property-template.xlsx');
+            const a = document.createElement('a');
+            a.href = '/Dark-Stores-Import-Ready.xlsx';
+            a.download = 'walmart-realty-property-template.xlsx';
+            a.click();
             showToast('Template downloaded!');
         }
 
