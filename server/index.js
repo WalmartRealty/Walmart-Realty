@@ -497,7 +497,8 @@ app.get('/api/properties', (req, res) => {
         params.push(status);
     }
     if (type) {
-        query += ' AND type = ?';
+        // DB uses property_type, not type
+        query += ' AND property_type = ?';
         params.push(type);
     }
     if (listing_type) {
@@ -539,17 +540,33 @@ app.get('/api/properties/:id', (req, res) => {
 // Create property (admin only)
 app.post('/api/properties', authenticateToken, (req, res) => {
     const {
-        title, city, state, address, size_acres, price, type, listing_type,
-        status, description, lat, lon, image, broker_name, broker_email, broker_phone
+        city, state, address, size_acres, price,
+        type, property_type,          // accept both; 'type' from admin form
+        status, description, lat, lon,
+        image, image_url,             // accept both
+        broker_name, broker_email, broker_phone
     } = req.body;
-    
+
+    const resolvedType  = property_type || type || 'land';
+    const resolvedImage = image_url || image || null;
+
     const result = db.prepare(`
-        INSERT INTO properties (title, city, state, address, size_acres, price, type, listing_type, status, description, lat, lon, image, broker_name, broker_email, broker_phone)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(title, city, state, address, size_acres, price, type || 'land', listing_type || 'sale', status || 'available', description, lat, lon, image, broker_name, broker_email, broker_phone);
-    
-    logActivity(req.user.id, 'CREATE', 'property', result.lastInsertRowid, { title, city, state });
-    
+        INSERT INTO properties
+            (city, state, address, size_acres, price, property_type, listing_type,
+             status, description, lat, lon, image_url, broker_name, broker_email, broker_phone)
+        VALUES (?, ?, ?, ?, ?, ?, 'sale', ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+        city, state, address || null,
+        size_acres || null, price || null,
+        resolvedType,
+        status || 'available',
+        description || null,
+        lat || null, lon || null,
+        resolvedImage,
+        broker_name || null, broker_email || null, broker_phone || null
+    );
+
+    logActivity(req.user.id, 'CREATE', 'property', result.lastInsertRowid, { city, state });
     res.status(201).json({ id: result.lastInsertRowid, message: 'Property created successfully' });
 });
 
@@ -557,23 +574,51 @@ app.post('/api/properties', authenticateToken, (req, res) => {
 app.put('/api/properties/:id', authenticateToken, (req, res) => {
     const { id } = req.params;
     const updates = req.body;
-    
+
     const existingProperty = db.prepare('SELECT * FROM properties WHERE id = ?').get(id);
     if (!existingProperty) {
         return res.status(404).json({ error: 'Property not found' });
     }
-    
-    const fields = Object.keys(updates).filter(k => k !== 'id');
-    const setClause = fields.map(f => `${f} = ?`).join(', ');
-    const values = fields.map(f => updates[f]);
-    
+
+    // Map frontend field names -> actual DB column names, whitelist valid columns only
+    const FIELD_MAP = {
+        type:         'property_type',
+        property_type:'property_type',
+        image:        'image_url',
+        image_url:    'image_url',
+        city:         'city',
+        state:        'state',
+        address:      'address',
+        size_acres:   'size_acres',
+        price:        'price',
+        listing_type: 'listing_type',
+        status:       'status',
+        description:  'description',
+        lat:          'lat',
+        lon:          'lon',
+        broker_name:  'broker_name',
+        broker_email: 'broker_email',
+        broker_phone: 'broker_phone',
+        store_number: 'store_number',
+        featured:     'featured'
+    };
+
+    const mapped = {};
+    for (const [k, v] of Object.entries(updates)) {
+        if (k === 'id') continue;
+        const col = FIELD_MAP[k];
+        if (col) mapped[col] = v;
+    }
+
+    const fields = Object.keys(mapped);
     if (fields.length > 0) {
+        const setClause = fields.map(f => `${f} = ?`).join(', ');
+        const values    = fields.map(f => mapped[f]);
         db.prepare(`UPDATE properties SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
             .run(...values, id);
     }
-    
+
     logActivity(req.user.id, 'UPDATE', 'property', id, updates);
-    
     res.json({ message: 'Property updated successfully' });
 });
 
