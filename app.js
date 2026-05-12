@@ -2548,23 +2548,27 @@ function addPropertyMarkers(propertiesToShow) {
     // Clear existing markers
     mainMapMarkers.forEach(marker => mainMap.removeLayer(marker));
     mainMapMarkers = [];
-    
-    // Create custom Walmart icon
-    const walmartIcon = L.divIcon({
-        className: 'custom-marker',
-        html: `<div style="background-color: #001e60; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFC220">
-                    <circle cx="12" cy="12" r="4"/>
-                </svg>
-               </div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-        popupAnchor: [0, -20]
-    });
-    
+
+    // Build a marker icon — dark stores get #001e60, everything else original #0071CE
+    function makeIcon(property) {
+        const isDarkStore = (property.type || property.property_type || '') === 'dark-store';
+        const color = isDarkStore ? '#001e60' : '#0071CE';
+        return L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background-color: ${color}; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFC220">
+                        <circle cx="12" cy="12" r="4"/>
+                    </svg>
+                   </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -20]
+        });
+    }
+
     // Add markers for each property
     propertiesToShow.forEach(property => {
-        const marker = L.marker([property.lat, property.lon], { icon: walmartIcon })
+        const marker = L.marker([property.lat, property.lon], { icon: makeIcon(property) })
             .addTo(mainMap);
         
         // Build ESRI aerial image URL (free, no API key)
