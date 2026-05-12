@@ -1367,9 +1367,19 @@
             
             noBrokers.classList.add('hidden');
             
-            tbody.innerHTML = brokers.map(b => `
+            tbody.innerHTML = brokers.map(b => {
+                const initials = b.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
+                const avatar = b.photo
+                    ? `<img src="${b.photo}" alt="${b.name}" class="w-9 h-9 rounded-full object-cover object-top border border-gray-200 shrink-0">`
+                    : `<div class="w-9 h-9 rounded-full bg-walmart-blue flex items-center justify-center text-white text-xs font-bold shrink-0">${initials}</div>`;
+                return `
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-gray-900">${b.name}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            ${avatar}
+                            <span class="font-medium text-gray-900">${b.name}</span>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 text-gray-600">${b.email}</td>
                     <td class="px-6 py-4 text-gray-600">${b.phone || '-'}</td>
                     <td class="px-6 py-4 text-gray-600">${b.company || '-'}</td>
@@ -1384,17 +1394,43 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <button onclick="editBroker(${b.id})" class="text-walmart-blue hover:text-walmart-dark font-medium text-sm mr-3">
-                            Edit
-                        </button>
-                        <button onclick="deleteBroker(${b.id})" class="text-red-600 hover:text-red-800 font-medium text-sm">
-                            Delete
-                        </button>
+                        <label class="cursor-pointer text-gray-500 hover:text-walmart-blue font-medium text-sm mr-3" title="Upload photo">
+                            📷
+                            <input type="file" accept="image/*" class="hidden" onchange="uploadBrokerPhoto(${b.id}, this)">
+                        </label>
+                        <button onclick="editBroker(${b.id})" class="text-walmart-blue hover:text-walmart-dark font-medium text-sm mr-3">Edit</button>
+                        <button onclick="deleteBroker(${b.id})" class="text-red-600 hover:text-red-800 font-medium text-sm">Delete</button>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
         }
         
+        async function uploadBrokerPhoto(brokerId, input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('photo', file);
+
+            showToast('Uploading photo…');
+            try {
+                const res = await fetch(`${API_BASE}/api/brokers/${brokerId}/photo`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('✅ Photo uploaded!');
+                    loadBrokers(); // refresh table to show new avatar
+                } else {
+                    showToast(data.error || 'Upload failed', 'error');
+                }
+            } catch (err) {
+                showToast('Upload failed — is the server running?', 'error');
+            }
+        }
+
         function openBrokerModal(brokerId = null) {
             document.getElementById('broker-form').reset();
             document.getElementById('broker-id').value = '';

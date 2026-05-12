@@ -266,6 +266,7 @@ db.exec(`
         phone TEXT,
         company TEXT,
         states TEXT NOT NULL,
+        photo TEXT,
         is_active INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -929,6 +930,29 @@ app.post('/api/brokers/import', authenticateToken, (req, res) => {
 });
 
 // Update broker (admin only)
+// Migrate: add photo column to brokers if it doesn't exist yet
+try {
+    const cols = db.prepare('PRAGMA table_info(brokers)').all().map(c => c.name);
+    if (!cols.includes('photo')) {
+        db.prepare('ALTER TABLE brokers ADD COLUMN photo TEXT').run();
+        console.log('[migrate] Added photo column to brokers table');
+    }
+} catch (e) { console.warn('[migrate] brokers photo column:', e.message); }
+
+// Upload broker photo (admin only)
+app.post('/api/brokers/:id/photo', authenticateToken, upload.single('photo'), (req, res) => {
+    const { id } = req.params;
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const broker = db.prepare('SELECT * FROM brokers WHERE id = ?').get(id);
+    if (!broker) return res.status(404).json({ error: 'Broker not found' });
+
+    const photoUrl = `/uploads/${req.file.filename}`;
+    db.prepare('UPDATE brokers SET photo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(photoUrl, id);
+    logActivity(req.user.id, 'UPDATE', 'broker', id, { photo: photoUrl });
+    res.json({ photo: photoUrl, message: 'Photo uploaded successfully' });
+});
+
 app.put('/api/brokers/:id', authenticateToken, (req, res) => {
     const { id } = req.params;
     const { name, email, phone, company, states, is_active } = req.body;
