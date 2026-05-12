@@ -2077,7 +2077,9 @@
                     if (imported === 0 && skipped > 0) {
                         showToast(`⚠️ Nothing imported — ${skipped} rows skipped. Check the console (F12) for details.`, 'error');
                     } else {
-                        showToast(`✅ Imported ${imported} properties${skipped ? `, skipped ${skipped}` : ''}!`);
+                        showToast(`✅ Imported ${imported} properties${skipped ? `, skipped ${skipped}` : ''}! Syncing to GitHub…`);
+                        // Auto-sync to GitHub Pages so the public site updates
+                        await syncToGitHub();
                     }
                     if (errors.length) console.warn('Import row errors:', errors);
 
@@ -2187,7 +2189,8 @@
 
                 savePropertiesToStorage();
                 closePropertyModal();
-                loadProperties();
+                await loadProperties();
+                syncToGitHub(); // push to GitHub Pages in background
             } catch (err) {
                 console.error('saveProperty error:', err);
                 showToast('Save failed — is the server running? ' + err.message, 'error');
@@ -2352,8 +2355,7 @@
         async function syncToGitHub() {
             if (!authToken) { showToast('Please log in first', 'error'); return; }
             const btn = document.getElementById('sync-github-btn');
-            btn.disabled = true;
-            btn.innerHTML = `⏳ Syncing…`;
+            if (btn) { btn.disabled = true; btn.innerHTML = `⏳ Syncing…`; }
             try {
                 const res = await fetch(`${API_BASE}/api/admin/sync-github`, {
                     method: 'POST',
@@ -2371,8 +2373,7 @@
             } catch (err) {
                 showToast('Cannot reach server — is it running?', 'error');
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = `🚀 Publish to GitHub Pages`;
+                if (btn) { btn.disabled = false; btn.innerHTML = `🚀 Publish to GitHub Pages`; }
             }
         }
 
