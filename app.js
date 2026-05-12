@@ -666,7 +666,7 @@ function createPropertyCard(property) {
                         <div>
                             <div class="flex gap-2 mb-1">
                                 ${getStatusBadge(status)}
-                                ${property.listingType === 'lease' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">For Lease</span>' : ''}
+                                ${property.listingType === 'lease' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#a9ddf7;color:#001e60">For Lease</span>' : ''}
                             </div>
                             <h4 class="text-lg font-bold text-gray-900 line-clamp-1">${property.city}, ${property.state}</h4>
                         </div>
@@ -1038,7 +1038,7 @@ function openPropertyModal(id) {
             </button>
             <div class="absolute bottom-4 left-4 flex gap-2 z-10">
                 ${getStatusBadge(property.status, 'lg')}
-                ${property.listingType === 'lease' ? '<span class="px-4 py-2 rounded-full text-sm font-semibold bg-purple-600 text-white">For Lease</span>' : ''}
+                ${property.listingType === 'lease' ? '<span class="px-4 py-2 rounded-full text-sm font-semibold" style="background:#a9ddf7;color:#001e60">For Lease</span>' : ''}
             </div>
             <a href="${mapsLink}" target="_blank" rel="noopener noreferrer" 
                class="absolute bottom-4 right-4 px-4 py-2 rounded-full text-sm font-semibold bg-white text-gray-800 hover:bg-gray-100 transition-colors z-10 flex items-center gap-2">
