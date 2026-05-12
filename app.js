@@ -39,12 +39,7 @@ async function loadPropertiesFromFile() {
     // Check for embedded properties first (bundled version)
     if (window.EMBEDDED_PROPERTIES && Array.isArray(window.EMBEDDED_PROPERTIES) && window.EMBEDDED_PROPERTIES.length > 0) {
         console.log('Found', window.EMBEDDED_PROPERTIES.length, 'embedded properties (bundled mode)');
-        return window.EMBEDDED_PROPERTIES.map((p, i) => ({
-            ...p,
-            id: p.id || p.store_num || (i + 1),
-            listingType: 'sale',
-            status: 'available'
-        }));
+        return window.EMBEDDED_PROPERTIES.map((p, i) => normaliseProperty(p, i));
     }
     
     // Otherwise try fetching properties.json
@@ -54,17 +49,27 @@ async function loadPropertiesFromFile() {
         if (response.ok) {
             const props = await response.json();
             console.log('Parsed', props.length, 'properties from JSON');
-            return props.map((p, i) => ({
-                ...p,
-                id: p.id || p.store_num || (i + 1),
-                listingType: 'sale',
-                status: 'available'
-            }));
+            return props.map((p, i) => normaliseProperty(p, i));
         }
     } catch (e) {
         console.error('Failed to load properties from JSON:', e);
     }
     return null;
+}
+
+// Normalise a raw property record from properties.json into the shape the
+// rest of the app expects. Handles both legacy (type) and DB-sourced
+// (property_type) field names without clobbering real status values.
+function normaliseProperty(p, index) {
+    return {
+        ...p,
+        id:          p.id || p.store_num || (index + 1),
+        type:        p.type || p.property_type || 'land',
+        listingType: p.listingType || p.listing_type || 'sale',
+        status:      p.status || 'available',
+        lotSize:     p.size_acres ? `${p.size_acres} acres` : 'N/A',
+        sizeAcres:   p.size_acres
+    };
 }
 
 // Fallback properties if file load fails
@@ -151,10 +156,12 @@ function getPropertyImage(index, type) {
 // Transform raw data into full property objects
 function transformProperties(rawProps) {
     return rawProps.map((p, index) => {
-        const isRetail = p.type === 'retail';
+        // Resolve type from either legacy 'type' or DB-sourced 'property_type'
+        const resolvedType = p.type || p.property_type || 'land';
+        const isRetail = resolvedType === 'retail';
         
         // Get thumbnail image
-        const image = getPropertyImage(index, p.type);
+        const image = getPropertyImage(index, resolvedType);
         
         // Calculate price per acre for land
         const pricePerAcre = p.size_acres ? Math.round((p.price || 0) / p.size_acres) : null;
@@ -163,6 +170,8 @@ function transformProperties(rawProps) {
         if (p.id && p.marketingMaterials) {
             return {
                 ...p,
+                type: resolvedType,
+                status: p.status || 'available',
                 title: p.title || (isRetail 
                     ? `Former Retail Location - ${p.city}, ${p.state}`
                     : `Development Land - ${p.city}, ${p.state}`),
@@ -181,8 +190,9 @@ function transformProperties(rawProps) {
             title: isRetail 
                 ? `Former Retail Location - ${p.city}, ${p.state}`
                 : `Development Land - ${p.city}, ${p.state}`,
-            type: p.type || 'land',
-            listingType: p.listingType || 'sale',
+            type: resolvedType,
+            status: p.status || 'available',
+            listingType: p.listingType || p.listing_type || 'sale',
             price: p.price,
             pricePerAcre: pricePerAcre,
             sizeAcres: p.size_acres,
