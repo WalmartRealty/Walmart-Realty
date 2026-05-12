@@ -186,7 +186,6 @@
                         <option value="">All Types</option>
                         <option value="land">Land</option>
                         <option value="buildings">Buildings</option>
-                        <option value="dark-store">Dark Store</option>
                     </select>
                 </div>
             </div>
@@ -688,7 +687,6 @@
                             <option value="">Select type...</option>
                             <option value="land">Land</option>
                             <option value="buildings">Buildings</option>
-                            <option value="dark-store">Dark Store</option>
                         </select>
                     </div>
                 </div>
@@ -2033,15 +2031,14 @@
         // ========== UTILITIES ==========
         
         function getTypeIcon(type) {
-            const icons = { land: '🌾', buildings: '🏢', 'dark-store': '🏪' };
+            const icons = { land: '🌾', buildings: '🏢' };
             return icons[type] || '🏠';
         }
         
         function getTypeBadgeClass(type) {
             const classes = {
                 land: 'bg-green-100 text-green-800',
-                buildings: 'bg-blue-100 text-blue-800',
-                'dark-store': 'bg-gray-800 text-white'
+                buildings: 'bg-blue-100 text-blue-800'
             };
             return classes[type] || 'bg-gray-100 text-gray-800';
         }

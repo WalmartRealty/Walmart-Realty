@@ -2558,8 +2558,8 @@ function addPropertyMarkers(propertiesToShow) {
 
     // Build a marker icon — dark stores get #001e60, everything else original #0071CE
     function makeIcon(property) {
-        const isDarkStore = (property.type || property.property_type || '') === 'dark-store';
-        const color = isDarkStore ? '#001e60' : '#0071CE';
+        const type = (property.type || property.property_type || '').toLowerCase();
+        const color = type === 'buildings' ? '#001e60' : '#0071CE';
         return L.divIcon({
             className: 'custom-marker',
             html: `<div style="background-color: ${color}; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
