@@ -765,6 +765,7 @@
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
                             <option value="sale">For Sale</option>
                             <option value="lease">For Lease</option>
+                            <option value="ground_lease">Ground Lease</option>
                         </select>
                     </div>
                 </div>
@@ -1936,7 +1937,8 @@
         // ========== PROPERTY CRUD ==========
         
         function updatePriceLabel() {
-            const isLease = document.getElementById('property-listing-type').value === 'lease';
+            const val = document.getElementById('property-listing-type').value;
+            const isLease = val === 'lease' || val === 'ground_lease';
             document.getElementById('price-label').textContent = isLease ? 'Annual Lease Rate ($/yr) *' : 'Price ($) *';
             document.getElementById('property-price').placeholder = isLease ? 'e.g., 200000  →  displays as $200,000/yr' : 'e.g., 500000';
             document.getElementById('price-hint').classList.toggle('hidden', !isLease);

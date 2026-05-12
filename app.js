@@ -348,7 +348,7 @@ function formatPrice(price, listingType) {
     if (price === null || price === undefined) {
         return 'Contact for Pricing';
     }
-    if (listingType === 'lease') {
+    if (listingType === 'lease' || listingType === 'ground_lease') {
         if (price >= 1000000) return `$${(price / 1000000).toFixed(1)}M/yr`;
         return `$${price.toLocaleString()}/yr`;
     }
@@ -666,7 +666,7 @@ function createPropertyCard(property) {
                         <div>
                             <div class="flex gap-2 mb-1">
                                 ${getStatusBadge(status)}
-                                ${property.listingType === 'lease' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#a9ddf7;color:#001e60">For Lease</span>' : ''}
+                                ${property.listingType === 'lease' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#a9ddf7;color:#001e60">For Lease</span>' : property.listingType === 'ground_lease' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#a9ddf7;color:#001e60">Ground Lease</span>' : ''}
                             </div>
                             <h4 class="text-lg font-bold text-gray-900 line-clamp-1">${property.city}, ${property.state}</h4>
                         </div>
@@ -1038,7 +1038,7 @@ function openPropertyModal(id) {
             </button>
             <div class="absolute bottom-4 left-4 flex gap-2 z-10">
                 ${getStatusBadge(property.status, 'lg')}
-                ${property.listingType === 'lease' ? '<span class="px-4 py-2 rounded-full text-sm font-semibold" style="background:#a9ddf7;color:#001e60">For Lease</span>' : ''}
+                ${property.listingType === 'lease' ? '<span class="px-4 py-2 rounded-full text-sm font-semibold" style="background:#a9ddf7;color:#001e60">For Lease</span>' : property.listingType === 'ground_lease' ? '<span class="px-4 py-2 rounded-full text-sm font-semibold" style="background:#a9ddf7;color:#001e60">Ground Lease</span>' : ''}
             </div>
             <a href="${mapsLink}" target="_blank" rel="noopener noreferrer" 
                class="absolute bottom-4 right-4 px-4 py-2 rounded-full text-sm font-semibold bg-white text-gray-800 hover:bg-gray-100 transition-colors z-10 flex items-center gap-2">
@@ -1062,7 +1062,7 @@ function openPropertyModal(id) {
                     <p class="text-gray-400 text-sm mt-1">Coordinates: ${property.lat}, ${property.lon}</p>
                 </div>
                 <div class="text-right">
-                    ${isSold ? '' : `<p class="text-2xl font-bold text-walmart-blue">${property.listingType === 'lease' ? formatPrice(property.price, 'lease') : 'Contact for Pricing'}</p>`}
+                    ${isSold ? '' : `<p class="text-2xl font-bold text-walmart-blue">${(property.listingType === 'lease' || property.listingType === 'ground_lease') ? formatPrice(property.price, property.listingType) : 'Contact for Pricing'}</p>`}
                 </div>
             </div>
             
