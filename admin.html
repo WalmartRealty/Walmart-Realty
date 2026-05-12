@@ -196,10 +196,26 @@
                     <table class="w-full">
                         <thead class="bg-gray-50 border-b">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Property</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Location</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Size</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">
+                                    <button onclick="sortAdminTable('city')" class="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                                        Property <span id="sort-arrow-city" class="text-gray-300">⇅</span>
+                                    </button>
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">
+                                    <button onclick="sortAdminTable('state')" class="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                                        Location <span id="sort-arrow-state" class="text-gray-300">⇅</span>
+                                    </button>
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">
+                                    <button onclick="sortAdminTable('type')" class="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                                        Type <span id="sort-arrow-type" class="text-gray-300">⇅</span>
+                                    </button>
+                                </th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">
+                                    <button onclick="sortAdminTable('size_acres')" class="flex items-center gap-1 hover:text-gray-800 transition-colors">
+                                        Size <span id="sort-arrow-size_acres" class="text-gray-300">⇅</span>
+                                    </button>
+                                </th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Price</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Marketing</th>
                                 <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
@@ -884,8 +900,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">Delete Item?</h3>
-                <p class="text-gray-600 mb-6" id="delete-message">Are you sure?</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Are you sure?</h3>
+                <p class="text-gray-600 mb-6" id="delete-message">This action cannot be undone.</p>
                 
                 <div class="flex gap-3">
                     <button onclick="confirmDelete()" 
@@ -993,6 +1009,8 @@
         let deleteType = null;
         let currentPropertyId = null;
         let pendingMarketingFiles = [];
+        let adminSortCol = null;   // column key currently sorted
+        let adminSortDir = 1;      // 1 = asc, -1 = desc
         
         // Check auth on load
         function checkAuth() {
@@ -1195,6 +1213,46 @@
             renderPropertiesTable();
         }
         
+        function sortAdminTable(col) {
+            if (adminSortCol === col) {
+                adminSortDir *= -1;  // flip direction
+            } else {
+                adminSortCol = col;
+                adminSortDir = 1;   // reset to asc on new column
+            }
+            renderPropertiesTable();
+        }
+
+        function getSortedProperties() {
+            if (!adminSortCol) return filteredProperties;
+            return [...filteredProperties].sort((a, b) => {
+                // resolve the right field (DB uses property_type, admin array may use type)
+                const getVal = (p) => {
+                    if (adminSortCol === 'type') return (p.property_type || p.type || '').toLowerCase();
+                    const v = p[adminSortCol];
+                    return typeof v === 'string' ? v.toLowerCase() : (v ?? 0);
+                };
+                const va = getVal(a), vb = getVal(b);
+                if (va < vb) return -1 * adminSortDir;
+                if (va > vb) return  1 * adminSortDir;
+                return 0;
+            });
+        }
+
+        function updateSortArrows() {
+            ['city','state','type','size_acres'].forEach(col => {
+                const el = document.getElementById(`sort-arrow-${col}`);
+                if (!el) return;
+                if (adminSortCol !== col) {
+                    el.textContent = '⇅';
+                    el.classList.replace('text-walmart-blue', 'text-gray-300') || el.classList.add('text-gray-300');
+                } else {
+                    el.textContent = adminSortDir === 1 ? '↑' : '↓';
+                    el.classList.replace('text-gray-300', 'text-walmart-blue') || el.classList.add('text-walmart-blue');
+                }
+            });
+        }
+
         function renderPropertiesTable() {
             const tbody = document.getElementById('properties-table-body');
             const noProps = document.getElementById('no-properties');
@@ -1206,13 +1264,20 @@
             }
             
             noProps.classList.add('hidden');
-            
-            tbody.innerHTML = filteredProperties.map(p => `
-                <tr class="hover:bg-gray-50">
+            updateSortArrows();
+
+            const rows = getSortedProperties();
+            tbody.innerHTML = rows.map(p => {
+                const typeLabel = (p.property_type || p.type || 'land');
+                const typeDisplay = typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1);
+                return `
+                <tr class="hover:bg-gray-50 cursor-pointer"
+                    ondblclick="editProperty(${p.id})"
+                    title="Double-click to edit">
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="h-10 w-10 bg-gray-200 rounded-lg flex items-center justify-center text-lg">
-                                ${getTypeIcon(p.type)}
+                                ${getTypeIcon(typeLabel)}
                             </div>
                             <div>
                                 <p class="font-medium text-gray-900">${p.city}</p>
@@ -1222,27 +1287,27 @@
                     </td>
                     <td class="px-6 py-4 text-gray-900">${p.city}, ${p.state}</td>
                     <td class="px-6 py-4">
-                        <span class="px-2 py-1 rounded-full text-xs font-medium ${getTypeBadgeClass(p.type)}">
-                            ${p.type.charAt(0).toUpperCase() + p.type.slice(1)}
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${getTypeBadgeClass(typeLabel)}">
+                            ${typeDisplay}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-gray-900">${p.size_acres} acres</td>
+                    <td class="px-6 py-4 text-gray-900">${p.size_acres ?? '—'} acres</td>
                     <td class="px-6 py-4 text-gray-900 font-medium">${formatPrice(p.price)}</td>
                     <td class="px-6 py-4">
-                        <button onclick="openMarketingModal(${p.id})" class="text-walmart-blue hover:text-walmart-dark text-sm">
+                        <button onclick="event.stopPropagation(); openMarketingModal(${p.id})" class="text-walmart-blue hover:text-walmart-dark text-sm">
                             📎 Upload
                         </button>
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <button onclick="editProperty(${p.id})" class="text-walmart-blue hover:text-walmart-dark font-medium text-sm mr-3">
+                        <button onclick="event.stopPropagation(); editProperty(${p.id})" class="text-walmart-blue hover:text-walmart-dark font-medium text-sm mr-3">
                             Edit
                         </button>
-                        <button onclick="deleteProperty(${p.id})" class="text-red-600 hover:text-red-800 font-medium text-sm">
+                        <button onclick="event.stopPropagation(); deleteProperty(${p.id})" class="text-red-600 hover:text-red-800 font-medium text-sm">
                             Delete
                         </button>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
         }
         
         // ========== BROKERS ==========
@@ -1963,9 +2028,11 @@
         
         function deleteProperty(id) {
             const property = adminProperties.find(p => p.id === id);
+            if (!property) return;
             deleteTarget = id;
             deleteType = 'property';
-            document.getElementById('delete-message').textContent = `Delete property "${property.city}, ${property.state}"?`;
+            document.getElementById('delete-message').textContent =
+                `Are you sure you want to delete "${property.city}, ${property.state}"? This cannot be undone.`;
             document.getElementById('delete-modal').classList.remove('hidden');
             document.getElementById('delete-modal').classList.add('flex');
         }
