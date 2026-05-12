@@ -185,9 +185,7 @@
                             class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
                         <option value="">All Types</option>
                         <option value="land">Land</option>
-                        <option value="retail">Retail</option>
-                        <option value="warehouse">Warehouse</option>
-                        <option value="office">Office</option>
+                        <option value="buildings">Buildings</option>
                     </select>
                 </div>
             </div>
@@ -688,9 +686,7 @@
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
                             <option value="">Select type...</option>
                             <option value="land">Land</option>
-                            <option value="retail">Retail</option>
-                            <option value="warehouse">Warehouse</option>
-                            <option value="office">Office</option>
+                            <option value="buildings">Buildings</option>
                         </select>
                     </div>
                     <div>
@@ -2007,16 +2003,14 @@
         // ========== UTILITIES ==========
         
         function getTypeIcon(type) {
-            const icons = { land: '🌾', retail: '🏪', warehouse: '🏭', office: '🏢' };
+            const icons = { land: '🌾', buildings: '🏢' };
             return icons[type] || '🏠';
         }
         
         function getTypeBadgeClass(type) {
             const classes = {
                 land: 'bg-green-100 text-green-800',
-                retail: 'bg-blue-100 text-blue-800',
-                warehouse: 'bg-orange-100 text-orange-800',
-                office: 'bg-purple-100 text-purple-800'
+                buildings: 'bg-blue-100 text-blue-800'
             };
             return classes[type] || 'bg-gray-100 text-gray-800';
         }
