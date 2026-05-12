@@ -8,6 +8,8 @@
     <meta http-equiv="Expires" content="0">
     <title>Admin Panel | Walmart Real Estate</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS for Excel/CSV parsing -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -156,12 +158,19 @@
                     </svg>
                     Export Data
                 </button>
+                <button onclick="downloadPropertyTemplate()"
+                        class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Download Template
+                </button>
                 <label class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 cursor-pointer">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                     </svg>
-                    Import Data
-                    <input type="file" accept=".json" onchange="importProperties(event)" class="hidden">
+                    Import Excel / CSV
+                    <input type="file" accept=".xlsx,.xls,.csv" onchange="importPropertiesExcel(event)" class="hidden">
                 </label>
                 <button onclick="changeServerUrl()" title="Change backend server URL"
                         class="border-2 border-gray-300 hover:b500 text-gray-500 hover:text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors flex items-center gap-1 text-sm">
@@ -1942,6 +1951,114 @@
             document.getElementById('price-label').textContent = isLease ? 'Annual Lease Rate ($/yr) *' : 'Price ($) *';
             document.getElementById('property-price').placeholder = isLease ? 'e.g., 200000  →  displays as $200,000/yr' : 'e.g., 500000';
             document.getElementById('price-hint').classList.toggle('hidden', !isLease);
+        }
+
+        // ========== BULK IMPORT ==========
+
+        function downloadPropertyTemplate() {
+            const headers = ['city','state','property_type','listing_type','size_acres','price','lat','lon','status','address','description'];
+            const example = ['Rogers','AR','land','sale','33.38','7000000','36.3371','-94.2258','available','Near Mathis Airport Pkwy','Prime commercial land parcel'];
+            const example2 = ['Niskayuna','NY','buildings','ground_lease','2.5','150000','42.7733','-73.8953','available','123 Main St','Former retail building for ground lease'];
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([headers, example, example2]);
+
+            // Column widths
+            ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length + 4, 16) }));
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Properties');
+            XLSX.writeFile(wb, 'walmart-realty-property-template.xlsx');
+            showToast('Template downloaded!');
+        }
+
+        async function importPropertiesExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            event.target.value = ''; // reset so same file can be re-imported
+
+            showToast('Reading file...');
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+                    if (rows.length === 0) {
+                        showToast('No rows found in file.', 'error');
+                        return;
+                    }
+
+                    // Flexible column name mapping (handles spaces, caps, underscores)
+                    const normalise = str => String(str).toLowerCase().replace(/[\s_-]+/g, '');
+                    const COL_MAP = {
+                        city:         ['city'],
+                        state:        ['state'],
+                        property_type:['propertytype','type'],
+                        listing_type: ['listingtype','listing'],
+                        size_acres:   ['sizeacres','acres','size'],
+                        price:        ['price','annualrate','rate'],
+                        lat:          ['lat','latitude'],
+                        lon:          ['lon','lng','longitude'],
+                        status:       ['status'],
+                        address:      ['address'],
+                        description:  ['description','desc']
+                    };
+
+                    function getField(row, fieldKey) {
+                        const aliases = COL_MAP[fieldKey];
+                        for (const key of Object.keys(row)) {
+                            if (aliases.includes(normalise(key))) return row[key];
+                        }
+                        return '';
+                    }
+
+                    const VALID_TYPES    = ['land','buildings'];
+                    const VALID_LISTING  = ['sale','lease','ground_lease'];
+                    const VALID_STATUS   = ['available','under_contract','sold'];
+
+                    let imported = 0, skipped = 0, errors = [];
+
+                    for (let i = 0; i < rows.length; i++) {
+                        const row = rows[i];
+                        const city  = String(getField(row,'city')).trim();
+                        const state = String(getField(row,'state')).trim().toUpperCase();
+
+                        if (!city || !state) { skipped++; continue; }
+
+                        const type        = VALID_TYPES.includes(String(getField(row,'property_type')).toLowerCase()) ? String(getField(row,'property_type')).toLowerCase() : 'land';
+                        const listing     = VALID_LISTING.includes(String(getField(row,'listing_type')).toLowerCase()) ? String(getField(row,'listing_type')).toLowerCase() : 'sale';
+                        const status      = VALID_STATUS.includes(String(getField(row,'status')).toLowerCase()) ? String(getField(row,'status')).toLowerCase() : 'available';
+                        const size_acres  = parseFloat(getField(row,'size_acres')) || null;
+                        const price       = parseFloat(getField(row,'price')) || null;
+                        const lat         = parseFloat(getField(row,'lat')) || null;
+                        const lon         = parseFloat(getField(row,'lon')) || null;
+                        const address     = String(getField(row,'address')).trim() || null;
+                        const description = String(getField(row,'description')).trim() || null;
+
+                        try {
+                            const res = await fetch(`${API_BASE}/api/properties`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+                                body: JSON.stringify({ city, state, type, listing_type: listing, size_acres, price, lat, lon, status, address, description })
+                            });
+                            if (res.ok) { imported++; } else { skipped++; errors.push(`Row ${i+2}: ${city}, ${state}`); }
+                        } catch { skipped++; errors.push(`Row ${i+2}: network error`); }
+                    }
+
+                    await loadProperties();
+                    const msg = `✅ Imported ${imported} properties${skipped ? `, skipped ${skipped}` : ''}.`;
+                    showToast(msg);
+                    if (errors.length) console.warn('Import issues:', errors);
+
+                } catch (err) {
+                    console.error('Import error:', err);
+                    showToast('Failed to parse file: ' + err.message, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
         }
 
         function openAddModal() {
