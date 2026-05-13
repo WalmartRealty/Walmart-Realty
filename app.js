@@ -881,14 +881,17 @@ function performSearch() {
     const propertyType = document.getElementById('property-type').value;
 
     filteredProperties = properties.filter(property => {
-        // Keyword search
+        // Keyword search — normalise both sides: lowercase + strip commas
         const fullStateName = STATE_NAMES[property.state] || '';
         const searchFields = [
             property.title, property.city, property.state,
             fullStateName, property.address, property.description,
             property.zoning, String(property.price), property.features?.join(' ')
         ].filter(Boolean).join(' ').toLowerCase();
-        if (!searchFields.includes(searchTerm)) return false;
+
+        // Normalise the search term the same way
+        const normalisedSearch = searchTermLower.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+        if (!searchFields.includes(normalisedSearch)) return false;
 
         if (propertyType) {
             const acres = property.size_acres || property.sizeAcres || 0;

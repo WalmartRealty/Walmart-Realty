@@ -625,71 +625,18 @@
             <!-- Pagination will be rendered by JavaScript -->
         </nav>
     </main>
-    
-    <!-- Footer -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="contact-name" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                            <input type="text" id="contact-name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                        </div>
-                        <div>
-                            <label for="contact-email" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                            <input type="email" id="contact-email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="contact-phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                            <input type="tel" id="contact-phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                        </div>
-                        <div>
-                            <label for="contact-company" class="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                            <input type="text" id="contact-company" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="contact-state" class="block text-sm font-medium text-gray-700 mb-1">State of Interest</label>
-                            <select id="contact-state" onchange="updateContactPropertyDropdown()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                                <option value="">Select a state (optional)</option>
-                                <!-- Populated by JavaScript -->
-                            </select>
-                        </div>
-                        <div>
-                            <label for="contact-property" class="block text-sm font-medium text-gray-700 mb-1">Property of Interest</label>
-                            <select id="contact-property" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue" disabled>
-                                <option value="">Select a state first</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="contact-message" class="block text-sm font-medium text-gray-700 mb-1">Message *</label>
-                        <textarea id="contact-message" rows="4" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"></textarea>
-                    </div>
-                    <button type="submit" class="w-full bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-4 px-6 rounded-lg transition-colors text-lg">
-                        Submit Inquiry
-                    </button>
-    <!-- Footer -->
+
     <footer class="bg-gray-900 text-white">
         <div class="max-w-7xl 3xl:max-w-9xl 4xl:max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 3xl:px-12 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
                     <div class="flex items-center gap-2 mb-4">
-                        <svg class="h-8 w-8" viewBox="0 0 36 36">
-                            <g transform="translate(18,18)">
-                                <rect x="-2" y="-9" width="4" height="18" rx="2" fill="#FFC220" transform="rotate(0)"/>
-                                <rect x="-2" y="-9" width="4" height="18" rx="2" fill="#FFC220" transform="rotate(60)"/>
-                                <rect x="-2" y="-9" width="4" height="18" rx="2" fill="#FFC220" transform="rotate(120)"/>
-                                <rect x="-2" y="-9" width="4" height="18" rx="2" fill="#FFC220" transform="rotate(180)"/>
-                                <rect x="-2" y="-9" width="4" height="18" rx="2" fill="#FFC220" transform="rotate(240)"/>
-                                <rect x="-2" y="-9" width="4" height="18" rx="2" fill="#FFC220" transform="rotate(300)"/>
-                            </g>
-                        </svg>
-                        <span class="font-bold">Walmart Realty</span>
+                        <img src="spark-logo.png" alt="Walmart Spark" class="h-9 w-9 object-contain" aria-hidden="true">
+                        <span class="font-bold text-lg">Walmart Realty</span>
                     </div>
                     <p class="text-gray-400 text-sm">Your trusted partner for commercial real estate opportunities.</p>
                 </div>
-                
+
                 <div>
                     <h4 class="font-semibold mb-4">Property Types</h4>
                     <ul class="space-y-2 text-gray-400 text-sm">
@@ -697,27 +644,17 @@
                         <li><a href="#" onclick="filterByPropertyType('buildings'); return false;" class="hover:text-walmart-yellow transition-colors">Buildings</a></li>
                     </ul>
                 </div>
-                
+
                 <div>
                     <h4 class="font-semibold mb-4">Resources</h4>
                     <ul class="space-y-2 text-gray-400 text-sm">
                         <li><a href="#" class="hover:text-walmart-yellow transition-colors">Property Alerts</a></li>
                         <li><a href="#" class="hover:text-walmart-yellow transition-colors">Market Reports</a></li>
                         <li><a href="#" class="hover:text-walmart-yellow transition-colors">FAQ</a></li>
-                        <li><a href="mailto:realestatedispositions@walmart.com" class="hover:text-walmart-yellow transition-colors">Contact Us</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="font-semibold mb-4">Contact</h4>
-                    <ul class="space-y-2 text-gray-400 text-sm">
-                        <li>702 SW 8th Street</li>
-                        <li>Bentonville, AR 72716</li>
-                        <li class="pt-2"><a href="mailto:realestatedispositions@walmart.com" class="hover:text-walmart-yellow transition-colors">realestatedispositions@walmart.com</a></li>
                     </ul>
                 </div>
             </div>
-            
+
             <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
                 <p>&copy; 2025 Walmart Inc. All rights reserved.</p>
             </div>

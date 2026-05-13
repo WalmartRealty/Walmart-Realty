@@ -13,8 +13,10 @@ node_modules/
 database/*.db
 server/*.db
 
-# Uploaded files — served at runtime, not tracked in git
-uploads/
+# Uploaded files — marketing PDFs/images ARE committed so GitHub Pages can serve them
+# Only exclude the raw broker photos and temp files
+uploads/brokers/
+!uploads/
 !uploads/.gitkeep
 
 # OS / editor noise

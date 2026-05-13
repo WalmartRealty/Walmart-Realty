@@ -1212,6 +1212,8 @@ app.post('/api/admin/sync-github', authenticateToken, (req, res) => {
         // Attempt git commit + push
         try {
             execSync('git add properties.json', { cwd: repoRoot, stdio: 'pipe' });
+            // Also commit marketing materials so GitHub Pages can serve them
+            execSync('git add uploads/', { cwd: repoRoot, stdio: 'pipe' });
             execSync(
                 `git commit -m "Admin: Update ${merged.length} properties from admin panel [skip ci]" --no-verify`,
                 { cwd: repoRoot, stdio: 'pipe' }
