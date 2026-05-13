@@ -850,6 +850,7 @@ const STATE_ABBREVS = Object.fromEntries(
 
 // Perform keyword search from the main search bar
 function performSearch() {
+    hideAutocomplete();
     const searchInput = document.getElementById('search-input');
     let searchTerm = searchInput.value.trim();
     let searchTermLower = searchTerm.toLowerCase();
