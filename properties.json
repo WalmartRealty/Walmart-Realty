@@ -20,7 +20,7 @@
     "broker_phone": null,
     "store_number": "2070",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z",
+    "updated_at": "2026-05-13T21:28:34.855Z",
     "store_num": 2070,
     "type": "land",
     "broker_company": "Jack White Commercial",
@@ -53,7 +53,8 @@
     "broker_phone": null,
     "store_number": "4474",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 54,
@@ -76,7 +77,8 @@
     "broker_phone": null,
     "store_number": "4474",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 55,
@@ -99,7 +101,8 @@
     "broker_phone": null,
     "store_number": "55",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 56,
@@ -122,7 +125,8 @@
     "broker_phone": null,
     "store_number": "169",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 57,
@@ -145,7 +149,7 @@
     "broker_phone": null,
     "store_number": "7",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z",
+    "updated_at": "2026-05-13T21:28:34.855Z",
     "marketingMaterials": [
       {
         "name": "7 Sherwood, AR Materials (3 Outlots).pdf",
@@ -175,7 +179,7 @@
     "broker_phone": null,
     "store_number": "7",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z",
+    "updated_at": "2026-05-13T21:28:34.855Z",
     "marketingMaterials": [
       {
         "name": "7 Sherwood, AR Materials (3 Outlots).pdf",
@@ -205,7 +209,7 @@
     "broker_phone": null,
     "store_number": "7",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z",
+    "updated_at": "2026-05-13T21:28:34.855Z",
     "marketingMaterials": [
       {
         "name": "7 Sherwood, AR Materials (3 Outlots).pdf",
@@ -235,7 +239,8 @@
     "broker_phone": null,
     "store_number": "74",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 61,
@@ -258,7 +263,8 @@
     "broker_phone": null,
     "store_number": "4108",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 62,
@@ -281,7 +287,8 @@
     "broker_phone": null,
     "store_number": "4686",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 63,
@@ -304,7 +311,8 @@
     "broker_phone": null,
     "store_number": "204",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 64,
@@ -327,7 +335,8 @@
     "broker_phone": null,
     "store_number": "4686",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 65,
@@ -350,7 +359,8 @@
     "broker_phone": null,
     "store_number": "292",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 66,
@@ -373,7 +383,8 @@
     "broker_phone": null,
     "store_number": "362",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 67,
@@ -396,7 +407,8 @@
     "broker_phone": null,
     "store_number": "5738",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 68,
@@ -419,7 +431,8 @@
     "broker_phone": null,
     "store_number": "7317",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 69,
@@ -442,7 +455,8 @@
     "broker_phone": null,
     "store_number": "414",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 70,
@@ -465,7 +479,8 @@
     "broker_phone": null,
     "store_number": "418",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 71,
@@ -488,7 +503,8 @@
     "broker_phone": null,
     "store_number": "418",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 72,
@@ -511,7 +527,8 @@
     "broker_phone": null,
     "store_number": "418",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 73,
@@ -534,7 +551,8 @@
     "broker_phone": null,
     "store_number": "432",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 74,
@@ -557,7 +575,8 @@
     "broker_phone": null,
     "store_number": "523",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 75,
@@ -580,7 +599,8 @@
     "broker_phone": null,
     "store_number": "538",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 76,
@@ -603,7 +623,8 @@
     "broker_phone": null,
     "store_number": "569",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 77,
@@ -626,7 +647,8 @@
     "broker_phone": null,
     "store_number": "621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.855Z",
+    "marketingMaterials": []
   },
   {
     "id": 78,
@@ -649,7 +671,8 @@
     "broker_phone": null,
     "store_number": "4203",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 79,
@@ -672,7 +695,8 @@
     "broker_phone": null,
     "store_number": "5190",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 80,
@@ -695,7 +719,8 @@
     "broker_phone": null,
     "store_number": "7320",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 81,
@@ -718,7 +743,8 @@
     "broker_phone": null,
     "store_number": "727",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 82,
@@ -741,7 +767,8 @@
     "broker_phone": null,
     "store_number": "7320",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 83,
@@ -764,7 +791,8 @@
     "broker_phone": null,
     "store_number": "774",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 84,
@@ -787,7 +815,8 @@
     "broker_phone": null,
     "store_number": "1922",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 85,
@@ -810,7 +839,8 @@
     "broker_phone": null,
     "store_number": "2952",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 86,
@@ -833,7 +863,8 @@
     "broker_phone": null,
     "store_number": "3312",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 87,
@@ -856,7 +887,8 @@
     "broker_phone": null,
     "store_number": "822",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 88,
@@ -879,7 +911,8 @@
     "broker_phone": null,
     "store_number": "840",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 89,
@@ -902,7 +935,8 @@
     "broker_phone": null,
     "store_number": "897",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 90,
@@ -925,7 +959,8 @@
     "broker_phone": null,
     "store_number": "897",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 91,
@@ -948,7 +983,8 @@
     "broker_phone": null,
     "store_number": "897",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 92,
@@ -971,7 +1007,8 @@
     "broker_phone": null,
     "store_number": "1555",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 93,
@@ -994,7 +1031,8 @@
     "broker_phone": null,
     "store_number": "1555",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 94,
@@ -1017,7 +1055,8 @@
     "broker_phone": null,
     "store_number": "927",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 95,
@@ -1040,7 +1079,8 @@
     "broker_phone": null,
     "store_number": "1555",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 96,
@@ -1063,7 +1103,8 @@
     "broker_phone": null,
     "store_number": "1879",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 97,
@@ -1086,7 +1127,8 @@
     "broker_phone": null,
     "store_number": "1879",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 98,
@@ -1109,7 +1151,8 @@
     "broker_phone": null,
     "store_number": "2001",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 99,
@@ -1132,7 +1175,8 @@
     "broker_phone": null,
     "store_number": "2001",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 100,
@@ -1155,7 +1199,8 @@
     "broker_phone": null,
     "store_number": "999",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 101,
@@ -1178,7 +1223,8 @@
     "broker_phone": null,
     "store_number": "999",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 102,
@@ -1201,7 +1247,8 @@
     "broker_phone": null,
     "store_number": "999",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 103,
@@ -1224,7 +1271,8 @@
     "broker_phone": null,
     "store_number": "999",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 104,
@@ -1247,7 +1295,8 @@
     "broker_phone": null,
     "store_number": "1000",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 105,
@@ -1270,7 +1319,8 @@
     "broker_phone": null,
     "store_number": "2001",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 106,
@@ -1293,7 +1343,8 @@
     "broker_phone": null,
     "store_number": "1026",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 107,
@@ -1316,7 +1367,8 @@
     "broker_phone": null,
     "store_number": "1747",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 108,
@@ -1339,7 +1391,8 @@
     "broker_phone": null,
     "store_number": "1088",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 109,
@@ -1362,7 +1415,8 @@
     "broker_phone": null,
     "store_number": "1091",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.649Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 110,
@@ -1385,7 +1439,8 @@
     "broker_phone": null,
     "store_number": "1157",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.649Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 111,
@@ -1408,7 +1463,8 @@
     "broker_phone": null,
     "store_number": "1747",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.649Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 112,
@@ -1431,7 +1487,8 @@
     "broker_phone": null,
     "store_number": "1162",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.649Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 113,
@@ -1454,7 +1511,8 @@
     "broker_phone": null,
     "store_number": "1179",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.649Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 114,
@@ -1477,7 +1535,8 @@
     "broker_phone": null,
     "store_number": "2181",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.649Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 115,
@@ -1500,7 +1559,8 @@
     "broker_phone": null,
     "store_number": "1203",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 116,
@@ -1523,7 +1583,8 @@
     "broker_phone": null,
     "store_number": "2181",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 117,
@@ -1546,7 +1607,8 @@
     "broker_phone": null,
     "store_number": "2181",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 118,
@@ -1569,7 +1631,8 @@
     "broker_phone": null,
     "store_number": "2181",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 119,
@@ -1592,7 +1655,8 @@
     "broker_phone": null,
     "store_number": "2181",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 120,
@@ -1615,7 +1679,8 @@
     "broker_phone": null,
     "store_number": "1271",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 121,
@@ -1638,7 +1703,8 @@
     "broker_phone": null,
     "store_number": "1301",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 122,
@@ -1661,7 +1727,8 @@
     "broker_phone": null,
     "store_number": "1329",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 123,
@@ -1684,7 +1751,8 @@
     "broker_phone": null,
     "store_number": "1329",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 124,
@@ -1707,7 +1775,8 @@
     "broker_phone": null,
     "store_number": "2053",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 125,
@@ -1730,7 +1799,8 @@
     "broker_phone": null,
     "store_number": "1484",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 126,
@@ -1753,7 +1823,8 @@
     "broker_phone": null,
     "store_number": "1484",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 127,
@@ -1776,7 +1847,8 @@
     "broker_phone": null,
     "store_number": "1384",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 128,
@@ -1799,7 +1871,8 @@
     "broker_phone": null,
     "store_number": "3805",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 129,
@@ -1822,7 +1895,8 @@
     "broker_phone": null,
     "store_number": "3824",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 130,
@@ -1845,7 +1919,8 @@
     "broker_phone": null,
     "store_number": "4288",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 131,
@@ -1868,7 +1943,8 @@
     "broker_phone": null,
     "store_number": "3883",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 132,
@@ -1891,7 +1967,8 @@
     "broker_phone": null,
     "store_number": "646",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 133,
@@ -1914,7 +1991,8 @@
     "broker_phone": null,
     "store_number": "646",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 134,
@@ -1937,7 +2015,8 @@
     "broker_phone": null,
     "store_number": "751",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 135,
@@ -1960,7 +2039,8 @@
     "broker_phone": null,
     "store_number": "2508",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 136,
@@ -1983,7 +2063,8 @@
     "broker_phone": null,
     "store_number": "1934",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 137,
@@ -2006,7 +2087,8 @@
     "broker_phone": null,
     "store_number": "1946",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 138,
@@ -2029,7 +2111,8 @@
     "broker_phone": null,
     "store_number": "3093",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 139,
@@ -2052,7 +2135,8 @@
     "broker_phone": null,
     "store_number": "3093",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 140,
@@ -2075,7 +2159,8 @@
     "broker_phone": null,
     "store_number": "5841",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 141,
@@ -2098,7 +2183,8 @@
     "broker_phone": null,
     "store_number": "5841",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 142,
@@ -2121,7 +2207,8 @@
     "broker_phone": null,
     "store_number": "1878",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 144,
@@ -2144,7 +2231,7 @@
     "broker_phone": null,
     "store_number": "436",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z",
+    "updated_at": "2026-05-13T21:28:34.856Z",
     "marketingMaterials": [
       {
         "name": "436 Carlyle, IL Materials (1.16).pdf",
@@ -2174,7 +2261,8 @@
     "broker_phone": null,
     "store_number": "4695",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 146,
@@ -2197,7 +2285,8 @@
     "broker_phone": null,
     "store_number": "4695",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 147,
@@ -2220,7 +2309,8 @@
     "broker_phone": null,
     "store_number": "4695",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 148,
@@ -2243,7 +2333,8 @@
     "broker_phone": null,
     "store_number": "4695",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 149,
@@ -2266,7 +2357,8 @@
     "broker_phone": null,
     "store_number": "2268",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 150,
@@ -2289,7 +2381,7 @@
     "broker_phone": "312.297.7690",
     "store_number": "891",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z",
+    "updated_at": "2026-05-13T21:28:34.856Z",
     "marketingMaterials": [
       {
         "name": "IL_Sterling_4115 E Lincoln Way_Store#891_Flyer_20250603.pdf",
@@ -2321,7 +2413,8 @@
     "broker_phone": null,
     "store_number": "2543",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 152,
@@ -2344,7 +2437,8 @@
     "broker_phone": null,
     "store_number": "933",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 153,
@@ -2367,7 +2461,8 @@
     "broker_phone": null,
     "store_number": "933",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 154,
@@ -2390,7 +2485,8 @@
     "broker_phone": null,
     "store_number": "1377",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 155,
@@ -2413,7 +2509,8 @@
     "broker_phone": null,
     "store_number": "1451",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 156,
@@ -2436,7 +2533,8 @@
     "broker_phone": null,
     "store_number": "1814",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 157,
@@ -2459,7 +2557,8 @@
     "broker_phone": null,
     "store_number": "1814",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 158,
@@ -2482,7 +2581,8 @@
     "broker_phone": null,
     "store_number": "3837",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 159,
@@ -2505,7 +2605,8 @@
     "broker_phone": null,
     "store_number": "4511",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 160,
@@ -2528,7 +2629,8 @@
     "broker_phone": null,
     "store_number": "2763",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 161,
@@ -2551,7 +2653,8 @@
     "broker_phone": null,
     "store_number": "2763",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 162,
@@ -2574,7 +2677,8 @@
     "broker_phone": null,
     "store_number": "2763",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 163,
@@ -2597,7 +2701,8 @@
     "broker_phone": null,
     "store_number": "2763",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 164,
@@ -2620,7 +2725,8 @@
     "broker_phone": null,
     "store_number": "2763",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 165,
@@ -2643,7 +2749,8 @@
     "broker_phone": null,
     "store_number": "2763",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 166,
@@ -2666,7 +2773,8 @@
     "broker_phone": null,
     "store_number": "2763",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 167,
@@ -2689,7 +2797,8 @@
     "broker_phone": null,
     "store_number": "2779",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 168,
@@ -2712,7 +2821,8 @@
     "broker_phone": null,
     "store_number": "2779",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 169,
@@ -2735,7 +2845,8 @@
     "broker_phone": null,
     "store_number": "2779",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 170,
@@ -2758,7 +2869,8 @@
     "broker_phone": null,
     "store_number": "2779",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 171,
@@ -2781,7 +2893,8 @@
     "broker_phone": null,
     "store_number": "2779",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 172,
@@ -2804,7 +2917,8 @@
     "broker_phone": null,
     "store_number": "2779",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 173,
@@ -2827,7 +2941,8 @@
     "broker_phone": null,
     "store_number": "2779",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 174,
@@ -2850,7 +2965,8 @@
     "broker_phone": null,
     "store_number": "2786",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 175,
@@ -2873,7 +2989,8 @@
     "broker_phone": null,
     "store_number": "2786",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 176,
@@ -2896,7 +3013,8 @@
     "broker_phone": null,
     "store_number": "4511",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 177,
@@ -2919,7 +3037,8 @@
     "broker_phone": null,
     "store_number": "4511",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 178,
@@ -2942,7 +3061,8 @@
     "broker_phone": null,
     "store_number": "4699",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 179,
@@ -2965,7 +3085,8 @@
     "broker_phone": null,
     "store_number": "2874",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 180,
@@ -2988,7 +3109,8 @@
     "broker_phone": null,
     "store_number": "4699",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 181,
@@ -3011,7 +3133,8 @@
     "broker_phone": null,
     "store_number": "39",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 182,
@@ -3034,7 +3157,8 @@
     "broker_phone": null,
     "store_number": "42",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 183,
@@ -3057,7 +3181,8 @@
     "broker_phone": null,
     "store_number": "3028",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 184,
@@ -3080,7 +3205,8 @@
     "broker_phone": null,
     "store_number": "3043",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 185,
@@ -3103,7 +3229,8 @@
     "broker_phone": null,
     "store_number": "3051",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 186,
@@ -3126,7 +3253,8 @@
     "broker_phone": null,
     "store_number": "3060",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 187,
@@ -3149,7 +3277,8 @@
     "broker_phone": null,
     "store_number": "368",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 188,
@@ -3172,7 +3301,8 @@
     "broker_phone": null,
     "store_number": "368",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 189,
@@ -3195,7 +3325,8 @@
     "broker_phone": null,
     "store_number": "3153",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 190,
@@ -3218,7 +3349,8 @@
     "broker_phone": null,
     "store_number": "3154",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 191,
@@ -3241,7 +3373,8 @@
     "broker_phone": null,
     "store_number": "3173",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 192,
@@ -3264,7 +3397,8 @@
     "broker_phone": null,
     "store_number": "368",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 193,
@@ -3287,7 +3421,8 @@
     "broker_phone": null,
     "store_number": "3284",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 194,
@@ -3310,7 +3445,8 @@
     "broker_phone": null,
     "store_number": "799",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 195,
@@ -3333,7 +3469,8 @@
     "broker_phone": null,
     "store_number": "799",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 196,
@@ -3356,7 +3493,8 @@
     "broker_phone": null,
     "store_number": "3332",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 197,
@@ -3379,7 +3517,8 @@
     "broker_phone": null,
     "store_number": "3333",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 198,
@@ -3402,7 +3541,8 @@
     "broker_phone": null,
     "store_number": "3346",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 199,
@@ -3425,7 +3565,8 @@
     "broker_phone": null,
     "store_number": "3362",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 200,
@@ -3448,7 +3589,8 @@
     "broker_phone": null,
     "store_number": "3403",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 201,
@@ -3471,7 +3613,8 @@
     "broker_phone": null,
     "store_number": "3403",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 202,
@@ -3494,7 +3637,8 @@
     "broker_phone": null,
     "store_number": "4198",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 203,
@@ -3517,7 +3661,8 @@
     "broker_phone": null,
     "store_number": "3433",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 204,
@@ -3540,7 +3685,8 @@
     "broker_phone": null,
     "store_number": "3433",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 205,
@@ -3563,7 +3709,8 @@
     "broker_phone": null,
     "store_number": "3446",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 206,
@@ -3586,7 +3733,8 @@
     "broker_phone": null,
     "store_number": "5219",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 207,
@@ -3609,7 +3757,8 @@
     "broker_phone": null,
     "store_number": "5307",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 208,
@@ -3632,7 +3781,8 @@
     "broker_phone": null,
     "store_number": "3485",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 209,
@@ -3655,7 +3805,8 @@
     "broker_phone": null,
     "store_number": "3485",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 210,
@@ -3678,7 +3829,8 @@
     "broker_phone": null,
     "store_number": "5307",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 211,
@@ -3701,7 +3853,8 @@
     "broker_phone": null,
     "store_number": "3631",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 212,
@@ -3724,7 +3877,8 @@
     "broker_phone": null,
     "store_number": "3631",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 213,
@@ -3747,7 +3901,8 @@
     "broker_phone": null,
     "store_number": "5775",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 214,
@@ -3770,7 +3925,8 @@
     "broker_phone": null,
     "store_number": "3701",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 215,
@@ -3793,7 +3949,7 @@
     "broker_phone": null,
     "store_number": "98",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z",
+    "updated_at": "2026-05-13T21:28:34.856Z",
     "marketingMaterials": [
       {
         "name": "98 Bastrop, LA Materials (1.21ac).pdf",
@@ -3823,7 +3979,8 @@
     "broker_phone": null,
     "store_number": "4129",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 217,
@@ -3846,7 +4003,8 @@
     "broker_phone": null,
     "store_number": "3750",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 218,
@@ -3869,7 +4027,8 @@
     "broker_phone": null,
     "store_number": "3750",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.856Z",
+    "marketingMaterials": []
   },
   {
     "id": 219,
@@ -3892,7 +4051,8 @@
     "broker_phone": null,
     "store_number": "3750",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 220,
@@ -3915,7 +4075,8 @@
     "broker_phone": null,
     "store_number": "912",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 221,
@@ -3938,7 +4099,8 @@
     "broker_phone": null,
     "store_number": "1611",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 222,
@@ -3961,7 +4123,8 @@
     "broker_phone": null,
     "store_number": "3760",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 223,
@@ -3984,7 +4147,8 @@
     "broker_phone": null,
     "store_number": "2559",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 224,
@@ -4007,7 +4171,8 @@
     "broker_phone": null,
     "store_number": "3806",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 225,
@@ -4030,7 +4195,8 @@
     "broker_phone": null,
     "store_number": "3328",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 226,
@@ -4053,7 +4219,8 @@
     "broker_phone": null,
     "store_number": "3328",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 227,
@@ -4076,7 +4243,8 @@
     "broker_phone": null,
     "store_number": "3877",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 228,
@@ -4099,7 +4267,8 @@
     "broker_phone": null,
     "store_number": "4540",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 229,
@@ -4122,7 +4291,8 @@
     "broker_phone": null,
     "store_number": "4103",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 230,
@@ -4145,7 +4315,8 @@
     "broker_phone": null,
     "store_number": "4540",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 231,
@@ -4168,7 +4339,8 @@
     "broker_phone": null,
     "store_number": "4110",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 232,
@@ -4191,7 +4363,8 @@
     "broker_phone": null,
     "store_number": "4115",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 233,
@@ -4214,7 +4387,8 @@
     "broker_phone": null,
     "store_number": "4131",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 234,
@@ -4237,7 +4411,8 @@
     "broker_phone": null,
     "store_number": "4131",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 235,
@@ -4260,7 +4435,8 @@
     "broker_phone": null,
     "store_number": "4131",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 236,
@@ -4283,7 +4459,8 @@
     "broker_phone": null,
     "store_number": "4162",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 237,
@@ -4306,7 +4483,8 @@
     "broker_phone": null,
     "store_number": "4162",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 238,
@@ -4329,7 +4507,8 @@
     "broker_phone": null,
     "store_number": "4165",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 239,
@@ -4352,7 +4531,8 @@
     "broker_phone": null,
     "store_number": "4165",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 240,
@@ -4375,7 +4555,8 @@
     "broker_phone": null,
     "store_number": "5280",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 241,
@@ -4398,7 +4579,8 @@
     "broker_phone": null,
     "store_number": "4183",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 242,
@@ -4421,7 +4603,8 @@
     "broker_phone": null,
     "store_number": "4590",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 243,
@@ -4444,7 +4627,8 @@
     "broker_phone": null,
     "store_number": "4212",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 244,
@@ -4467,7 +4651,8 @@
     "broker_phone": null,
     "store_number": "4236",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 245,
@@ -4490,7 +4675,8 @@
     "broker_phone": null,
     "store_number": "203",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 246,
@@ -4513,7 +4699,8 @@
     "broker_phone": null,
     "store_number": "4269",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 247,
@@ -4536,7 +4723,8 @@
     "broker_phone": null,
     "store_number": "4269",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 248,
@@ -4559,7 +4747,8 @@
     "broker_phone": null,
     "store_number": "4269",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 249,
@@ -4582,7 +4771,8 @@
     "broker_phone": null,
     "store_number": "4269",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 250,
@@ -4605,7 +4795,8 @@
     "broker_phone": null,
     "store_number": "4269",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 251,
@@ -4628,7 +4819,8 @@
     "broker_phone": null,
     "store_number": "4274",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 252,
@@ -4651,7 +4843,8 @@
     "broker_phone": null,
     "store_number": "4280",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 253,
@@ -4674,7 +4867,8 @@
     "broker_phone": null,
     "store_number": "820",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 254,
@@ -4697,7 +4891,8 @@
     "broker_phone": null,
     "store_number": "2607",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 255,
@@ -4720,7 +4915,8 @@
     "broker_phone": null,
     "store_number": "7199",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 256,
@@ -4743,7 +4939,8 @@
     "broker_phone": null,
     "store_number": "7199",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 257,
@@ -4766,7 +4963,8 @@
     "broker_phone": null,
     "store_number": "4368",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 258,
@@ -4789,7 +4987,8 @@
     "broker_phone": null,
     "store_number": "4374",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 259,
@@ -4812,7 +5011,8 @@
     "broker_phone": null,
     "store_number": "4417",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 260,
@@ -4835,7 +5035,8 @@
     "broker_phone": null,
     "store_number": "4436",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 261,
@@ -4858,7 +5059,8 @@
     "broker_phone": null,
     "store_number": "4450",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 262,
@@ -4881,7 +5083,8 @@
     "broker_phone": null,
     "store_number": "3428",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 263,
@@ -4904,7 +5107,8 @@
     "broker_phone": null,
     "store_number": "1330",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 264,
@@ -4927,7 +5131,8 @@
     "broker_phone": null,
     "store_number": "1895",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 265,
@@ -4950,7 +5155,8 @@
     "broker_phone": null,
     "store_number": "2506",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 266,
@@ -4973,7 +5179,8 @@
     "broker_phone": null,
     "store_number": "4501",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 267,
@@ -4996,7 +5203,8 @@
     "broker_phone": null,
     "store_number": "73",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 268,
@@ -5019,7 +5227,8 @@
     "broker_phone": null,
     "store_number": "4522",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 269,
@@ -5042,7 +5251,8 @@
     "broker_phone": null,
     "store_number": "3964",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 270,
@@ -5065,7 +5275,8 @@
     "broker_phone": null,
     "store_number": "3734",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 271,
@@ -5088,7 +5299,8 @@
     "broker_phone": null,
     "store_number": "3734",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 272,
@@ -5111,7 +5323,8 @@
     "broker_phone": null,
     "store_number": "4616",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 273,
@@ -5134,7 +5347,8 @@
     "broker_phone": null,
     "store_number": "4616",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 274,
@@ -5157,7 +5371,8 @@
     "broker_phone": null,
     "store_number": "4621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 275,
@@ -5180,7 +5395,8 @@
     "broker_phone": null,
     "store_number": "4621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 276,
@@ -5203,7 +5419,8 @@
     "broker_phone": null,
     "store_number": "4621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 277,
@@ -5226,7 +5443,8 @@
     "broker_phone": null,
     "store_number": "4621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 278,
@@ -5249,7 +5467,8 @@
     "broker_phone": null,
     "store_number": "4621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 279,
@@ -5272,7 +5491,8 @@
     "broker_phone": null,
     "store_number": "4621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 280,
@@ -5295,7 +5515,8 @@
     "broker_phone": null,
     "store_number": "4621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 281,
@@ -5318,7 +5539,8 @@
     "broker_phone": null,
     "store_number": "4623",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 282,
@@ -5341,7 +5563,8 @@
     "broker_phone": null,
     "store_number": "4623",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 283,
@@ -5364,7 +5587,8 @@
     "broker_phone": null,
     "store_number": "4636",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 284,
@@ -5387,7 +5611,8 @@
     "broker_phone": null,
     "store_number": "4636",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 285,
@@ -5410,7 +5635,8 @@
     "broker_phone": null,
     "store_number": "4648",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 286,
@@ -5433,7 +5659,8 @@
     "broker_phone": null,
     "store_number": "4648",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 287,
@@ -5456,7 +5683,8 @@
     "broker_phone": null,
     "store_number": "4680",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 288,
@@ -5479,7 +5707,8 @@
     "broker_phone": null,
     "store_number": "1725",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 289,
@@ -5502,7 +5731,8 @@
     "broker_phone": null,
     "store_number": "3789",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 290,
@@ -5525,7 +5755,8 @@
     "broker_phone": null,
     "store_number": "3218",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 291,
@@ -5548,7 +5779,8 @@
     "broker_phone": null,
     "store_number": "5035",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 292,
@@ -5571,7 +5803,8 @@
     "broker_phone": null,
     "store_number": "5059",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 293,
@@ -5594,7 +5827,8 @@
     "broker_phone": null,
     "store_number": "5089",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 294,
@@ -5617,7 +5851,8 @@
     "broker_phone": null,
     "store_number": "5883",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 295,
@@ -5640,7 +5875,8 @@
     "broker_phone": null,
     "store_number": "5461",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 296,
@@ -5663,7 +5899,8 @@
     "broker_phone": null,
     "store_number": "5290",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 297,
@@ -5686,7 +5923,8 @@
     "broker_phone": null,
     "store_number": "5415",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 298,
@@ -5709,7 +5947,8 @@
     "broker_phone": null,
     "store_number": "5449",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 299,
@@ -5732,7 +5971,8 @@
     "broker_phone": null,
     "store_number": "5449",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 300,
@@ -5755,7 +5995,8 @@
     "broker_phone": null,
     "store_number": "5452",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 301,
@@ -5778,7 +6019,8 @@
     "broker_phone": null,
     "store_number": "1394",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 302,
@@ -5801,7 +6043,8 @@
     "broker_phone": null,
     "store_number": "5496",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 303,
@@ -5824,7 +6067,8 @@
     "broker_phone": null,
     "store_number": "5621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 304,
@@ -5847,7 +6091,8 @@
     "broker_phone": null,
     "store_number": "5621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 305,
@@ -5870,7 +6115,8 @@
     "broker_phone": null,
     "store_number": "5621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 306,
@@ -5893,7 +6139,8 @@
     "broker_phone": null,
     "store_number": "5621",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 307,
@@ -5916,7 +6163,8 @@
     "broker_phone": null,
     "store_number": "1672",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 308,
@@ -5939,7 +6187,8 @@
     "broker_phone": null,
     "store_number": "5702",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 309,
@@ -5962,7 +6211,8 @@
     "broker_phone": null,
     "store_number": "5713",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 310,
@@ -5985,7 +6235,8 @@
     "broker_phone": null,
     "store_number": "5777",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 311,
@@ -6008,7 +6259,8 @@
     "broker_phone": null,
     "store_number": "5804",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 312,
@@ -6031,7 +6283,8 @@
     "broker_phone": null,
     "store_number": "5804",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 313,
@@ -6054,7 +6307,8 @@
     "broker_phone": null,
     "store_number": "2828",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 314,
@@ -6077,7 +6331,8 @@
     "broker_phone": null,
     "store_number": "6263",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 315,
@@ -6100,7 +6355,8 @@
     "broker_phone": null,
     "store_number": "6470",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 316,
@@ -6123,7 +6379,8 @@
     "broker_phone": null,
     "store_number": "6578",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 317,
@@ -6146,7 +6403,8 @@
     "broker_phone": null,
     "store_number": "6887",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 318,
@@ -6169,7 +6427,8 @@
     "broker_phone": null,
     "store_number": "6929",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 319,
@@ -6192,7 +6451,8 @@
     "broker_phone": null,
     "store_number": "7020",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 320,
@@ -6215,7 +6475,8 @@
     "broker_phone": null,
     "store_number": "5463",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 321,
@@ -6238,7 +6499,8 @@
     "broker_phone": null,
     "store_number": "7205",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 322,
@@ -6261,7 +6523,8 @@
     "broker_phone": null,
     "store_number": "7277",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 323,
@@ -6284,7 +6547,8 @@
     "broker_phone": null,
     "store_number": "1412",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 324,
@@ -6307,7 +6571,8 @@
     "broker_phone": null,
     "store_number": "4471",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 325,
@@ -6330,7 +6595,8 @@
     "broker_phone": null,
     "store_number": "4471",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 326,
@@ -6353,7 +6619,8 @@
     "broker_phone": null,
     "store_number": "7613",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 327,
@@ -6376,7 +6643,8 @@
     "broker_phone": null,
     "store_number": "70249",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 328,
@@ -6397,7 +6665,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 329,
@@ -6418,7 +6687,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 330,
@@ -6439,7 +6709,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 331,
@@ -6460,7 +6731,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 332,
@@ -6481,7 +6753,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 333,
@@ -6502,7 +6775,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 334,
@@ -6523,7 +6797,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 335,
@@ -6544,7 +6819,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 336,
@@ -6565,7 +6841,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 337,
@@ -6586,7 +6863,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 338,
@@ -6607,7 +6885,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 339,
@@ -6628,7 +6907,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 340,
@@ -6649,7 +6929,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.857Z",
+    "marketingMaterials": []
   },
   {
     "id": 341,
@@ -6670,7 +6951,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   },
   {
     "id": 342,
@@ -6691,7 +6973,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   },
   {
     "id": 343,
@@ -6712,7 +6995,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   },
   {
     "id": 344,
@@ -6733,7 +7017,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   },
   {
     "id": 345,
@@ -6754,7 +7039,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   },
   {
     "id": 346,
@@ -6775,7 +7061,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   },
   {
     "id": 347,
@@ -6796,7 +7083,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   },
   {
     "id": 348,
@@ -6817,7 +7105,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   },
   {
     "id": 349,
@@ -6838,7 +7127,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   },
   {
     "id": 350,
@@ -6859,7 +7149,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   },
   {
     "id": 351,
@@ -6880,7 +7171,8 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   },
   {
     "id": 352,
@@ -6901,7 +7193,7 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z",
+    "updated_at": "2026-05-13T21:28:34.858Z",
     "marketingMaterials": [
       {
         "name": "98 Bastrop, LA Materials (1.21ac).pdf",
@@ -6929,6 +7221,7 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T21:28:34.858Z",
+    "marketingMaterials": []
   }
 ]
