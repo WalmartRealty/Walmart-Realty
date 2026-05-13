@@ -145,7 +145,14 @@
     "broker_phone": null,
     "store_number": "7",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T20:50:20.648Z",
+    "marketingMaterials": [
+      {
+        "name": "7 Sherwood, AR Materials (3 Outlots).pdf",
+        "url": "uploads/1778688858255-bac8954e-c95b-4b84-9148-99dcb2faefaf.pdf",
+        "type": "application/pdf"
+      }
+    ]
   },
   {
     "id": 58,
@@ -168,7 +175,14 @@
     "broker_phone": null,
     "store_number": "7",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T20:50:20.648Z",
+    "marketingMaterials": [
+      {
+        "name": "7 Sherwood, AR Materials (3 Outlots).pdf",
+        "url": "uploads/1778688902249-0ae7220e-113c-4634-a066-f1e27a3cba3d.pdf",
+        "type": "application/pdf"
+      }
+    ]
   },
   {
     "id": 59,
@@ -191,7 +205,14 @@
     "broker_phone": null,
     "store_number": "7",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.648Z"
+    "updated_at": "2026-05-13T20:50:20.648Z",
+    "marketingMaterials": [
+      {
+        "name": "7 Sherwood, AR Materials (3 Outlots).pdf",
+        "url": "uploads/1778688931231-471fc208-944b-4295-be29-cece89f23bbd.pdf",
+        "type": "application/pdf"
+      }
+    ]
   },
   {
     "id": 60,
@@ -2123,7 +2144,14 @@
     "broker_phone": null,
     "store_number": "436",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T20:50:20.650Z",
+    "marketingMaterials": [
+      {
+        "name": "436 Carlyle, IL Materials (1.16).pdf",
+        "url": "uploads/1778705057397-28ca5ec1-1488-49e1-983a-3e8a5ecffa24.pdf",
+        "type": "application/pdf"
+      }
+    ]
   },
   {
     "id": 145,
@@ -2264,8 +2292,8 @@
     "updated_at": "2026-05-13T20:50:20.650Z",
     "marketingMaterials": [
       {
-        "name": "IL_Sterling_Store891_Flyer.pdf",
-        "url": "marketing/IL_Sterling_Store891_Flyer.pdf",
+        "name": "IL_Sterling_4115 E Lincoln Way_Store#891_Flyer_20250603.pdf",
+        "url": "uploads/1777469456276-e3077904-21c0-46ff-bd2f-2bd69efd2e0f.pdf",
         "type": "application/pdf"
       }
     ],
@@ -3765,7 +3793,14 @@
     "broker_phone": null,
     "store_number": "98",
     "created_at": "2026-04-08 16:01:13",
-    "updated_at": "2026-05-13T20:50:20.650Z"
+    "updated_at": "2026-05-13T20:50:20.650Z",
+    "marketingMaterials": [
+      {
+        "name": "98 Bastrop, LA Materials (1.21ac).pdf",
+        "url": "uploads/1778705399404-33f11519-d822-4864-ad49-c9c486827489.pdf",
+        "type": "application/pdf"
+      }
+    ]
   },
   {
     "id": 216,
@@ -6866,7 +6901,14 @@
     "broker_email": null,
     "broker_phone": null,
     "store_number": null,
-    "updated_at": "2026-05-13T20:50:20.651Z"
+    "updated_at": "2026-05-13T20:50:20.651Z",
+    "marketingMaterials": [
+      {
+        "name": "98 Bastrop, LA Materials (1.21ac).pdf",
+        "url": "uploads/1778704523465-781a6c7a-efb4-4d31-9e6f-7cca991f05df.pdf",
+        "type": "application/pdf"
+      }
+    ]
   },
   {
     "id": 353,

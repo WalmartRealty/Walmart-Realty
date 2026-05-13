@@ -932,24 +932,6 @@ function performSearch() {
             if (!ok) return false;
         }
         
-        // Price filter
-        if (priceRange) {
-            const [min, max] = priceRange.split('-').map(p => {
-                if (p.includes('+')) return Infinity;
-                return parseInt(p);
-            });
-            if (property.price < min || property.price > max) return false;
-        }
-        
-        // Size filter
-        if (sizeRange) {
-            const acres = property.size_acres || property.sizeAcres || 0;
-            if (sizeRange === '0-1' && acres >= 1) return false;
-            if (sizeRange === '1-5' && (acres < 1 || acres >= 5)) return false;
-            if (sizeRange === '5-20' && (acres < 5 || acres >= 20)) return false;
-            if (sizeRange === '20+' && acres < 20) return false;
-        }
-        
         return true;
     });
     
