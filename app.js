@@ -1078,7 +1078,7 @@ function openPropertyModal(id) {
                     <p class="text-gray-400 text-sm mt-1">Coordinates: ${property.lat}, ${property.lon}</p>
                 </div>
                 <div class="text-right">
-                    ${isSold ? '' : `<p class="text-2xl font-bold text-walmart-blue">${(property.listingType === 'lease' || property.listingType === 'ground_lease') ? formatPrice(property.price, property.listingType) : 'Contact for Pricing'}</p>`}
+                    ${isSold ? '' : `<p class="text-2xl font-bold text-walmart-blue">${formatPrice(property.price, property.listingType)}</p>`}
                 </div>
             </div>
             
