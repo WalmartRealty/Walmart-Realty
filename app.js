@@ -864,7 +864,13 @@ function performSearch() {
     // Check if search term is a full state name (e.g., "Texas", "Arkansas")
     const stateAbbrFromName = STATE_ABBREVS[searchTermLower];
     if (stateAbbrFromName) {
-        filterByStateIcon(stateAbbrFromName);
+        // SET the filter (don't toggle — toggling clears it on second search)
+        selectedStates.clear();
+        selectedStates.add(stateAbbrFromName);
+        syncStateDropdown();
+        renderStateChips();
+        updateCarouselButtonStyles();
+        filterProperties();
         searchInput.value = '';
         return;
     }
@@ -872,7 +878,13 @@ function performSearch() {
     // Check if search term is a state abbreviation (e.g., "TX", "AR")
     const searchTermUpper = searchTerm.toUpperCase();
     if (STATE_NAMES[searchTermUpper]) {
-        filterByStateIcon(searchTermUpper);
+        // SET the filter (don't toggle)
+        selectedStates.clear();
+        selectedStates.add(searchTermUpper);
+        syncStateDropdown();
+        renderStateChips();
+        updateCarouselButtonStyles();
+        filterProperties();
         searchInput.value = '';
         return;
     }
@@ -3057,7 +3069,8 @@ function updateAutocomplete(term) {
     });
     
     Object.keys(stateCounts).forEach(state => {
-        if (state.toLowerCase().includes(termLower)) {
+        const fullName = (STATE_NAMES[state] || '').toLowerCase();
+        if (state.toLowerCase().includes(termLower) || fullName.includes(termLower)) {
             stateMatches.push({ state, count: stateCounts[state] });
         }
     });
