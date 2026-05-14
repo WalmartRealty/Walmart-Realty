@@ -652,7 +652,7 @@
                         <p class="text-gray-400 text-sm mb-4">PDFs will be converted to images automatically</p>
                         <label class="inline-block bg-walmart-blue hover:bg-walmart-dark text-white font-medium py-2 px-6 rounded-lg cursor-pointer transition-colors">
                             Browse Files
-                            <input type="file" accept=".pdf,.png,.jpg,.jpeg" multiple onchange="handleMarketingUpload(event)" class="hidden">
+                            <input type="file" accept=".pdf,.png,.jpg,.jpeg" multiple onchange="handleMarketingTabUpload(event)" class="hidden">
                         </label>
                     </div>
                     
@@ -1982,7 +1982,7 @@
             uploadMarketingFiles(files);
         }
         
-        function handleMarketingUpload(event) {
+        function handleMarketingTabUpload(event) {
             const files = event.target.files;
             uploadMarketingFiles(files);
             event.target.value = '';
@@ -2423,21 +2423,24 @@
         async function uploadModalMarketingFile(file) {
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('name', file.name);
+            formData.append('property_id', currentPropertyId);
             showToast(`Uploading ${file.name}…`);
             try {
-                const response = await fetch(`${API_BASE}/api/properties/${currentPropertyId}/marketing`, {
+                const response = await fetch(`${API_BASE}/api/marketing/upload`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${authToken}` },
                     body: formData
                 });
                 if (response.ok) {
                     showToast(`✅ ${file.name} uploaded!`);
+                } else if (response.status === 401 || response.status === 403) {
+                    showToast('⚠️ Session expired — please log out and log back in.', 'error');
                 } else {
-                    showToast(`❌ Failed to upload ${file.name}`, 'error');
+                    const err = await response.json().catch(() => ({}));
+                    showToast(`❌ Failed to upload ${file.name}: ${err.error || response.statusText}`, 'error');
                 }
             } catch (err) {
-                showToast(`❌ Upload error: ${err.message}`, 'error');
+                showToast(`❌ Upload error — is the server running? ${err.message}`, 'error');
             }
         }
         

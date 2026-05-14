@@ -31,7 +31,7 @@ const DEFAULT_PORT = 3000;
 
 // JWT Secret - MUST be set via environment variable in production
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
-const JWT_EXPIRES_IN = '8h'; // Token expires in 8 hours
+const JWT_EXPIRES_IN = '24h'; // Token expires in 24 hours
 const BCRYPT_ROUNDS = 12; // Strong password hashing
 
 // Warn if using generated secret (not persistent across restarts)
@@ -742,7 +742,7 @@ app.post('/api/loi', upload.single('document'), async (req, res) => {
 // Get all LOI submissions (admin only)
 app.get('/api/loi', authenticateToken, (req, res) => {
     const submissions = db.prepare(`
-        SELECT l.*, p.title as property_title, p.city, p.state
+        SELECT l.*, (p.city || ', ' || p.state) as property_title, p.city, p.state
         FROM loi_submissions l
         LEFT JOIN properties p ON l.property_id = p.id
         ORDER BY l.created_at DESC
@@ -814,7 +814,7 @@ app.post('/api/contact', async (req, res) => {
 // Get all contact inquiries (admin only)
 app.get('/api/contact', authenticateToken, (req, res) => {
     const inquiries = db.prepare(`
-        SELECT c.*, p.title as property_title, p.city as property_city, p.state as property_state
+        SELECT c.*, (p.city || ', ' || p.state) as property_title, p.city as property_city, p.state as property_state
         FROM contact_inquiries c
         LEFT JOIN properties p ON c.property_id = p.id
         ORDER BY c.created_at DESC
