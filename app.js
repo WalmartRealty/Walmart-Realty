@@ -31,6 +31,7 @@ let selectedStates = new Set();
 let selectedPrices = new Set();
 let selectedSizes = new Set();
 let selectedListingTypes = new Set();
+let activeKeyword = ''; // persists keyword search so state carousel can union with it
 
 // Load properties from embedded data (bundled version) or properties.json file
 async function loadPropertiesFromFile() {
@@ -530,29 +531,55 @@ function syncStateDropdown() {
     });
 }
 
-// Render chips below the carousel showing which states are active
+// Clear active keyword search and refilter
+function clearKeyword() {
+    activeKeyword = '';
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.value = '';
+    renderStateChips();
+    filterProperties();
+}
+
+// Render chips below the carousel showing which states + keyword are active
 function renderStateChips() {
     const bar = document.getElementById('state-chips-bar');
     if (!bar) return;
-    if (selectedStates.size === 0) {
+    const hasStates = selectedStates.size > 0;
+    const hasKeyword = activeKeyword !== '';
+    if (!hasStates && !hasKeyword) {
         bar.innerHTML = '';
         bar.classList.add('hidden');
         return;
     }
     bar.classList.remove('hidden');
-    const chips = [...selectedStates].sort().map(state => `
+    const stateChips = [...selectedStates].sort().map(state => `
         <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#0053e2] text-white text-sm font-medium shadow-sm">
             ${STATE_NAMES[state] || state}
             <button onclick="filterByStateIcon('${state}')" class="ml-1 hover:text-[#ffc220] transition-colors" aria-label="Remove ${state} filter">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </span>`).join('');
+    const keywordChip = hasKeyword ? `
+        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#ffc220] text-gray-900 text-sm font-medium shadow-sm">
+            🔍 &ldquo;${activeKeyword}&rdquo;
+            <button onclick="clearKeyword()" class="ml-1 hover:text-[#0053e2] transition-colors" aria-label="Clear keyword search">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </span>` : '';
     bar.innerHTML = `
         <div class="flex items-center gap-2 flex-wrap">
             <span class="text-sm font-medium text-gray-600">Filtering by:</span>
-            ${chips}
-            <button onclick="filterByStateIcon('')" class="text-xs text-gray-500 underline hover:text-[#0053e2] transition-colors">Clear all</button>
+            ${keywordChip}
+            ${stateChips}
+            <button onclick="clearAllFilters()" class="text-xs text-gray-500 underline hover:text-[#0053e2] transition-colors">Clear all</button>
         </div>`;
+}
+
+function clearAllFilters() {
+    activeKeyword = '';
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.value = '';
+    filterByStateIcon(''); // clears selectedStates, syncs dropdown, re-renders chips, filters
 }
 
 // Get property type label
@@ -810,8 +837,24 @@ function filterProperties() {
         // Listing type (OR across selections)
         if (selectedListingTypes.size > 0 && !selectedListingTypes.has(property.listingType)) return false;
 
-        // State (OR across selections)
-        if (selectedStates.size > 0 && !selectedStates.has(property.state)) return false;
+        // Keyword + State: union — property passes if it matches the keyword
+        // OR is in one of the selected states (or both filters are inactive)
+        const hasKeyword = activeKeyword !== '';
+        const hasStates = selectedStates.size > 0;
+        if (hasKeyword || hasStates) {
+            const matchesKeyword = hasKeyword && (() => {
+                const fullStateName = STATE_NAMES[property.state] || '';
+                const searchFields = [
+                    property.title, property.city, property.state,
+                    fullStateName, property.address, property.description,
+                    property.zoning, String(property.price || ''),
+                    property.features?.join(' ')
+                ].filter(Boolean).join(' ').toLowerCase();
+                return searchFields.includes(activeKeyword);
+            })();
+            const matchesState = hasStates && selectedStates.has(property.state);
+            if (!matchesKeyword && !matchesState) return false;
+        }
 
         // Price (OR across selected ranges)
         if (selectedPrices.size > 0) {
@@ -852,19 +895,21 @@ const STATE_ABBREVS = Object.fromEntries(
 function performSearch() {
     hideAutocomplete();
     const searchInput = document.getElementById('search-input');
-    let searchTerm = searchInput.value.trim();
-    let searchTermLower = searchTerm.toLowerCase();
-    
+    const searchTerm = searchInput.value.trim();
+    const searchTermLower = searchTerm.toLowerCase();
+
     if (!searchTerm) {
-        // If empty, just run the filter with current dropdown values
+        // Empty search — clear keyword and refilter with whatever states are active
+        activeKeyword = '';
+        renderStateChips();
         filterProperties();
         return;
     }
-    
-    // Check if search term is a full state name (e.g., "Texas", "Arkansas")
+
+    // State full name (e.g. "Texas") — add to selected states, clear keyword
     const stateAbbrFromName = STATE_ABBREVS[searchTermLower];
     if (stateAbbrFromName) {
-        // SET the filter (don't toggle — toggling clears it on second search)
+        activeKeyword = '';
         selectedStates.clear();
         selectedStates.add(stateAbbrFromName);
         syncStateDropdown();
@@ -875,10 +920,10 @@ function performSearch() {
         return;
     }
 
-    // Check if search term is a state abbreviation (e.g., "TX", "AR")
+    // State abbreviation (e.g. "TX") — add to selected states, clear keyword
     const searchTermUpper = searchTerm.toUpperCase();
     if (STATE_NAMES[searchTermUpper]) {
-        // SET the filter (don't toggle)
+        activeKeyword = '';
         selectedStates.clear();
         selectedStates.add(searchTermUpper);
         syncStateDropdown();
@@ -888,56 +933,12 @@ function performSearch() {
         searchInput.value = '';
         return;
     }
-    
-    // Get current filter values
-    // Get current filter values
-    const propertyType = document.getElementById('property-type').value;
 
-    filteredProperties = properties.filter(property => {
-        // Keyword search — normalise both sides: lowercase + strip commas
-        const fullStateName = STATE_NAMES[property.state] || '';
-        const searchFields = [
-            property.title, property.city, property.state,
-            fullStateName, property.address, property.description,
-            property.zoning, String(property.price), property.features?.join(' ')
-        ].filter(Boolean).join(' ').toLowerCase();
-
-        // Normalise the search term the same way
-        const normalisedSearch = searchTermLower.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
-        if (!searchFields.includes(normalisedSearch)) return false;
-
-        if (propertyType) {
-            const acres = property.size_acres || property.sizeAcres || 0;
-            if (propertyType === 'land' && property.type !== 'land') return false;
-            if (propertyType === 'buildings' && property.type !== 'buildings') return false;
-        }
-        if (selectedListingTypes.size > 0 && !selectedListingTypes.has(property.listingType)) return false;
-        if (selectedStates.size > 0 && !selectedStates.has(property.state)) return false;
-        if (selectedPrices.size > 0) {
-            const price = property.price || 0;
-            const ok = [...selectedPrices].some(range => {
-                if (range.endsWith('+')) return price >= parseInt(range);
-                const [mn, mx] = range.split('-').map(Number);
-                return price >= mn && price <= mx;
-            });
-            if (!ok) return false;
-        }
-        if (selectedSizes.size > 0) {
-            const acres = property.size_acres || property.sizeAcres || 0;
-            const ok = [...selectedSizes].some(range => {
-                if (range === '20+') return acres >= 20;
-                const [mn, mx] = range.split('-').map(Number);
-                return acres >= mn && acres < mx;
-            });
-            if (!ok) return false;
-        }
-        
-        return true;
-    });
-    
-    sortProperties();
-    renderProperties();
-    updateMapMarkers();
+    // Keyword search — store normalised term and run through filterProperties()
+    // so it stacks with any active state/price/size filters
+    activeKeyword = searchTermLower.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+    renderStateChips(); // show the keyword chip
+    filterProperties();
 }
 
 // Filter by listing type from nav links
