@@ -1197,7 +1197,7 @@
             filteredProperties = [...adminProperties];
     updateStats();
             populateStateFilter();
-            renderPropertiesTable();
+            filterAdminProperties(); // re-apply active search/filters instead of resetting
         }
         
         function getDefaultProperties() {
