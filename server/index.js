@@ -87,7 +87,7 @@ const apiLimiter = rateLimit({
 
 const uploadLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 50, // 50 uploads per hour
+    max: 500, // 500 uploads per hour
     message: { error: 'Upload limit reached. Please try again later.' }
 });
 
