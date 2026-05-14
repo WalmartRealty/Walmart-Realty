@@ -761,6 +761,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Property Type *</label>
                         <select id="property-type" required
+                                onchange="updatePropertyTypeFields()"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
                             <option value="">Select type...</option>
                             <option value="land">Land</option>
@@ -779,11 +780,17 @@
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div id="size-price-row" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Size (Acres) *</label>
                         <input type="number" id="property-size" required step="0.01" min="0"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                    </div>
+                    <div id="sqft-field" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Square Feet</label>
+                        <input type="number" id="property-sqft" min="0" step="1"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
+                               placeholder="e.g., 92000">
                     </div>
                     <div>
                         <label id="price-label" class="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
@@ -2049,6 +2056,16 @@
             document.getElementById('price-hint').classList.toggle('hidden', !isLease);
         }
 
+        function updatePropertyTypeFields() {
+            const isBuildings = document.getElementById('property-type').value === 'buildings';
+            const sqftField   = document.getElementById('sqft-field');
+            const row         = document.getElementById('size-price-row');
+            sqftField.classList.toggle('hidden', !isBuildings);
+            // 3-col grid when sqft is visible, 2-col otherwise
+            row.classList.toggle('md:grid-cols-3', isBuildings);
+            row.classList.toggle('md:grid-cols-2', !isBuildings);
+        }
+
         // ========== BULK IMPORT ==========
 
         function downloadPropertyTemplate() {
@@ -2203,6 +2220,7 @@
             document.getElementById('marketing-materials-list').innerHTML = '';
             currentPropertyId = null;
             pendingMarketingFiles = [];
+            updatePropertyTypeFields(); // reset sqft field visibility
             document.getElementById('property-modal').classList.remove('hidden');
             document.getElementById('property-modal').classList.add('flex');
         }
@@ -2218,12 +2236,14 @@
             document.getElementById('property-type').value = property.type;
 
             document.getElementById('property-size').value = property.size_acres;
+            document.getElementById('property-sqft').value = property.size_sqft || '';
             document.getElementById('property-price').value = property.price;
             document.getElementById('property-lat').value = property.lat;
             document.getElementById('property-lon').value = property.lon;
             document.getElementById('property-status').value = property.status || 'available';
             document.getElementById('property-listing-type').value = property.listingType || property.listing_type || 'sale';
             updatePriceLabel();
+            updatePropertyTypeFields();
             
             currentPropertyId = id;
             loadMarketingMaterials(id);
@@ -2246,6 +2266,7 @@
                 state:        document.getElementById('property-state').value,
                 type:         document.getElementById('property-type').value,
                 size_acres:   parseFloat(document.getElementById('property-size').value) || null,
+                size_sqft:    parseInt(document.getElementById('property-sqft').value) || null,
                 price:        parseInt(document.getElementById('property-price').value) || null,
                 lat:          parseFloat(document.getElementById('property-lat').value) || null,
                 lon:          parseFloat(document.getElementById('property-lon').value) || null,

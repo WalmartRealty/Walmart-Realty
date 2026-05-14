@@ -593,6 +593,7 @@ app.put('/api/properties/:id', authenticateToken, (req, res) => {
         state:        'state',
         address:      'address',
         size_acres:   'size_acres',
+        size_sqft:    'size_sqft',
         price:        'price',
         listing_type: 'listing_type',
         status:       'status',
@@ -1170,6 +1171,19 @@ app.post('/api/admin/sync-github', authenticateToken, (req, res) => {
         // Pull current DB properties
         const dbProps = db.prepare('SELECT * FROM properties ORDER BY id').all();
 
+        // Pull all marketing materials, keyed by property_id
+        const allMaterials = db.prepare('SELECT * FROM marketing_materials ORDER BY created_at ASC').all();
+        const materialsByPropId = {};
+        allMaterials.forEach(m => {
+            if (!materialsByPropId[m.property_id]) materialsByPropId[m.property_id] = [];
+            // Strip leading slash — GitHub Pages serves relative to repo root
+            const url = (m.file_url || '').replace(/^\//, '');
+            materialsByPropId[m.property_id].push({
+                name: m.file_name || url.split('/').pop(),
+                url,
+                type: m.file_type || 'application/octet-stream'
+            });
+        });
         // Merge with existing properties.json to preserve extra fields
         // (broker_company, marketingMaterials, store_num, etc.)
         let existingProps = [];
@@ -1202,6 +1216,7 @@ app.post('/api/admin/sync-github', authenticateToken, (req, res) => {
                 broker_email: p.broker_email,
                 broker_phone: p.broker_phone,
                 store_number: p.store_number || base.store_number || null,
+                marketingMaterials: materialsByPropId[p.id] || base.marketingMaterials || [],
                 updated_at: new Date().toISOString()
             };
         });
