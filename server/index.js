@@ -132,7 +132,7 @@ const ALLOWED_FILE_TYPES = {
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
 };
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 // File upload configuration with security
 const storage = multer.diskStorage({
@@ -1357,7 +1357,7 @@ function isPortInUse(port) {
 app.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({ error: 'File too large. Maximum size is 10MB.' });
+            return res.status(400).json({ error: 'File too large. Maximum size is 50MB.' });
         }
         if (err.code === 'LIMIT_FILE_COUNT') {
             return res.status(400).json({ error: 'Too many files. Maximum is 5 files per upload.' });
