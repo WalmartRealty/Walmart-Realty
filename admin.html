@@ -298,8 +298,9 @@
             <!-- CSV Import Info -->
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                 <h4 class="font-semibold text-blue-800 mb-2">📋 CSV Import Format</h4>
-                <p class="text-sm text-blue-700">Your CSV should have these columns: <code class="bg-blue-100 px-1 rounded">name, email, phone, company, states</code></p>
+                <p class="text-sm text-blue-700">Your CSV should have these columns: <code class="bg-blue-100 px-1 rounded">name, email, phone, company, states, cities</code></p>
                 <p class="text-sm text-blue-700 mt-1">For multiple states, separate with commas: <code class="bg-blue-100 px-1 rounded">TX,OK,AR</code></p>
+                <p class="text-sm text-blue-700 mt-1"><code class="bg-blue-100 px-1 rounded">cities</code> is optional — leave blank to cover entire state, or list cities: <code class="bg-blue-100 px-1 rounded">Dallas,Fort Worth</code></p>
             </div>
             
             <!-- Brokers Table -->
@@ -313,6 +314,7 @@
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Phone</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">States</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Cities / Territory</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
                                 <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
                             </tr>
@@ -905,6 +907,16 @@
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue uppercase">
                 </div>
                 
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Managed Cities
+                        <span class="text-gray-400 font-normal">(optional — leave blank to cover entire state)</span>
+                    </label>
+                    <input type="text" id="broker-cities" placeholder="Dallas,Fort Worth,Arlington"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                    <p class="text-xs text-gray-400 mt-1">Separate cities with commas. If set, this broker only appears for properties in those cities.</p>
+                </div>
+                
                 <div class="flex items-center gap-2">
                     <input type="checkbox" id="broker-active" checked class="h-4 w-4 text-walmart-blue rounded">
                     <label for="broker-active" class="text-sm text-gray-700">Active (receives LOI notifications)</label>
@@ -1397,8 +1409,14 @@
                     <td class="px-6 py-4 text-gray-600">${b.company || '-'}</td>
                     <td class="px-6 py-4">
                         <div class="flex flex-wrap gap-1">
-                            ${b.states.split(',').map(s => `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">${s.trim()}</span>`).join('')}
+                            ${b.states.split(',').map(s => `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-mono">${s.trim()}</span>`).join('')}
                         </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600 text-sm">
+                        ${b.cities
+                            ? `<div class="flex flex-wrap gap-1">${b.cities.split(',').map(c => `<span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded text-xs">${c.trim()}</span>`).join('')}</div>`
+                            : `<span class="text-gray-400 italic text-xs">Entire state</span>`
+                        }
                     </td>
                     <td class="px-6 py-4">
                         <span class="px-2 py-1 rounded-full text-xs font-medium ${b.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
@@ -1467,6 +1485,7 @@
             document.getElementById('broker-phone').value = broker.phone || '';
             document.getElementById('broker-company').value = broker.company || '';
             document.getElementById('broker-states').value = broker.states;
+            document.getElementById('broker-cities').value = broker.cities || '';
             document.getElementById('broker-active').checked = broker.is_active;
             
             document.getElementById('broker-modal').classList.remove('hidden');
@@ -1483,6 +1502,7 @@
                 phone: document.getElementById('broker-phone').value || null,
                 company: document.getElementById('broker-company').value || null,
                 states: document.getElementById('broker-states').value.toUpperCase(),
+                cities: document.getElementById('broker-cities').value || null,
                 is_active: document.getElementById('broker-active').checked
             };
             

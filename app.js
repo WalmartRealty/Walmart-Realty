@@ -1102,27 +1102,8 @@ function openPropertyModal(id) {
                     <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-6 py-3.5">
                         <h3 class="text-white font-bold text-base tracking-wide uppercase">Broker Contact</h3>
                     </div>
-                    <div id="broker-contact-container" class="p-7 flex flex-col items-center text-center gap-4">
-                        ${property.broker_name ? `
-                            ${property.broker_photo
-                                ? `<img src="${property.broker_photo}" alt="${property.broker_name}" class="w-16 h-16 rounded-full object-cover object-top shadow-md shrink-0 border-2 border-white">`
-                                : `<div class="w-16 h-16 rounded-full bg-[#0053e2] flex items-center justify-center text-white text-xl font-bold shadow-md shrink-0">${property.broker_name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}</div>`}
-                            <div>
-                                <p class="font-bold text-gray-900 text-xl leading-tight">${property.broker_name}</p>
-                                <p class="text-gray-400 text-sm mt-0.5">${property.broker_company || 'Walmart Realty'}</p>
-                            </div>
-                            <div class="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-                                ${property.broker_phone ? `<a href="tel:${property.broker_phone.replace(/[^0-9+]/g, '')}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>${property.broker_phone}</a>` : ''}
-                                ${property.broker_email ? `<a href="mailto:${property.broker_email}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#0053e2] text-[#0053e2] rounded-xl font-semibold text-sm hover:bg-blue-50 transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Email Broker</a>` : ''}
-                            </div>
-                        ` : `
-                            <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-3xl">🏢</div>
-                            <div>
-                                <p class="font-bold text-gray-900 text-lg">Walmart Realty</p>
-                                <p class="text-gray-400 text-sm mt-0.5">Commercial Real Estate</p>
-                            </div>
-                            <a href="mailto:realestatedispositions@walmart.com" class="flex items-center gap-2 px-5 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Contact Us</a>
-                        `}
+                    <div id="broker-contact-container" class="p-6 flex items-center justify-center min-h-[80px]">
+                        <div class="animate-pulse text-gray-400 text-sm">Loading contact info…</div>
                     </div>
                 </div>
             </div>
@@ -1479,74 +1460,88 @@ async function loadMarketingMaterials(propertyId) {
 }
 
 // Shared helper — renders photo or initials circle for broker card
-function brokerAvatarHtml(name, photoUrl) {
-    if (photoUrl) {
-        return `<img src="${photoUrl}" alt="${name}" class="w-16 h-16 rounded-full object-cover object-top shadow-md shrink-0 border-2 border-white">`;
-    }
+function brokerAvatarHtml(name, photoUrl, size = 'lg') {
+    const dim = size === 'lg' ? 'w-14 h-14' : 'w-10 h-10';
+    const text = size === 'lg' ? 'text-lg' : 'text-sm';
     const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
-    return `<div class="w-16 h-16 rounded-full bg-[#0053e2] flex items-center justify-center text-white text-xl font-bold shadow-md shrink-0">${initials}</div>`;
+    if (photoUrl) {
+        return `<img src="${photoUrl}" alt="${name}" class="${dim} rounded-full object-cover object-top shadow border-2 border-white shrink-0">`;
+    }
+    return `<div class="${dim} rounded-full bg-[#0053e2] flex items-center justify-center text-white ${text} font-bold shadow shrink-0">${initials}</div>`;
 }
 
-// Load broker contact info for a state (with optional propertyId for embedded data)
+// Render a single broker contact card (horizontal layout for stacking)
+function brokerCardHtml(b) {
+    const phoneIcon = `<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>`;
+    const emailIcon = `<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`;
+    return `
+        <div class="flex items-center gap-4 py-4 px-5 border-b border-gray-100 last:border-0">
+            ${brokerAvatarHtml(b.name, b.photo || null)}
+            <div class="flex-1 min-w-0">
+                <p class="font-bold text-gray-900 leading-tight truncate">${b.name}</p>
+                <p class="text-gray-400 text-xs mt-0.5 truncate">${b.company || 'Walmart Realty'}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                ${b.phone ? `<a href="tel:${b.phone.replace(/[^0-9+]/g,'')}" title="Call ${b.name}" class="flex items-center gap-1.5 px-3 py-2 bg-[#0053e2] text-white rounded-lg font-semibold text-sm hover:bg-[#003eb0] transition-colors">${phoneIcon}<span class="hidden sm:inline">Call</span></a>` : ''}
+                ${b.email ? `<a href="mailto:${b.email}" title="Email ${b.name}" class="flex items-center gap-1.5 px-3 py-2 border-2 border-[#0053e2] text-[#0053e2] rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors">${emailIcon}<span class="hidden sm:inline">Email</span></a>` : ''}
+            </div>
+        </div>`;
+}
+
+// Load broker contact info for a property — handles 1–N brokers
 async function loadBrokerContact(state, propertyId) {
     const container = document.getElementById('broker-contact-container');
     if (!container) return;
-    
-    console.log('loadBrokerContact called with state:', state, 'propertyId:', propertyId);
-    
-    // First check if property has embedded broker info
-    if (propertyId) {
-        const property = properties.find(p => p.id === propertyId || p.id === parseInt(propertyId));
-        console.log('Found property:', property ? 'yes' : 'no');
-        console.log('Property broker:', property?.broker);
-        console.log('Property broker_name:', property?.broker_name);
-        
-        // Check for broker object first
-        if (property && property.broker && property.broker.name) {
-            const b = property.broker;
-            container.innerHTML = `
-                ${brokerAvatarHtml(b.name, b.photo || null)}
-                <div>
-                    <p class="font-bold text-gray-900 text-xl leading-tight">${b.name}</p>
-                    <p class="text-gray-400 text-sm mt-0.5">${b.company || 'Walmart Realty'}</p>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-                    ${b.phone ? `<a href="tel:${b.phone.replace(/[^0-9+]/g,'')}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>${b.phone}</a>` : ''}
-                    ${b.email ? `<a href="mailto:${b.email}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#0053e2] text-[#0053e2] rounded-xl font-semibold text-sm hover:bg-blue-50 transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Email Broker</a>` : ''}
-                </div>
-            `;
-            return;
+
+    // Try the API first (local server)
+    try {
+        const res = await fetch(`/api/brokers/property/${propertyId}`);
+        if (res.ok) {
+            const brokerList = await res.json();
+            if (brokerList.length > 0) {
+                container.innerHTML = brokerList.map(brokerCardHtml).join('');
+                return;
+            }
         }
-        
-        // Fallback: check for broker_name, broker_email, etc. fields directly
-        if (property && property.broker_name) {
-            container.innerHTML = `
-                ${brokerAvatarHtml(property.broker_name, property.broker_photo || null)}
-                <div>
-                    <p class="font-bold text-gray-900 text-xl leading-tight">${property.broker_name}</p>
-                    <p class="text-gray-400 text-sm mt-0.5">${property.broker_company || 'Walmart Realty'}</p>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-                    ${property.broker_phone ? `<a href="tel:${property.broker_phone.replace(/[^0-9+]/g,'')}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>${property.broker_phone}</a>` : ''}
-                    ${property.broker_email ? `<a href="mailto:${property.broker_email}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#0053e2] text-[#0053e2] rounded-xl font-semibold text-sm hover:bg-blue-50 transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Email Broker</a>` : ''}
-                </div>
-            `;
-            return;
-        }
+    } catch (_) {
+        // API not available — static/GitHub Pages mode, fall through
     }
-    
-    // Fallback message for GitHub Pages (no API)
+
+    // Static fallback: use broker fields embedded directly on the property object
+    const property = properties.find(p => p.id === propertyId || p.id === parseInt(propertyId));
+    if (property && property.broker_name) {
+        container.innerHTML = brokerCardHtml({
+            name: property.broker_name,
+            email: property.broker_email || null,
+            phone: property.broker_phone || null,
+            company: property.broker_company || 'Walmart Realty',
+            photo: property.broker_photo || null
+        });
+        return;
+    }
+    if (property && property.broker && property.broker.name) {
+        const b = property.broker;
+        container.innerHTML = brokerCardHtml({
+            name: b.name,
+            email: b.email || null,
+            phone: b.phone || null,
+            company: b.company || 'Walmart Realty',
+            photo: b.photo || null
+        });
+        return;
+    }
+
+    // Final fallback — Walmart Realty contact
+    const emailIcon = `<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`;
     container.innerHTML = `
-        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-3xl">🏢</div>
-        <div>
-            <p class="font-bold text-gray-900 text-lg">Walmart Realty</p>
-            <p class="text-gray-400 text-sm mt-0.5">Commercial Real Estate</p>
-        </div>
-        <a href="mailto:realestatedispositions@walmart.com" class="flex items-center gap-2 px-5 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-            Contact Us
-        </a>
-    `;
+        <div class="flex items-center gap-4 py-4 px-5">
+            <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-2xl shrink-0">🏢</div>
+            <div class="flex-1 min-w-0">
+                <p class="font-bold text-gray-900 leading-tight">Walmart Realty</p>
+                <p class="text-gray-400 text-xs mt-0.5">Commercial Real Estate</p>
+            </div>
+            <a href="mailto:realestatedispositions@walmart.com" class="flex items-center gap-1.5 px-3 py-2 bg-[#0053e2] text-white rounded-lg font-semibold text-sm hover:bg-[#003eb0] transition-colors">${emailIcon}<span class="hidden sm:inline">Contact</span></a>
+        </div>`;
 }
 
 // LOI Documents available

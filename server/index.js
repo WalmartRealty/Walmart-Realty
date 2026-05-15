@@ -695,13 +695,21 @@ app.post('/api/loi', upload.single('document'), async (req, res) => {
     // Get property details to find brokers
     const property = db.prepare('SELECT * FROM properties WHERE id = ?').get(property_id);
     
-    // Find brokers for this state
+    // Find brokers for this property — city-specific first, state-wide as fallback
     let brokers = [];
     if (property) {
-        brokers = db.prepare(`
-            SELECT id, name, email, phone, company FROM brokers 
+        const allStateBrokers = db.prepare(`
+            SELECT id, name, email, phone, company, cities FROM brokers 
             WHERE is_active = 1 AND states LIKE ?
         `).all(`%${property.state}%`);
+        
+        const cityNorm = (property.city || '').trim().toLowerCase();
+        const citySpecific = allStateBrokers.filter(b =>
+            b.cities && b.cities.split(',').map(c => c.trim().toLowerCase()).includes(cityNorm)
+        );
+        brokers = citySpecific.length > 0
+            ? citySpecific
+            : allStateBrokers.filter(b => !b.cities || b.cities.trim() === '');
     }
     
     const result = db.prepare(`
@@ -857,25 +865,81 @@ app.get('/api/brokers', authenticateToken, (req, res) => {
 // Get brokers by state (for LOI routing)
 app.get('/api/brokers/state/:state', (req, res) => {
     const { state } = req.params;
+    const { city } = req.query; // optional ?city=Dallas
     const brokers = db.prepare(`
         SELECT * FROM brokers 
         WHERE is_active = 1 AND states LIKE ?
     `).all(`%${state.toUpperCase()}%`);
-    res.json(brokers);
+    
+    if (!city) { return res.json(brokers); }
+    
+    // Priority: city-specific brokers first, then state-wide (empty cities) as fallback
+    const cityNorm = city.trim().toLowerCase();
+    const citySpecific = brokers.filter(b => {
+        if (!b.cities) return false;
+        return b.cities.split(',').map(c => c.trim().toLowerCase()).includes(cityNorm);
+    });
+    const stateWide = brokers.filter(b => !b.cities || b.cities.trim() === '');
+    
+    // Return city-specific if found, otherwise state-wide
+    res.json(citySpecific.length > 0 ? citySpecific : stateWide);
+});
+
+// Get brokers for a specific property — respects city > state priority
+app.get('/api/brokers/property/:propertyId', (req, res) => {
+    const { propertyId } = req.params;
+    const property = db.prepare('SELECT city, state, broker_name, broker_email, broker_phone FROM properties WHERE id = ?').get(propertyId);
+    if (!property) return res.status(404).json({ error: 'Property not found' });
+    
+    // Level 1: property has a directly embedded broker — return it wrapped as an array
+    if (property.broker_name) {
+        return res.json([{
+            id: null,
+            name: property.broker_name,
+            email: property.broker_email || null,
+            phone: property.broker_phone || null,
+            company: 'Walmart Realty',
+            photo: null,
+            territory: 'property'
+        }]);
+    }
+    
+    const allStatebrokers = db.prepare(`
+        SELECT * FROM brokers WHERE is_active = 1 AND states LIKE ?
+    `).all(`%${property.state.toUpperCase()}%`);
+    
+    const cityNorm = (property.city || '').trim().toLowerCase();
+    
+    // Level 2: city-specific brokers
+    const cityBrokers = allStatebrokers
+        .filter(b => b.cities && b.cities.split(',').map(c => c.trim().toLowerCase()).includes(cityNorm))
+        .map(b => ({ ...b, territory: 'city' }));
+    
+    if (cityBrokers.length > 0) return res.json(cityBrokers);
+    
+    // Level 3: state-wide brokers (no cities set)
+    const stateBrokers = allStatebrokers
+        .filter(b => !b.cities || b.cities.trim() === '')
+        .map(b => ({ ...b, territory: 'state' }));
+    
+    res.json(stateBrokers);
 });
 
 // Add single broker (admin only)
 app.post('/api/brokers', authenticateToken, (req, res) => {
-    const { name, email, phone, company, states } = req.body;
+    const { name, email, phone, company, states, cities } = req.body;
     
     if (!name || !email || !states) {
         return res.status(400).json({ error: 'Name, email, and states are required' });
     }
     
+    // Normalise cities: title-case, comma-separated
+    const normCities = cities ? cities.split(',').map(c => c.trim()).filter(Boolean).join(',') : null;
+    
     const result = db.prepare(`
-        INSERT INTO brokers (name, email, phone, company, states)
-        VALUES (?, ?, ?, ?, ?)
-    `).run(name, email, phone, company, states.toUpperCase());
+        INSERT INTO brokers (name, email, phone, company, states, cities)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `).run(name, email, phone, company, states.toUpperCase(), normCities || null);
     
     logActivity(req.user.id, 'CREATE', 'broker', result.lastInsertRowid, { name, email });
     
@@ -891,8 +955,8 @@ app.post('/api/brokers/import', authenticateToken, (req, res) => {
     }
     
     const insertStmt = db.prepare(`
-        INSERT INTO brokers (name, email, phone, company, states)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO brokers (name, email, phone, company, states, cities)
+        VALUES (?, ?, ?, ?, ?, ?)
     `);
     
     let imported = 0;
@@ -905,12 +969,16 @@ app.post('/api/brokers/import', authenticateToken, (req, res) => {
                     errors.push(`Missing required fields for: ${broker.name || broker.email || 'unknown'}`);
                     continue;
                 }
+                const normCities = broker.cities
+                    ? broker.cities.split(',').map(c => c.trim()).filter(Boolean).join(',')
+                    : null;
                 insertStmt.run(
                     broker.name,
                     broker.email,
                     broker.phone || null,
                     broker.company || null,
-                    broker.states.toUpperCase()
+                    broker.states.toUpperCase(),
+                    normCities || null
                 );
                 imported++;
             } catch (err) {
@@ -931,14 +999,18 @@ app.post('/api/brokers/import', authenticateToken, (req, res) => {
 });
 
 // Update broker (admin only)
-// Migrate: add photo column to brokers if it doesn't exist yet
+// Migrate: add photo + cities columns to brokers if they don't exist yet
 try {
     const cols = db.prepare('PRAGMA table_info(brokers)').all().map(c => c.name);
     if (!cols.includes('photo')) {
         db.prepare('ALTER TABLE brokers ADD COLUMN photo TEXT').run();
         console.log('[migrate] Added photo column to brokers table');
     }
-} catch (e) { console.warn('[migrate] brokers photo column:', e.message); }
+    if (!cols.includes('cities')) {
+        db.prepare('ALTER TABLE brokers ADD COLUMN cities TEXT').run();
+        console.log('[migrate] Added cities column to brokers table');
+    }
+} catch (e) { console.warn('[migrate] brokers migration:', e.message); }
 
 // Upload broker photo (admin only)
 app.post('/api/brokers/:id/photo', authenticateToken, upload.single('photo'), (req, res) => {
@@ -956,12 +1028,14 @@ app.post('/api/brokers/:id/photo', authenticateToken, upload.single('photo'), (r
 
 app.put('/api/brokers/:id', authenticateToken, (req, res) => {
     const { id } = req.params;
-    const { name, email, phone, company, states, is_active } = req.body;
+    const { name, email, phone, company, states, cities, is_active } = req.body;
+    
+    const normCities = cities ? cities.split(',').map(c => c.trim()).filter(Boolean).join(',') : null;
     
     db.prepare(`
-        UPDATE brokers SET name = ?, email = ?, phone = ?, company = ?, states = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+        UPDATE brokers SET name = ?, email = ?, phone = ?, company = ?, states = ?, cities = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-    `).run(name, email, phone, company, states?.toUpperCase(), is_active ? 1 : 0, id);
+    `).run(name, email, phone, company, states?.toUpperCase(), normCities || null, is_active ? 1 : 0, id);
     
     logActivity(req.user.id, 'UPDATE', 'broker', id, { name, email });
     
