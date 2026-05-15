@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Walmart Realty — Staples Business Card Print</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+
+  <style>
+    :root {
+      --blue:   #0053e2;
+      --yellow: #ffc220;
+      --dark:   #001a5e;
+    }
+
+    /* Walmart Everyday Sans → Bogle → system */
+    @font-face {
+      font-family: 'EverydaySans';
+      src: url('https://i5.walmartimages.com/dfw/63fd9f59-e0d6/ee4d4aa3-7cd5-4e26-9b5a-e23cb52ef82f/v1/EverydaySans-Regular.woff2') format('woff2'),
+           url('https://i5.walmartimages.com/dfw/63fd9f59-e0d6/636a849e-a3cf-43c3-8464-14b89abef7be/v1/Bogle-Regular.woff2') format('woff2');
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'EverydaySans';
+      src: url('https://i5.walmartimages.com/dfw/63fd9f59-e0d6/ee4d4aa3-7cd5-4e26-9b5a-e23cb52ef82f/v1/EverydaySans-Bold.woff2') format('woff2'),
+           url('https://i5.walmartimages.com/dfw/63fd9f59-e0d6/636a849e-a3cf-43c3-8464-14b89abef7be/v1/Bogle-Bold.woff2') format('woff2');
+      font-weight: 700 800; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Bogle';
+      src: url('https://i5.walmartimages.com/dfw/63fd9f59-e0d6/636a849e-a3cf-43c3-8464-14b89abef7be/v1/Bogle-Regular.woff2') format('woff2');
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Bogle';
+      src: url('https://i5.walmartimages.com/dfw/63fd9f59-e0d6/636a849e-a3cf-43c3-8464-14b89abef7be/v1/Bogle-Bold.woff2') format('woff2');
+      font-weight: 700 800; font-style: normal; font-display: swap;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      padding: 32px 16px;
+      background: #111827;
+      font-family: 'EverydaySans', 'Bogle', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* ── spec badge ── */
+    .spec-box {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      padding: 16px 24px;
+      color: #d1d5db;
+      font-size: .82rem;
+      text-align: center;
+      max-width: 480px;
+    }
+    .spec-box strong { color: #ffc220; }
+    .spec-box .trim-note {
+      margin-top: 8px;
+      font-size: .75rem;
+      color: #6b7280;
+    }
+
+    /* ── card preview ── */
+    .card-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    /* Bleed boundary (full canvas) */
+    canvas {
+      display: block;
+      /* Render at 2× for crispness, display at 1× */
+      width:  337px;   /* 675 / 2 */
+      height: 562px;   /* 1125 / 2 */
+      border-radius: 6px;
+      box-shadow:
+        0 0 0 2px var(--yellow),
+        0 0 32px 4px rgba(0,83,226,.5),
+        0 20px 60px rgba(0,0,0,.8);
+    }
+
+    /* Trim line overlay (dashed, 300 DPI = 37.5px from each edge at 1× display) */
+    .trim-overlay {
+      position: absolute;
+      /* bleed is 0.125" per side = 37.5px at 300dpi, scaled to 1×: 18.75px */
+      inset: 18px;
+      border: 1.5px dashed rgba(255,194,32,.55);
+      border-radius: 3px;
+      pointer-events: none;
+    }
+    .trim-label {
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,194,32,.85);
+      color: #001a5e;
+      font-size: .6rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 3px;
+      letter-spacing: .06em;
+      white-space: nowrap;
+    }
+
+    /* ── buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      font-family: 'EverydaySans', 'Bogle', -apple-system, sans-serif;
+      font-size: .88rem;
+      font-weight: 700;
+      padding: 11px 26px;
+      transition: transform .12s, opacity .12s;
+    }
+    button:hover  { opacity: .88; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    .btn-dl    { background: var(--yellow); color: #001a5e; }
+    .btn-print { background: var(--blue);   color: #fff; }
+
+    /* ── print styles ── */
+    @media print {
+      body { background: white; padding: 0; gap: 0; }
+      .spec-box, .btn-row, .trim-overlay, .trim-label { display: none !important; }
+      canvas {
+        width: 2.25in !important;
+        height: 3.75in !important;
+        box-shadow: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="spec-box">
+    <strong>Staples Business Card — Print-Ready</strong><br>
+    Canvas: <strong>675 × 1125 px</strong> &nbsp;|&nbsp; 300 DPI &nbsp;|&nbsp;
+    Bleed: <strong>2.25″ × 3.75″</strong><br>
+    <span class="trim-note">
+      Dashed line = final trim at <strong>2″ × 3.5″</strong>.
+      Keep key content inside the dashed line.
+    </span>
+  </div>
+
+  <div class="card-wrap">
+    <!-- 675 × 1125 = 2.25" × 3.75" @ 300 DPI (full bleed) -->
+    <canvas id="card" width="675" height="1125"></canvas>
+    <div class="trim-overlay">
+      <span class="trim-label">TRIM LINE — 2″ × 3.5″</span>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-dl" id="dl-btn">⬇️ Download PNG</button>
+    <button class="btn-print" onclick="window.print()">🖨️ Print Preview</button>
+  </div>
+
+  <script>
+  (() => {
+    /* ─── palette ──────────────────────────────────────────── */
+    const BLUE      = '#0053e2';
+    const BLUE_DARK = '#001a5e';
+    const YELLOW    = '#ffc220';
+    const WHITE     = '#ffffff';
+    const FONT      = "'EverydaySans', 'Bogle', -apple-system, BlinkMacSystemFont, sans-serif";
+
+    /* ─── URL encoded into the QR ───────────────────────────── */
+    const URL = 'https://walmartrealty.github.io/Walmart-Realty/';
+
+    /* ─── Generate QR (level H = 30% damage tolerance) ─────── */
+    const qr = qrcode(0, 'H');
+    qr.addData(URL);
+    qr.make();
+    const N = qr.getModuleCount();
+
+    /* ─── canvas ────────────────────────────────────────────── */
+    const canvas = document.getElementById('card');
+    const W  = canvas.width;   // 675
+    const H  = canvas.height;  // 1125
+    const ctx = canvas.getContext('2d');
+
+    /* ─── layout constants (portrait business card) ─────────── */
+    const CORNER_R = 20;
+
+    // Header block
+    const HDR_H = 180;
+
+    // QR panel — square, centered horizontally, with padding
+    const QR_SIDE_PAD = 40;
+    const QR_AVAIL    = W - QR_SIDE_PAD * 2;  // 595
+    const QR_CELL     = QR_AVAIL / N;
+    const QR_SZ       = QR_CELL * N;
+    const QR_OX       = QR_SIDE_PAD;
+    const QR_OY       = HDR_H + 28;
+
+    // Footer block
+    const FTR_TOP = QR_OY + QR_SZ + 28;
+
+    /* ─── helper: rounded rect path ─────────────────────────── */
+    const roundRect = (cx, cy, cw, ch, cr) => {
+      ctx.beginPath();
+      ctx.moveTo(cx + cr, cy);
+      ctx.lineTo(cx + cw - cr, cy);
+      ctx.arcTo(cx + cw, cy,      cx + cw, cy + cr,      cr);
+      ctx.lineTo(cx + cw, cy + ch - cr);
+      ctx.arcTo(cx + cw, cy + ch, cx + cw - cr, cy + ch, cr);
+      ctx.lineTo(cx + cr, cy + ch);
+      ctx.arcTo(cx,       cy + ch, cx,           cy + ch - cr, cr);
+      ctx.lineTo(cx, cy + cr);
+      ctx.arcTo(cx,       cy,      cx + cr,      cy,      cr);
+      ctx.closePath();
+    };
+
+    /* ─── main draw ──────────────────────────────────────────── */
+    const drawAll = (sparkImg) => {
+
+      /* ══ 1. BACKGROUND ══════════════════════════════════════ */
+      ctx.save();
+      roundRect(0, 0, W, H, CORNER_R);
+      ctx.clip();
+      const glow = ctx.createRadialGradient(W/2, H * .4, 0, W/2, H * .4, H * .75);
+      glow.addColorStop(0,    '#0a2a6e');
+      glow.addColorStop(.50,  '#071540');
+      glow.addColorStop(1,    '#030c26');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+
+      /* ══ 2. YELLOW TOP ACCENT BAR ═══════════════════════════ */
+      ctx.fillStyle = YELLOW;
+      ctx.fillRect(0, 0, W, 10);
+
+      /* ══ 3. HEADER TEXT ═════════════════════════════════════ */
+      ctx.save();
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+
+      // WALMART — big, bold, white
+      ctx.fillStyle    = WHITE;
+      ctx.font         = `800 ${W * .115}px ${FONT}`;
+      ctx.letterSpacing = `${W * .020}px`;
+      ctx.fillText('WALMART', W / 2, 72);
+
+      // REALTY — medium, yellow
+      ctx.fillStyle    = YELLOW;
+      ctx.font         = `700 ${W * .072}px ${FONT}`;
+      ctx.letterSpacing = `${W * .028}px`;
+      ctx.fillText('REALTY', W / 2, 136);
+      ctx.restore();
+
+      /* ══ 4. WHITE QR PANEL (with yellow glow ring) ══════════ */
+      const PANEL_PAD = 18;
+      const PX = QR_OX - PANEL_PAD;
+      const PY = QR_OY - PANEL_PAD;
+      const PW = QR_SZ + PANEL_PAD * 2;
+      const PH = QR_SZ + PANEL_PAD * 2;
+
+      // Yellow glow ring
+      ctx.save();
+      ctx.shadowColor = YELLOW;
+      ctx.shadowBlur  = 20;
+      roundRect(PX - 4, PY - 4, PW + 8, PH + 8, 14);
+      ctx.fillStyle = YELLOW;
+      ctx.fill();
+      ctx.restore();
+
+      // White panel
+      ctx.save();
+      roundRect(PX, PY, PW, PH, 10);
+      ctx.fillStyle = WHITE;
+      ctx.fill();
+      ctx.restore();
+
+      /* ══ 5. QR MODULES — blue rounded pebbles ═══════════════ */
+      const inFinder = (r, c) =>
+        (r < 8 && c < 8) || (r < 8 && c >= N - 8) || (r >= N - 8 && c < 8);
+
+      const modRadius = QR_CELL * .42;
+
+      const drawModule = (col, row, color) => {
+        const x   = QR_OX + col * QR_CELL;
+        const y   = QR_OY + row * QR_CELL;
+        const pad = QR_CELL * .10;
+        const s   = QR_CELL - pad * 2;
+        const rr  = Math.min(modRadius, s / 2);
+        roundRect(x + pad, y + pad, s, s, rr);
+        ctx.fillStyle = color;
+        ctx.fill();
+      };
+
+      for (let row = 0; row < N; row++) {
+        for (let col = 0; col < N; col++) {
+          if (!inFinder(row, col) && qr.isDark(row, col))
+            drawModule(col, row, BLUE);
+        }
+      }
+
+      /* ══ 6. FINDER PATTERNS ═════════════════════════════════ */
+      const drawFinder = (originCol, originRow) => {
+        const ox = QR_OX + originCol * QR_CELL;
+        const oy = QR_OY + originRow * QR_CELL;
+        const sz = QR_CELL;
+        const OUTER = 7 * sz;
+
+        roundRect(ox, oy, OUTER, OUTER, sz * .55);
+        ctx.fillStyle = BLUE_DARK; ctx.fill();
+
+        const YPAD = sz * .18;
+        roundRect(ox + YPAD, oy + YPAD, OUTER - YPAD*2, OUTER - YPAD*2, sz * .45);
+        ctx.fillStyle = YELLOW; ctx.fill();
+
+        const WP = sz * .9;
+        roundRect(ox + WP, oy + WP, OUTER - WP*2, OUTER - WP*2, sz * .35);
+        ctx.fillStyle = WHITE; ctx.fill();
+
+        const IP = sz * 2;
+        roundRect(ox + IP, oy + IP, sz * 3, sz * 3, sz * .55);
+        ctx.fillStyle = BLUE; ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(ox + sz * 2.5, oy + sz * 2.5, sz * .38, 0, Math.PI * 2);
+        ctx.fillStyle = YELLOW; ctx.fill();
+      };
+
+      drawFinder(0,     0    );
+      drawFinder(N - 7, 0    );
+      drawFinder(0,     N - 7);
+
+      /* ══ 7. OFFICIAL WALMART SPARK IN QR CENTER ═════════════ */
+      const CX     = QR_OX + QR_SZ / 2;
+      const CY     = QR_OY + QR_SZ / 2;
+      const DISC_R = QR_CELL * 3.2;
+      const SPARK  = DISC_R * 2 * 0.90;
+
+      // White disc with yellow glow
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,194,32,.4)';
+      ctx.shadowBlur  = 20;
+      ctx.beginPath();
+      ctx.arc(CX, CY, DISC_R, 0, Math.PI * 2);
+      ctx.fillStyle = WHITE;
+      ctx.fill();
+      ctx.restore();
+
+      // Yellow ring border
+      ctx.beginPath();
+      ctx.arc(CX, CY, DISC_R, 0, Math.PI * 2);
+      ctx.strokeStyle = YELLOW;
+      ctx.lineWidth   = QR_CELL * .18;
+      ctx.stroke();
+
+      // Spark PNG clipped to disc
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(CX, CY, DISC_R - 2, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(sparkImg, CX - SPARK/2, CY - SPARK/2, SPARK, SPARK);
+      ctx.restore();
+
+      /* ══ 8. FOOTER TEXT — "SCAN TO BROWSE..." ═══════════════ */
+      const footerCenter = FTR_TOP + (H - 10 - FTR_TOP) / 2;
+
+      ctx.save();
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle    = WHITE;
+      ctx.font         = `700 ${W * .040}px ${FONT}`;
+      ctx.letterSpacing = '0.10em';
+      ctx.fillText('SCAN TO BROWSE', W / 2, footerCenter - 22);
+      ctx.fillText('AVAILABLE PROPERTIES', W / 2, footerCenter + 22);
+      ctx.restore();
+
+      /* ══ 9. YELLOW BOTTOM ACCENT BAR ════════════════════════ */
+      ctx.fillStyle = YELLOW;
+      ctx.fillRect(0, H - 10, W, 10);
+
+    }; // end drawAll
+
+    /* ─── Load spark PNG, then wait for fonts, then draw ────── */
+    const sparkImg = new Image();
+    sparkImg.src   = 'spark-logo.png';
+
+    Promise.all([
+      document.fonts.ready,
+      new Promise((resolve) => {
+        sparkImg.onload  = resolve;
+        sparkImg.onerror = resolve; // graceful fallback
+      })
+    ]).then(() => drawAll(sparkImg));
+
+    /* ─── Download button ────────────────────────────────────── */
+    document.getElementById('dl-btn').addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.download = 'walmart-realty-card-print-ready.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    });
+
+  })();
+  </script>
+</body>
+</html>
