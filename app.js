@@ -1,6 +1,5 @@
-// Real Walmart Property Data - Generated from Non-Earning Land Report 11-30-2025
+// Real Walmart Property Data - Generated from Non-Earning Land Report
 // Store numbers, cities, states, and sizes are REAL data
-// Prices are randomly generated for demonstration purposes
 // Coordinates are based on city centers - actual property locations may vary
 
 // Check for admin-managed properties in localStorage
@@ -10,18 +9,72 @@ function getStoredProperties() {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
             const parsed = JSON.parse(stored);
-            // Only use localStorage if it has valid, non-empty data
+            // Only use if it's a valid array with properties
             if (Array.isArray(parsed) && parsed.length > 0) {
+                console.log('Found', parsed.length, 'properties in localStorage');
                 return parsed;
             }
         }
     } catch (e) {
-        console.warn('Invalid localStorage data, using embedded properties');
+        console.error('Error reading localStorage:', e);
+        // Clear corrupted data
+        localStorage.removeItem(STORAGE_KEY);
     }
     return null;
 }
 
-const rawProperties = getStoredProperties() || [
+// Will be populated from properties-data.js
+let rawProperties = getStoredProperties() || [];
+let properties = [];
+let filteredProperties = [];
+let selectedStates = new Set();
+let selectedPrices = new Set();
+let selectedSizes = new Set();
+let selectedListingTypes = new Set();
+let activeKeyword = ''; // persists keyword search so state carousel can union with it
+
+// Load properties from embedded data (bundled version) or properties.json file
+async function loadPropertiesFromFile() {
+    console.log('Attempting to load properties...');
+    
+    // Check for embedded properties first (bundled version)
+    if (window.EMBEDDED_PROPERTIES && Array.isArray(window.EMBEDDED_PROPERTIES) && window.EMBEDDED_PROPERTIES.length > 0) {
+        console.log('Found', window.EMBEDDED_PROPERTIES.length, 'embedded properties (bundled mode)');
+        return window.EMBEDDED_PROPERTIES.map((p, i) => normaliseProperty(p, i));
+    }
+    
+    // Otherwise try fetching properties.json
+    try {
+        const response = await fetch('properties.json');
+        console.log('Fetch response status:', response.status);
+        if (response.ok) {
+            const props = await response.json();
+            console.log('Parsed', props.length, 'properties from JSON');
+            return props.map((p, i) => normaliseProperty(p, i));
+        }
+    } catch (e) {
+        console.error('Failed to load properties from JSON:', e);
+    }
+    return null;
+}
+
+// Normalise a raw property record from properties.json into the shape the
+// rest of the app expects. Handles both legacy (type) and DB-sourced
+// (property_type) field names without clobbering real status values.
+function normaliseProperty(p, index) {
+    return {
+        ...p,
+        id:          p.id || p.store_num || (index + 1),
+        type:        p.type || p.property_type || 'land',
+        listingType: p.listingType || p.listing_type || 'sale',
+        status:      p.status || 'available',
+        lotSize:     p.size_acres ? `${p.size_acres} acres` : 'N/A',
+        sizeAcres:   p.size_acres
+    };
+}
+
+// Fallback properties if file load fails
+const fallbackProperties = [
     { id: 51, city: "Rogers", state: "AR", address: "Near Mathis Airport Pkwy", size_acres: 33.38, type: "land", price: 7000000, lat: 36.3371533, lon: -94.2258899, listingType: "sale", status: "available", description: "Prime excess land parcel situated along major commercial corridor. 33.38 acres zoned retail with excellent visibility and traffic counts of 44,700 VPD on Peachtree Pkwy. Adjacent to Laurel Springs Golf Club with nearby retailers including Target, Home Depot, Lidl, CVS, and Five Guys.", features: ["High Traffic Location", "Retail Zoning", "Near Major Retailers", "Golf Course Adjacent", "Utilities Available"], store_number: "4686", broker: { name: "Minh Nguyen", email: "mnguyen@mnguyencre.com", phone: "(832) 555-0173", company: "Commercial Real Estate Broker" }, marketingMaterials: [{ name: "4686 Marketing Materials.pdf", url: "/uploads/4686 Marketing Materials.pdf", type: "application/pdf" }, { name: "Site Aerial Map.png", url: "/uploads/image3.png", type: "image/png" }, { name: "Broker Contact - Minh Nguyen.png", url: "/uploads/image5.png", type: "image/png" }, { name: "Aerial Site View.png", url: "/uploads/image6.png", type: "image/png" }], featured: true },
     { city: "Sherwood", state: "AR", size_acres: 2.43, type: "land", price: 500000, lat: 34.8151, lon: -92.2243 },
     { city: "Newport", state: "AR", size_acres: 1.12, type: "land", price: 300000, lat: 35.6045, lon: -91.2818 },
@@ -102,64 +155,82 @@ function getPropertyImage(index, type) {
 }
 
 // Transform raw data into full property objects
-const properties = rawProperties.map((p, index) => {
-    const isRetail = p.type === 'retail';
-    
-    // Get thumbnail image
-    const image = getPropertyImage(index, p.type);
-    
-    // Calculate price per acre for land
-    const pricePerAcre = p.size_acres ? Math.round(p.price / p.size_acres) : null;
-    
-    // If property already has full data (like the Rogers demo property), preserve it
-    if (p.id && p.marketingMaterials) {
+function transformProperties(rawProps) {
+    return rawProps.map((p, index) => {
+        // Resolve type from either legacy 'type' or DB-sourced 'property_type'
+        const resolvedType = p.type || p.property_type || 'land';
+        const isRetail = resolvedType === 'retail';
+        
+        // Get thumbnail image
+        const image = getPropertyImage(index, resolvedType);
+        
+        // Calculate price per acre for land
+        const pricePerAcre = p.size_acres ? Math.round((p.price || 0) / p.size_acres) : null;
+        
+        // If property already has full data, preserve it
+        if (p.id && p.marketingMaterials) {
+            return {
+                ...p,
+                type: resolvedType,
+                status: p.status || 'available',
+                title: p.title || (isRetail 
+                    ? `Former Retail Location - ${p.city}, ${p.state}`
+                    : `Development Land - ${p.city}, ${p.state}`),
+                pricePerAcre: pricePerAcre,
+                sizeAcres: p.size_acres,
+                image: image,
+                zip: p.zip || getZipForState(p.state),
+                lotSize: `${p.size_acres} acres`,
+                zoning: p.zoning || 'Commercial'
+            };
+        }
+        
         return {
-            ...p,
-            title: p.title || (isRetail 
+            id: p.id || p.store_num || (index + 1),
+            store_num: p.store_num,
+            title: isRetail 
                 ? `Former Retail Location - ${p.city}, ${p.state}`
-                : `Development Land - ${p.city}, ${p.state}`),
+                : `Development Land - ${p.city}, ${p.state}`,
+            type: resolvedType,
+            status: p.status || 'available',
+            listingType: p.listingType || p.listing_type || 'sale',
+            price: p.price,
             pricePerAcre: pricePerAcre,
             sizeAcres: p.size_acres,
-            image: image,
+            size: isRetail ? Math.round(p.size_acres * 43560 * 0.15) : null,
+            address: p.address || `Commercial Property`,
+            city: p.city,
+            state: p.state,
             zip: p.zip || getZipForState(p.state),
-            lotSize: `${p.size_acres} acres`,
-            zoning: p.zoning || 'Commercial'
-        };
-    }
-    
-    return {
-        id: p.id || (index + 1),
-        title: isRetail 
-            ? `Former Retail Location - ${p.city}, ${p.state}`
-            : `Development Land - ${p.city}, ${p.state}`,
-        type: p.type,
-        listingType: p.listingType || 'sale',
-        price: p.price,
-        pricePerAcre: pricePerAcre,
-        sizeAcres: p.size_acres,
-        size: isRetail ? Math.round(p.size_acres * 43560 * 0.15) : null,
-        address: p.address || `Commercial Property`,
-        city: p.city,
-        state: p.state,
-        zip: p.zip || getZipForState(p.state),
-        lat: p.lat,
-        lon: p.lon,
-        image: image,
-        description: p.description || (isRetail
-            ? `Former retail location in ${p.city}, ${p.state}. Prime commercial property with excellent visibility and established traffic patterns. ${p.size_acres} acre site ready for redevelopment or continued retail use.`
-            : `Development-ready land parcel in ${p.city}, ${p.state}. ${p.size_acres} acres of commercial-zoned land ideal for retail, restaurant, or service businesses. Excellent location with strong demographics.`),
+            lat: p.lat,
+            lon: p.lon,
+            image: image,
+            description: p.description || (isRetail
+                ? `Former retail location in ${p.city}, ${p.state}. Prime commercial property with excellent visibility and established traffic patterns. ${p.size_acres} acre site ready for redevelopment or continued retail use.`
+                : `Development-ready land parcel in ${p.city}, ${p.state}. ${p.size_acres} acres of commercial-zoned land ideal for retail, restaurant, or service businesses. Excellent location with strong demographics.`),
         features: p.features || (isRetail
             ? [`${p.size_acres} Acre Site`, 'Established Location', 'High Traffic Area', 'Utilities In Place', 'Signalized Access']
             : [`${p.size_acres} Acres`, 'Commercial Zoning', 'Utilities Available', 'Pad-Ready', 'Strong Demographics']),
         yearBuilt: null,
         lotSize: `${p.size_acres} acres`,
         zoning: p.zoning || 'Commercial',
-        broker: p.broker || null,
+        broker: p.broker || (p.broker_name ? {
+            name: p.broker_name,
+            email: p.broker_email,
+            phone: p.broker_phone,
+            company: p.broker_company || 'Walmart Realty'
+        } : null),
+        // Keep raw broker fields for fallback
+        broker_name: p.broker_name || null,
+        broker_email: p.broker_email || null,
+        broker_phone: p.broker_phone || null,
+        broker_company: p.broker_company || null,
         marketingMaterials: p.marketingMaterials || null,
-        store_number: p.store_number || null,
+        store_number: p.store_number || p.store_num || null,
         featured: p.featured || false
     };
-});
+    });
+}
 
 // Helper function to generate plausible ZIP codes
 function getZipForState(state) {
@@ -174,28 +245,19 @@ function getZipForState(state) {
 
 // Current view state
 let currentView = 'grid';
-let filteredProperties = [];
 
-// Detect static hosting (GitHub Pages, etc.) - no API available
-const STATIC_MODE = window.location.hostname.includes('github.io') || 
-                    window.location.hostname.includes('pages.') ||
-                    window.location.protocol === 'file:';
-
-// Fetch properties from API and initialize
+// Fetch properties from API, file, or localStorage
 async function fetchPropertiesFromAPI() {
-    // Skip API call on static hosting - use embedded data
-    if (STATIC_MODE) {
-        console.log(`Static mode: Using ${properties.length} embedded properties`);
-        filteredProperties = [...properties];
-        return;
-    }
-    
+    console.log('fetchPropertiesFromAPI called');
+
+    // 1. Try the live API first — source of truth when server is running.
+    //    This ensures DB ids are always used so marketing materials, broker
+    //    info, and other relational data match up correctly.
     try {
-        const response = await fetch(`${window.location.origin}/api/properties`);
+        const response = await fetch(`${window.location.origin}/api/properties`, { cache: 'no-store' });
         if (response.ok) {
             const apiProps = await response.json();
-            // Only clear if we actually got valid data
-            if (Array.isArray(apiProps) && apiProps.length > 0) {
+            if (apiProps && apiProps.length > 0) {
                 properties.length = 0;
                 apiProps.forEach(p => {
                     properties.push({
@@ -214,23 +276,82 @@ async function fetchPropertiesFromAPI() {
                         lon: p.lon || 0,
                         store_number: p.store_number || '',
                         broker_name: p.broker_name || '',
-                        features: ['Commercial Zoning', 'Utilities Available'],
-                        featured: false,
+                        broker_email: p.broker_email || '',
+                        broker_phone: p.broker_phone || '',
+                        broker_company: p.broker_company || '',
+                        broker_photo: p.broker_photo || null,
+                        zoning: p.zoning || 'Commercial',
+                        features: p.features || ['Commercial Zoning', 'Utilities Available'],
+                        featured: p.featured === 1 || p.featured === true,
                         zip: getZipForState(p.state)
                     });
                 });
                 console.log(`Loaded ${properties.length} properties from API`);
+                filteredProperties = [...properties];
+                return;
             }
         }
     } catch (error) {
-        console.error('Error fetching properties (using embedded data):', error);
+        console.log('API not available, falling back to static sources:', error.message);
     }
+
+    // 2. Fall back to properties.json (GitHub Pages / static hosting)
+    console.log('Trying properties.json...');
+    try {
+        const fileProps = await loadPropertiesFromFile();
+        if (fileProps && fileProps.length > 0) {
+            console.log(`Loaded ${fileProps.length} properties from properties.json`);
+            rawProperties = fileProps;
+            properties.length = 0;
+            try {
+                properties.push(...transformProperties(rawProperties));
+            } catch (transformError) {
+                console.error('Error in transformProperties:', transformError);
+                properties.push(...rawProperties.map((p, i) => ({
+                    ...p,
+                    id: p.id || p.store_num || (i + 1),
+                    title: `Property in ${p.city}, ${p.state}`,
+                    listingType: 'sale',
+                    status: 'available',
+                    sizeAcres: p.size_acres,
+                    lotSize: `${p.size_acres} acres`
+                })));
+            }
+            filteredProperties = [...properties];
+            return;
+        }
+    } catch (e) {
+        console.error('Error loading from properties.json:', e);
+    }
+
+    // 3. Last resort: localStorage (used when no server and no static file)
+    const stored = getStoredProperties();
+    if (stored && stored.length > 0) {
+        console.log(`Loading ${stored.length} properties from localStorage`);
+        rawProperties = stored;
+        properties.length = 0;
+        properties.push(...transformProperties(rawProperties));
+        filteredProperties = [...properties];
+        return;
+    }
+    
+    // 4. Fallback to hardcoded properties
+    console.log(`Using ${fallbackProperties.length} fallback properties`);
+    rawProperties = fallbackProperties;
+    properties.length = 0;
+    properties.push(...transformProperties(rawProperties));
     filteredProperties = [...properties];
+}
 
 // Format price for display
 function formatPrice(price, listingType) {
-    if (listingType === 'lease') {
-        return `$${price.toLocaleString()}/SF/YR`;
+    // Handle null/undefined prices
+    if (price === null || price === undefined) {
+        return 'Contact for Pricing';
+    }
+    if (listingType === 'lease' || listingType === 'ground_lease') {
+        if (price >= 1000000) return `$${(price / 1000000).toFixed(1)}M/yr`;
+        return `$${price.toLocaleString()}/yr`;
     }
     if (price >= 1000000) {
         return `$${(price / 1000000).toFixed(1)}M`;
@@ -244,13 +365,243 @@ function formatSize(size) {
     return `${size.toLocaleString()} SF`;
 }
 
+// State abbreviation to full name mapping
+const STATE_NAMES = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+    'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+    'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+    'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+    'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+};
+
+// Scroll the states carousel
+// Open/close a filter panel; close all others first
+function toggleFilterDropdown(panelId) {
+    document.querySelectorAll('.filter-panel').forEach(p => {
+        if (p.id !== panelId) p.classList.add('hidden');
+    });
+    document.getElementById(panelId)?.classList.toggle('hidden');
+}
+
+// Generic checkbox toggle for price / size / listing filters
+function toggleFilterCheck(filterType, value, checked) {
+    const map = { price: selectedPrices, size: selectedSizes, listing: selectedListingTypes };
+    const badgeMap = { price: 'price-filter-badge', size: 'size-filter-badge', listing: 'listing-filter-badge' };
+    const set = map[filterType];
+    if (!set) return;
+    checked ? set.add(value) : set.delete(value);
+    updateFilterBadge(badgeMap[filterType], set.size);
+    filterProperties();
+}
+
+// Show/hide the count badge on a filter button
+function updateFilterBadge(badgeId, count) {
+    const badge = document.getElementById(badgeId);
+    if (!badge) return;
+    if (count > 0) {
+        badge.textContent = count;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+// Clear all active filters and reset the UI
+function showAllProperties() {
+    selectedStates.clear();
+    selectedPrices.clear();
+    selectedSizes.clear();
+    selectedListingTypes.clear();
+    // Uncheck all filter checkboxes
+    document.querySelectorAll('.filter-panel input[type="checkbox"]').forEach(cb => cb.checked = false);
+    ['price-filter-badge','size-filter-badge','listing-filter-badge','state-filter-badge'].forEach(id => updateFilterBadge(id, 0));
+    updateCarouselButtonStyles();
+    syncStateDropdown();
+    renderStateChips();
+    filterProperties();
+}
+
+// Close all filter panels when clicking outside
+document.addEventListener('click', e => {
+    if (!e.target.closest('.filter-panel') && !e.target.closest('[onclick^="toggleFilterDropdown"]')) {
+        document.querySelectorAll('.filter-panel').forEach(p => p.classList.add('hidden'));
+    }
+});
+
+// Scroll the state carousel
+function scrollStates(direction) {
+    const carousel = document.getElementById('states-carousel');
+    if (carousel) {
+        const scrollAmount = 200;
+        carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    }
+}
+
+// Populate state icons carousel
+function populateStateCarousel() {
+    const carousel = document.getElementById('states-carousel');
+    if (!carousel) return;
+
+    const stateCounts = {};
+    properties.forEach(p => {
+        if (p.state) stateCounts[p.state] = (stateCounts[p.state] || 0) + 1;
+    });
+    const states = Object.keys(stateCounts).sort();
+    const totalProperties = properties.length;
+
+    const allButton = `
+        <button onclick="filterByStateIcon('')"
+                id="state-btn-all" data-state="all"
+                class="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-blue-50 hover:ring-2 hover:ring-[#ffc220] transition-all group focus:outline-none focus:ring-2 focus:ring-[#ffc220]"
+                aria-label="View all properties">
+            <div class="state-circle w-16 h-16 rounded-full bg-[#ffc220] flex items-center justify-center text-gray-900 font-bold text-lg shadow-md group-hover:shadow-lg transition-all">
+                ALL
+            </div>
+            <span class="text-sm font-medium text-gray-700 group-hover:text-walmart-blue">All States</span>
+            <span class="text-xs text-gray-500">${totalProperties} properties</span>
+        </button>`;
+
+    const stateButtons = states.map(state => {
+        const isActive = selectedStates.has(state);
+        const circleClass = isActive
+            ? 'state-circle w-16 h-16 rounded-full bg-gradient-to-br from-[#ffc220] to-yellow-400 flex items-center justify-center text-gray-900 font-bold text-lg shadow-md ring-4 ring-white scale-110 transition-all'
+            : 'state-circle w-16 h-16 rounded-full bg-gradient-to-br from-walmart-blue to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md transition-all';
+        return `
+        <button onclick="filterByStateIcon('${state}')"
+                id="state-btn-${state}" data-state="${state}"
+                class="flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-[#ffc22033] hover:ring-2 hover:ring-walmart-blue transition-all group focus:outline-none focus:ring-2 focus:ring-walmart-blue"
+                aria-label="View ${STATE_NAMES[state] || state} properties" aria-pressed="${isActive}">
+            <div class="${circleClass}">${state}</div>
+            <span class="text-sm font-medium text-gray-700 group-hover:text-walmart-blue">${STATE_NAMES[state] || state}</span>
+            <span class="text-xs text-gray-500">${stateCounts[state]} ${stateCounts[state] === 1 ? 'property' : 'properties'}</span>
+        </button>`;
+    }).join('');
+
+    carousel.innerHTML = allButton + stateButtons;
+    renderStateChips();
+}
+
+// Toggle a state in/out of the multi-selection set
+function filterByStateIcon(state) {
+    if (state === '') {
+        // "All States" — clear everything
+        selectedStates.clear();
+    } else {
+        // Toggle this state
+        if (selectedStates.has(state)) {
+            selectedStates.delete(state);
+        } else {
+            selectedStates.add(state);
+        }
+    }
+    updateCarouselButtonStyles();
+    syncStateDropdown();
+    renderStateChips();
+    filterProperties();
+}
+
+// Update carousel button active/inactive styles without full re-render
+function updateCarouselButtonStyles() {
+    document.querySelectorAll('[data-state]').forEach(btn => {
+        const state = btn.dataset.state;
+        if (state === 'all') return;
+        const circle = btn.querySelector('.state-circle');
+        if (!circle) return;
+        const isActive = selectedStates.has(state);
+        btn.setAttribute('aria-pressed', isActive);
+        if (isActive) {
+            circle.className = 'state-circle w-16 h-16 rounded-full bg-gradient-to-br from-[#ffc220] to-yellow-400 flex items-center justify-center text-gray-900 font-bold text-lg shadow-md ring-4 ring-white scale-110 transition-all';
+        } else {
+            circle.className = 'state-circle w-16 h-16 rounded-full bg-gradient-to-br from-walmart-blue to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-md transition-all';
+        }
+    });
+}
+
+// Sync the state filter dropdown badge + carousel after external change
+function syncStateDropdown() {
+    updateFilterBadge('state-filter-badge', selectedStates.size);
+    // Sync checkboxes in the state panel
+    document.querySelectorAll('#state-checkboxes input[type="checkbox"]').forEach(cb => {
+        cb.checked = selectedStates.has(cb.value);
+    });
+}
+
+// Clear active keyword search and refilter
+function clearKeyword() {
+    activeKeyword = '';
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.value = '';
+    renderStateChips();
+    filterProperties();
+}
+
+// Render chips below the carousel showing which states + keyword are active
+function renderStateChips() {
+    const bar = document.getElementById('state-chips-bar');
+    if (!bar) return;
+    const hasStates = selectedStates.size > 0;
+    const hasKeyword = activeKeyword !== '';
+    if (!hasStates && !hasKeyword) {
+        bar.innerHTML = '';
+        bar.classList.add('hidden');
+        return;
+    }
+    bar.classList.remove('hidden');
+    const stateChips = [...selectedStates].sort().map(state => `
+        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#0053e2] text-white text-sm font-medium shadow-sm">
+            ${STATE_NAMES[state] || state}
+            <button onclick="filterByStateIcon('${state}')" class="ml-1 hover:text-[#ffc220] transition-colors" aria-label="Remove ${state} filter">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </span>`).join('');
+    const keywordChip = hasKeyword ? `
+        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#ffc220] text-gray-900 text-sm font-medium shadow-sm">
+            🔍 &ldquo;${activeKeyword}&rdquo;
+            <button onclick="clearKeyword()" class="ml-1 hover:text-[#0053e2] transition-colors" aria-label="Clear keyword search">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </span>` : '';
+    bar.innerHTML = `
+        <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-sm font-medium text-gray-600">Filtering by:</span>
+            ${keywordChip}
+            ${stateChips}
+            <button onclick="clearAllFilters()" class="text-xs text-gray-500 underline hover:text-[#0053e2] transition-colors">Clear all</button>
+        </div>`;
+}
+
+function clearAllFilters() {
+    activeKeyword = '';
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) searchInput.value = '';
+    filterByStateIcon(''); // clears selectedStates, syncs dropdown, re-renders chips, filters
+}
+
 // Get property type label
+// Get status badge HTML — drives the card and modal badges
+function getStatusBadge(status, size = 'sm') {
+    const pad = size === 'lg' ? 'px-4 py-2 text-sm' : 'px-2 py-0.5 text-xs';
+    const s = (status || 'available').toLowerCase();
+    if (s === 'under-contract' || s === 'under_contract' || s === 'pending') {
+        return `<span class="${pad} rounded-full font-semibold bg-yellow-400 text-yellow-900">Under Contract</span>`;
+    } else if (s === 'sold') {
+        return `<span class="${pad} rounded-full font-semibold bg-red-600 text-white">SOLD</span>`;
+    }
+    return `<span class="${pad} rounded-full font-semibold bg-green-500 text-white">Available</span>`;
+}
+
 function getTypeLabel(type) {
     const labels = {
         land: 'Land',
-        outlots: 'Outlots',
-        'dark-stores': 'Vacant Stores',
-        retail: 'Retail',
+        'buildings': 'Buildings',
+        outlots: 'Land',
+        'dark-stores': 'Buildings',
+        retail: 'Buildings',
         warehouse: 'Warehouse',
         office: 'Office',
         industrial: 'Industrial'
@@ -318,12 +669,12 @@ function getSatelliteThumbUrl(lat, lon) {
 }
 
 function createPropertyCard(property) {
-    const priceDisplay = formatPrice(property.price, property.listingType);
-    const listingLabel = property.listingType === 'sale' ? 'For Sale' : 'For Lease';
     const satelliteUrl = getSatelliteThumbUrl(property.lat, property.lon);
-    
+    const status = (property.status || 'available').toLowerCase();
+    const isSold = status === 'sold';
+
     return `
-        <article class="property-card bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg" 
+        <article class="property-card bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg${isSold ? ' opacity-75' : ''}" 
                  onclick="openPropertyModal(${property.id})"
                  tabindex="0"
                  role="button"
@@ -341,12 +692,8 @@ function createPropertyCard(property) {
                         </div>
                         <div>
                             <div class="flex gap-2 mb-1">
-                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${getListingBadgeClass(property.listingType)}">
-                                    ${listingLabel}
-                                </span>
-                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-                                    ${getTypeLabel(property.type)}
-                                </span>
+                                ${getStatusBadge(status)}
+                                ${property.listingType === 'lease' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#a9ddf7;color:#001e60">For Lease</span>' : property.listingType === 'ground_lease' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#a9ddf7;color:#001e60">Ground Lease</span>' : ''}
                             </div>
                             <h4 class="text-lg font-bold text-gray-900 line-clamp-1">${property.city}, ${property.state}</h4>
                         </div>
@@ -364,7 +711,7 @@ function createPropertyCard(property) {
             <div class="p-5 bg-gray-50">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-lg font-semibold text-walmart-blue">View Details</p>
+                        <p class="text-lg font-semibold text-walmart-blue">${isSold ? '' : 'View Details'}</p>
                     </div>
                     <button class="p-2 rounded-full hover:bg-white transition-colors focus-visible shadow-sm bg-white" 
                             aria-label="${isPropertySaved(property.id) ? 'Remove from saved' : 'Save property'}"
@@ -379,24 +726,72 @@ function createPropertyCard(property) {
     `;
 }
 
+// Show loading state
+function showLoadingState() {
+    const container = document.getElementById('property-grid');
+    if (container) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-16">
+                <div class="animate-spin h-12 w-12 border-4 border-walmart-blue border-t-transparent rounded-full mx-auto mb-4"></div>
+                <h3 class="text-xl font-semibold text-gray-600">Loading properties...</h3>
+            </div>
+        `;
+    }
+}
+
+// Show error state with retry button
+function showLoadError(errorMessage) {
+    const container = document.getElementById('property-grid');
+    if (container) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-16">
+                <svg class="h-16 w-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">Unable to load properties</h3>
+                <p class="text-gray-500 mb-4">${errorMessage || 'Please check your connection and try again.'}</p>
+                <button onclick="location.reload()" class="px-6 py-2 bg-walmart-blue text-white rounded-lg hover:bg-walmart-dark transition-colors">
+                    Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
 // Render properties
 function renderProperties() {
     const container = document.getElementById('property-grid');
     
+    if (filteredProperties.length === 0 && properties.length === 0) {
+        // No properties loaded at all - this is an error state
+        showLoadError('No properties could be loaded. Please try refreshing the page.');
+        return;
+    }
+    
     if (filteredProperties.length === 0) {
+        // Properties exist but filters returned nothing
         container.innerHTML = `
             <div class="col-span-full text-center py-16">
                 <svg class="h-16 w-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                 </svg>
                 <h3 class="text-xl font-semibold text-gray-600 mb-2">No properties found</h3>
-                <p class="text-gray-500">Try adjusting your search criteria</p>
+                <p class="text-gray-500 mb-4">Try adjusting your search criteria</p>
+                <button onclick="showAllProperties()" class="px-6 py-2 bg-walmart-blue text-white rounded-lg hover:bg-walmart-dark transition-colors">
+                    Show All Properties
+                </button>
             </div>
         `;
         return;
     }
     
-    container.innerHTML = filteredProperties.map(createPropertyCard).join('');
+    // Sold properties always go to the bottom
+    const sorted = [...filteredProperties].sort((a, b) => {
+        const aS = (a.status || '').toLowerCase() === 'sold' ? 1 : 0;
+        const bS = (b.status || '').toLowerCase() === 'sold' ? 1 : 0;
+        return aS - bS;
+    });
+    container.innerHTML = sorted.map(createPropertyCard).join('');
     
     // Update results count
     const countEl = document.getElementById('results-count');
@@ -417,7 +812,7 @@ function setView(view) {
         gridBtn.setAttribute('aria-pressed', 'true');
         listBtn.className = 'p-2 bg-white text-gray-600 hover:bg-gray-100 focus-visible';
         listBtn.setAttribute('aria-pressed', 'false');
-        container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-6';
+        container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
     } else {
         listBtn.className = 'p-2 bg-walmart-blue text-white focus-visible';
         listBtn.setAttribute('aria-pressed', 'true');
@@ -430,131 +825,133 @@ function setView(view) {
 // Filter properties
 function filterProperties() {
     const propertyType = document.getElementById('property-type').value;
-    const listingType = document.getElementById('listing-type').value;
-    const stateFilter = document.getElementById('state-filter').value;
-    const priceRange = document.getElementById('price-range').value;
-    const sizeRange = document.getElementById('size-range').value;
-    
+
     filteredProperties = properties.filter(property => {
-        // Property type filter - map dropdown values to data types
+        // Property type
         if (propertyType) {
-            const acres = property.size_acres || property.sizeAcres || 0;
-            if (propertyType === 'land' && property.type !== 'land') return false;
-            if (propertyType === 'outlots' && (property.type !== 'land' || acres >= 5)) return false;
-            if (propertyType === 'dark-stores' && property.type !== 'retail') return false;
+            const type = property.type;
+            if (propertyType === 'land' && type !== 'land') return false;
+            if (propertyType === 'buildings' && type !== 'buildings') return false;
         }
-        
-        // Listing type filter
-        if (listingType && property.listingType !== listingType) return false;
-        
-        // State filter
-        if (stateFilter && property.state !== stateFilter) return false;
-        
-        // Price filter
-        if (priceRange) {
-            const [min, max] = priceRange.split('-').map(p => {
-                if (p.includes('+')) return Infinity;
-                return parseInt(p);
+
+        // Listing type (OR across selections)
+        if (selectedListingTypes.size > 0 && !selectedListingTypes.has(property.listingType)) return false;
+
+        // Keyword + State: union — property passes if it matches the keyword
+        // OR is in one of the selected states (or both filters are inactive)
+        const hasKeyword = activeKeyword !== '';
+        const hasStates = selectedStates.size > 0;
+        if (hasKeyword || hasStates) {
+            const matchesKeyword = hasKeyword && (() => {
+                const fullStateName = STATE_NAMES[property.state] || '';
+                const searchFields = [
+                    property.title, property.city, property.state,
+                    fullStateName, property.address, property.description,
+                    property.zoning, String(property.price || ''),
+                    property.features?.join(' ')
+                ].filter(Boolean).join(' ').toLowerCase();
+                return searchFields.includes(activeKeyword);
+            })();
+            const matchesState = hasStates && selectedStates.has(property.state);
+            if (!matchesKeyword && !matchesState) return false;
+        }
+
+        // Price (OR across selected ranges)
+        if (selectedPrices.size > 0) {
+            const price = property.price || 0;
+            const matchesPrice = [...selectedPrices].some(range => {
+                if (range.endsWith('+')) return price >= parseInt(range);
+                const [min, max] = range.split('-').map(Number);
+                return price >= min && price <= max;
             });
-            if (property.price < min || property.price > max) return false;
+            if (!matchesPrice) return false;
         }
-        
-        // Size filter (acres)
-        if (sizeRange) {
+
+        // Size (OR across selected ranges)
+        if (selectedSizes.size > 0) {
             const acres = property.size_acres || property.sizeAcres || 0;
-            if (sizeRange === '0-1' && acres >= 1) return false;
-            if (sizeRange === '1-5' && (acres < 1 || acres >= 5)) return false;
-            if (sizeRange === '5-20' && (acres < 5 || acres >= 20)) return false;
-            if (sizeRange === '20+' && acres < 20) return false;
+            const matchesSize = [...selectedSizes].some(range => {
+                if (range === '20+') return acres >= 20;
+                const [min, max] = range.split('-').map(Number);
+                return acres >= min && acres < max;
+            });
+            if (!matchesSize) return false;
         }
-        
+
         return true;
     });
-    
-    // Sort and render
+
     sortProperties();
     renderProperties();
     updateMapMarkers();
 }
+
+// Reverse lookup: full state name to abbreviation
+const STATE_ABBREVS = Object.fromEntries(
+    Object.entries(STATE_NAMES).map(([abbr, name]) => [name.toLowerCase(), abbr])
+);
 
 // Perform keyword search from the main search bar
 function performSearch() {
+    hideAutocomplete();
     const searchInput = document.getElementById('search-input');
-    const searchTerm = searchInput.value.toLowerCase().trim();
-    
+    const searchTerm = searchInput.value.trim();
+    const searchTermLower = searchTerm.toLowerCase();
+
     if (!searchTerm) {
-        // If empty, just run the filter with current dropdown values
+        // Empty search — clear keyword and refilter with whatever states are active
+        activeKeyword = '';
+        renderStateChips();
         filterProperties();
         return;
     }
-    
-    // Get current filter values
-    const propertyType = document.getElementById('property-type').value;
-    const listingType = document.getElementById('listing-type').value;
-    const stateFilter = document.getElementById('state-filter').value;
-    const priceRange = document.getElementById('price-range').value;
-    const sizeRange = document.getElementById('size-range').value;
-    
-    filteredProperties = properties.filter(property => {
-        // Keyword search - check multiple fields
-        const searchFields = [
-            property.title,
-            property.city,
-            property.state,
-            property.address,
-            property.description,
-            property.zoning,
-            String(property.price),
-            property.features?.join(' ')
-        ].filter(Boolean).join(' ').toLowerCase();
-        
-        if (!searchFields.includes(searchTerm)) return false;
-        
-        // Apply other filters too
-        // Property type filter
-        if (propertyType) {
-            const acres = property.size_acres || property.sizeAcres || 0;
-            if (propertyType === 'land' && property.type !== 'land') return false;
-            if (propertyType === 'outlots' && (property.type !== 'land' || acres >= 5)) return false;
-            if (propertyType === 'dark-stores' && property.type !== 'retail') return false;
-        }
-        
-        // Listing type filter
-        if (listingType && property.listingType !== listingType) return false;
-        
-        // State filter
-        if (stateFilter && property.state !== stateFilter) return false;
-        
-        // Price filter
-        if (priceRange) {
-            const [min, max] = priceRange.split('-').map(p => {
-                if (p.includes('+')) return Infinity;
-                return parseInt(p);
-            });
-            if (property.price < min || property.price > max) return false;
-        }
-        
-        // Size filter
-        if (sizeRange) {
-            const acres = property.size_acres || property.sizeAcres || 0;
-            if (sizeRange === '0-1' && acres >= 1) return false;
-            if (sizeRange === '1-5' && (acres < 1 || acres >= 5)) return false;
-            if (sizeRange === '5-20' && (acres < 5 || acres >= 20)) return false;
-            if (sizeRange === '20+' && acres < 20) return false;
-        }
-        
-        return true;
-    });
-    
-    sortProperties();
-    renderProperties();
-    updateMapMarkers();
+
+    // State full name (e.g. "Texas") — add to selected states, clear keyword
+    const stateAbbrFromName = STATE_ABBREVS[searchTermLower];
+    if (stateAbbrFromName) {
+        activeKeyword = '';
+        selectedStates.clear();
+        selectedStates.add(stateAbbrFromName);
+        syncStateDropdown();
+        renderStateChips();
+        updateCarouselButtonStyles();
+        filterProperties();
+        searchInput.value = '';
+        return;
+    }
+
+    // State abbreviation (e.g. "TX") — add to selected states, clear keyword
+    const searchTermUpper = searchTerm.toUpperCase();
+    if (STATE_NAMES[searchTermUpper]) {
+        activeKeyword = '';
+        selectedStates.clear();
+        selectedStates.add(searchTermUpper);
+        syncStateDropdown();
+        renderStateChips();
+        updateCarouselButtonStyles();
+        filterProperties();
+        searchInput.value = '';
+        return;
+    }
+
+    // Keyword search — store normalised term and run through filterProperties()
+    // so it stacks with any active state/price/size filters
+    activeKeyword = searchTermLower.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+    renderStateChips(); // show the keyword chip
+    filterProperties();
 }
 
-// Filter by listing type (For Sale / For Lease) - called from nav links
+// Filter by listing type from nav links
 function filterByType(type) {
-    const listingTypeSelect = document.getElementById('listing-type');
-    listingTypeSelect.value = type;
+    if (type) {
+        selectedListingTypes.clear();
+        selectedListingTypes.add(type);
+        // Sync the checkbox in the panel
+        document.querySelectorAll('#listing-filter-panel input[type="checkbox"]').forEach(cb => {
+            cb.checked = cb.value === type;
+        });
+        updateFilterBadge('listing-filter-badge', selectedListingTypes.size);
+    }
     filterProperties();
 }
 
@@ -563,116 +960,26 @@ function filterByPropertyType(type) {
     selectPropertyType(type);
 }
 
-// Select property type from hero icon tabs
+// Select a property type tab — updates UI active state + runs filter
 function selectPropertyType(type) {
-    // Update hidden input
-    const propertyTypeInput = document.getElementById('property-type');
-    propertyTypeInput.value = type;
-    
-    // Update tab styling
-    document.querySelectorAll('.property-type-tab').forEach(tab => {
-        tab.classList.remove('active');
-        tab.setAttribute('aria-pressed', 'false');
+    const input = document.getElementById('property-type');
+    if (input) input.value = type;
+
+    // Swap active styling across all tabs
+    document.querySelectorAll('.property-type-tab').forEach(btn => {
+        btn.classList.remove('active', 'bg-white/90', 'border-white', 'text-gray-800');
+        btn.classList.add('bg-white/20', 'border-white/40', 'text-white', 'hover:bg-white/30');
+        btn.setAttribute('aria-pressed', 'false');
     });
-    
-    const activeTabId = type ? `type-tab-${type}` : 'type-tab-all';
-    const activeTab = document.getElementById(activeTabId);
-    if (activeTab) {
-        activeTab.classList.add('active');
-        activeTab.setAttribute('aria-pressed', 'true');
+
+    const activeId = type === '' ? 'type-tab-all' : `type-tab-${type}`;
+    const activeBtn = document.getElementById(activeId);
+    if (activeBtn) {
+        activeBtn.classList.remove('bg-white/20', 'border-white/40', 'text-white', 'hover:bg-white/30');
+        activeBtn.classList.add('active', 'bg-white/90', 'border-white', 'text-gray-800');
+        activeBtn.setAttribute('aria-pressed', 'true');
     }
-    
-    filterProperties();
-}
 
-// Use state abbreviations with styled display instead of inaccurate SVG paths
-// This provides a clean, professional look while we work on getting accurate state shapes
-const useStateAbbreviations = true;
-
-// All US state names for search
-const stateNames = {
-    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
-    'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
-    'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
-    'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
-    'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
-    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
-    'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
-    'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
-    'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
-    'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
-    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
-    'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
-    'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia'
-};
-
-// Populate states carousel with clean styled cards
-function populateStatesCarousel() {
-    const carousel = document.getElementById('states-carousel');
-    if (!carousel) return;
-    
-    // Get unique states and count properties
-    const stateCounts = {};
-    properties.forEach(p => {
-        stateCounts[p.state] = (stateCounts[p.state] || 0) + 1;
-    });
-    
-    // Sort alphabetically by state name
-    const sortedStates = Object.entries(stateCounts)
-        .sort((a, b) => {
-            const nameA = stateNames[a[0]] || a[0];
-            const nameB = stateNames[b[0]] || b[0];
-            return nameA.localeCompare(nameB);
-        });
-    
-    // Create "All" option first, then alphabetically sorted states
-    const allOption = `
-        <button onclick="filterByState('')" 
-                class="flex-shrink-0 group flex flex-col items-center justify-center w-24 py-4 rounded-xl hover:bg-blue-50 transition-all duration-200 focus-visible"
-                aria-label="View all properties">
-            <!-- All Badge -->
-            <div class="w-12 h-12 rounded-full bg-walmart-yellow flex items-center justify-center mb-2 group-hover:scale-105 transition-all duration-200 shadow-sm">
-                <span class="text-walmart-dark font-bold text-sm">All</span>
-            </div>
-            <!-- Label -->
-            <h4 class="font-semibold text-gray-900 group-hover:text-walmart-blue transition-colors text-xs text-center">All States</h4>
-            <!-- Property Count -->
-            <p class="text-xs text-gray-500 mt-0.5">${properties.length} Properties</p>
-        </button>
-    `;
-    
-    carousel.innerHTML = allOption + sortedStates.map(([state, count]) => {
-        const stateName = stateNames[state] || state;
-        
-        return `
-            <button onclick="filterByState('${state}')" 
-                    class="flex-shrink-0 group flex flex-col items-center justify-center w-24 py-4 rounded-xl hover:bg-blue-50 transition-all duration-200 focus-visible"
-                    aria-label="View ${count} properties in ${stateName}">
-                <!-- State Abbreviation Badge -->
-                <div class="w-12 h-12 rounded-full bg-walmart-blue flex items-center justify-center mb-2 group-hover:bg-walmart-dark group-hover:scale-105 transition-all duration-200 shadow-sm">
-                    <span class="text-white font-bold text-sm">${state}</span>
-                </div>
-                <!-- State Name -->
-                <h4 class="font-semibold text-gray-900 group-hover:text-walmart-blue transition-colors text-xs text-center">${stateName}</h4>
-                <!-- Property Count -->
-                <p class="text-xs text-gray-500 mt-0.5">${count} ${count === 1 ? 'Property' : 'Properties'}</p>
-            </button>
-        `;
-    }).join('');
-}
-
-// Scroll states carousel
-function scrollStates(direction) {
-    const carousel = document.getElementById('states-carousel');
-    if (!carousel) return;
-    const scrollAmount = 200;
-    carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
-}
-
-// Filter by state - called from state cards
-function filterByState(state) {
-    const stateSelect = document.getElementById('state-filter');
-    stateSelect.value = state;
     filterProperties();
 }
 
@@ -697,6 +1004,9 @@ function sortProperties() {
                 return a.state.localeCompare(b.state);
             case 'newest':
             default:
+                // Featured properties always surface first
+                if (a.featured && !b.featured) return -1;
+                if (!a.featured && b.featured) return 1;
                 return b.id - a.id; // Higher ID = newer
         }
     });
@@ -709,8 +1019,7 @@ function openPropertyModal(id) {
     
     const modal = document.getElementById('property-modal');
     const content = document.getElementById('modal-content');
-    const priceDisplay = formatPrice(property.price, property.listingType);
-    const listingLabel = property.listingType === 'sale' ? 'For Sale' : 'For Lease';
+    const isSold = (property.status || '').toLowerCase() === 'sold';
     
     // Google Maps embed URL for satellite view (free, no API key needed)
     const mapsLink = `https://www.google.com/maps/@${property.lat},${property.lon},500m/data=!3m1!1e3`;
@@ -727,12 +1036,8 @@ function openPropertyModal(id) {
                 </svg>
             </button>
             <div class="absolute bottom-4 left-4 flex gap-2 z-10">
-                <span class="px-4 py-2 rounded-full text-sm font-semibold ${getListingBadgeClass(property.listingType)}">
-                    ${listingLabel}
-                </span>
-                <span class="px-4 py-2 rounded-full text-sm font-semibold bg-gray-800 text-white">
-                    ${getTypeLabel(property.type)}
-                </span>
+                ${getStatusBadge(property.status, 'lg')}
+                ${property.listingType === 'lease' ? '<span class="px-4 py-2 rounded-full text-sm font-semibold" style="background:#a9ddf7;color:#001e60">For Lease</span>' : property.listingType === 'ground_lease' ? '<span class="px-4 py-2 rounded-full text-sm font-semibold" style="background:#a9ddf7;color:#001e60">Ground Lease</span>' : ''}
             </div>
             <a href="${mapsLink}" target="_blank" rel="noopener noreferrer" 
                class="absolute bottom-4 right-4 px-4 py-2 rounded-full text-sm font-semibold bg-white text-gray-800 hover:bg-gray-100 transition-colors z-10 flex items-center gap-2">
@@ -756,64 +1061,69 @@ function openPropertyModal(id) {
                     <p class="text-gray-400 text-sm mt-1">Coordinates: ${property.lat}, ${property.lon}</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-2xl font-bold text-walmart-blue">Contact for Pricing</p>
+                    ${isSold ? '' : `<p class="text-2xl font-bold text-walmart-blue">${formatPrice(property.price, property.listingType)}</p>`}
                 </div>
             </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="bg-gray-50 p-4 rounded-lg text-center">
-                    <p class="text-2xl font-bold text-gray-900">${property.lotSize}</p>
-                    <p class="text-sm text-gray-500">Lot Size</p>
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-gray-100 rounded-2xl shadow-md p-4 text-center">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Lot Size</p>
+                    <p class="text-xl font-bold text-gray-900 leading-tight">${property.lotSize}</p>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg text-center">
-                    <p class="text-2xl font-bold text-gray-900">${property.zoning}</p>
-                    <p class="text-sm text-gray-500">Zoning</p>
+                <div class="bg-gray-100 rounded-2xl shadow-md p-4 text-center">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">State</p>
+                    <p class="text-xl font-bold text-gray-900 leading-tight">${property.state}</p>
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg text-center">
-                    <p class="text-2xl font-bold text-gray-900">${property.state}</p>
-                    <p class="text-sm text-gray-500">State</p>
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg text-center">
-                    <p class="text-2xl font-bold text-walmart-blue">${property.type === 'retail' ? 'Retail' : 'Land'}</p>
-                    <p class="text-sm text-gray-500">Property Type</p>
+                <div class="bg-gray-100 rounded-2xl shadow-md p-4 text-center">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Type</p>
+                    <p class="text-xl font-bold text-[#0053e2] leading-tight">${property.type === 'retail' ? 'Retail' : 'Land'}</p>
                 </div>
             </div>
-            
-            <!-- Contact Button - Centered -->
+
+            <!-- Contact About Property -->
             <div class="flex justify-center mb-6">
-                <button onclick="openLOIModal(${property.id})" 
-                   class="bg-walmart-blue hover:bg-walmart-dark text-white text-center font-semibold py-3 px-8 rounded-lg transition-colors focus-visible text-lg">
+                <button onclick="openLOIModal(${property.id})"
+                   class="bg-[#0053e2] hover:bg-[#003eb0] text-white font-semibold py-3 px-8 rounded-xl transition-colors focus-visible text-base">
                     Contact About Property
                 </button>
             </div>
             
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">Features</h3>
-                <ul class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    ${property.features.map(feature => `
-                        <li class="flex items-center gap-2 text-gray-600">
-                            <svg class="h-5 w-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            ${feature}
-                        </li>
-                    `).join('')}
-                </ul>
-            </div>
-            
             <!-- Marketing Materials Section -->
             <div id="marketing-materials-section" class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-3">📎 Marketing Materials</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Marketing Materials</h3>
                 <div id="marketing-materials-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <p class="text-gray-500">Loading materials...</p>
                 </div>
             </div>
             
             <!-- Broker Contact Section -->
-            <div id="broker-contact-section" class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100 text-center">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Broker Contact</h3>
-                <div id="broker-contact-container">
-                    <p class="text-gray-500">Loading broker info...</p>
+            <div id="broker-contact-section" class="mb-8">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
+                    <div class="bg-gradient-to-r from-[#0053e2] to-[#003eb0] px-6 py-3.5">
+                        <h3 class="text-white font-bold text-base tracking-wide uppercase">Broker Contact</h3>
+                    </div>
+                    <div id="broker-contact-container" class="p-7 flex flex-col items-center text-center gap-4">
+                        ${property.broker_name ? `
+                            ${property.broker_photo
+                                ? `<img src="${property.broker_photo}" alt="${property.broker_name}" class="w-16 h-16 rounded-full object-cover object-top shadow-md shrink-0 border-2 border-white">`
+                                : `<div class="w-16 h-16 rounded-full bg-[#0053e2] flex items-center justify-center text-white text-xl font-bold shadow-md shrink-0">${property.broker_name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}</div>`}
+                            <div>
+                                <p class="font-bold text-gray-900 text-xl leading-tight">${property.broker_name}</p>
+                                <p class="text-gray-400 text-sm mt-0.5">${property.broker_company || 'Walmart Realty'}</p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                                ${property.broker_phone ? `<a href="tel:${property.broker_phone.replace(/[^0-9+]/g, '')}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>${property.broker_phone}</a>` : ''}
+                                ${property.broker_email ? `<a href="mailto:${property.broker_email}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#0053e2] text-[#0053e2] rounded-xl font-semibold text-sm hover:bg-blue-50 transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Email Broker</a>` : ''}
+                            </div>
+                        ` : `
+                            <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-3xl">🏢</div>
+                            <div>
+                                <p class="font-bold text-gray-900 text-lg">Walmart Realty</p>
+                                <p class="text-gray-400 text-sm mt-0.5">Commercial Real Estate</p>
+                            </div>
+                            <a href="mailto:realestatedispositions@walmart.com" class="flex items-center gap-2 px-5 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Contact Us</a>
+                        `}
+                    </div>
                 </div>
             </div>
         </div>
@@ -983,8 +1293,12 @@ async function loadMarketingMaterials(propertyId) {
     
     container.innerHTML = '<p class="text-gray-500 col-span-2">Loading materials...</p>';
     
+    console.log('loadMarketingMaterials called with propertyId:', propertyId);
+    
     // First check if property has embedded marketing materials
-    const property = properties.find(p => p.id === propertyId);
+    const property = properties.find(p => p.id === propertyId || p.id === parseInt(propertyId));
+    console.log('Found property:', property ? 'yes' : 'no', 'marketingMaterials:', property?.marketingMaterials);
+    
     if (property && property.marketingMaterials && property.marketingMaterials.length > 0) {
         const materials = property.marketingMaterials;
         const images = materials.filter(m => m.type?.startsWith('image/'));
@@ -1017,9 +1331,28 @@ async function loadMarketingMaterials(propertyId) {
             galleryDiv.appendChild(div);
         });
         
-        // Render PDFs as images
+        // Show PDFs inline via iframe + download button
         for (const pdf of pdfs) {
-            await renderPdfAsImages(pdf.url, pdf.name, galleryDiv);
+            const encodedUrl = encodeURI(pdf.url);
+            const pdfDiv = document.createElement('div');
+            pdfDiv.className = 'rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white';
+            pdfDiv.innerHTML = `
+                <div style="height:520px">
+                    <iframe src="${encodedUrl}" class="w-full h-full" title="${pdf.name}" loading="lazy"></iframe>
+                </div>
+                <div class="bg-gray-50 px-4 py-2.5 flex items-center justify-between border-t border-gray-200">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <svg class="h-4 w-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+                        <span class="text-sm font-medium text-gray-700 truncate">${pdf.name}</span>
+                    </div>
+                    <a href="${encodedUrl}" target="_blank" rel="noopener noreferrer"
+                       class="ml-3 shrink-0 bg-[#0053e2] hover:bg-[#003eb0] text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Download
+                    </a>
+                </div>
+            `;
+            galleryDiv.appendChild(pdfDiv);
         }
         
         container.appendChild(galleryDiv);
@@ -1092,9 +1425,28 @@ async function loadMarketingMaterials(propertyId) {
                     galleryDiv.appendChild(div);
                 });
                 
-                // Render PDFs as images
+                // Show PDFs inline via iframe
                 for (const pdf of pdfs) {
-                    await renderPdfAsImages(pdf.file_url, pdf.file_name, galleryDiv);
+                    const encodedUrl = encodeURI(pdf.file_url);
+                    const pdfDiv = document.createElement('div');
+                    pdfDiv.className = 'rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white';
+                    pdfDiv.innerHTML = `
+                        <div style="height:520px">
+                            <iframe src="${encodedUrl}" class="w-full h-full" title="${pdf.file_name}" loading="lazy"></iframe>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-2.5 flex items-center justify-between border-t border-gray-200">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <svg class="h-4 w-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+                                <span class="text-sm font-medium text-gray-700 truncate">${pdf.file_name}</span>
+                            </div>
+                            <a href="${encodedUrl}" target="_blank" rel="noopener noreferrer"
+                               class="ml-3 shrink-0 bg-[#0053e2] hover:bg-[#003eb0] text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Download
+                            </a>
+                        </div>
+                    `;
+                    galleryDiv.appendChild(pdfDiv);
                 }
                 
                 container.appendChild(galleryDiv);
@@ -1126,64 +1478,85 @@ async function loadMarketingMaterials(propertyId) {
     }
 }
 
+// Shared helper — renders photo or initials circle for broker card
+function brokerAvatarHtml(name, photoUrl) {
+    if (photoUrl) {
+        return `<img src="${photoUrl}" alt="${name}" class="w-16 h-16 rounded-full object-cover object-top shadow-md shrink-0 border-2 border-white">`;
+    }
+    const initials = name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+    return `<div class="w-16 h-16 rounded-full bg-[#0053e2] flex items-center justify-center text-white text-xl font-bold shadow-md shrink-0">${initials}</div>`;
+}
+
 // Load broker contact info for a state (with optional propertyId for embedded data)
 async function loadBrokerContact(state, propertyId) {
     const container = document.getElementById('broker-contact-container');
     if (!container) return;
     
+    console.log('loadBrokerContact called with state:', state, 'propertyId:', propertyId);
+    
     // First check if property has embedded broker info
     if (propertyId) {
-        const property = properties.find(p => p.id === propertyId);
-        if (property && property.broker) {
+        const property = properties.find(p => p.id === propertyId || p.id === parseInt(propertyId));
+        console.log('Found property:', property ? 'yes' : 'no');
+        console.log('Property broker:', property?.broker);
+        console.log('Property broker_name:', property?.broker_name);
+        
+        // Check for broker object first
+        if (property && property.broker && property.broker.name) {
             const b = property.broker;
             container.innerHTML = `
+                ${brokerAvatarHtml(b.name, b.photo || null)}
                 <div>
-                    <p class="font-semibold text-gray-900">${b.name}</p>
-                    <p class="text-sm text-gray-600">${b.company || 'Walmart Real Estate'}</p>
-                    <a href="mailto:${b.email}" class="text-walmart-blue hover:underline text-sm">${b.email}</a>
-                    ${b.phone ? `<p class="text-sm text-gray-500">${b.phone}</p>` : ''}
+                    <p class="font-bold text-gray-900 text-xl leading-tight">${b.name}</p>
+                    <p class="text-gray-400 text-sm mt-0.5">${b.company || 'Walmart Realty'}</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                    ${b.phone ? `<a href="tel:${b.phone.replace(/[^0-9+]/g,'')}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>${b.phone}</a>` : ''}
+                    ${b.email ? `<a href="mailto:${b.email}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#0053e2] text-[#0053e2] rounded-xl font-semibold text-sm hover:bg-blue-50 transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Email Broker</a>` : ''}
+                </div>
+            `;
+            return;
+        }
+        
+        // Fallback: check for broker_name, broker_email, etc. fields directly
+        if (property && property.broker_name) {
+            container.innerHTML = `
+                ${brokerAvatarHtml(property.broker_name, property.broker_photo || null)}
+                <div>
+                    <p class="font-bold text-gray-900 text-xl leading-tight">${property.broker_name}</p>
+                    <p class="text-gray-400 text-sm mt-0.5">${property.broker_company || 'Walmart Realty'}</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                    ${property.broker_phone ? `<a href="tel:${property.broker_phone.replace(/[^0-9+]/g,'')}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>${property.broker_phone}</a>` : ''}
+                    ${property.broker_email ? `<a href="mailto:${property.broker_email}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[#0053e2] text-[#0053e2] rounded-xl font-semibold text-sm hover:bg-blue-50 transition-colors"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Email Broker</a>` : ''}
                 </div>
             `;
             return;
         }
     }
     
-    // Fallback to API
-    try {
-        const response = await fetch(`${window.location.origin}/api/brokers/state/${state}`);
-        if (response.ok) {
-            const brokers = await response.json();
-            
-            if (brokers.length === 0) {
-                container.innerHTML = `
-                    <p class="text-gray-600">Contact us for information about properties in ${state}.</p>
-                `;
-            } else {
-                container.innerHTML = brokers.map(b => `
-                    <div class="${brokers.length > 1 ? 'mb-3 pb-3 border-b border-blue-100 last:border-0 last:mb-0 last:pb-0' : ''}">
-                        <p class="font-semibold text-gray-900">${b.name}</p>
-                        <p class="text-sm text-gray-600">${b.company || 'Walmart Real Estate'}</p>
-                        <a href="mailto:${b.email}" class="text-walmart-blue hover:underline text-sm">${b.email}</a>
-                        ${b.phone ? `<p class="text-sm text-gray-500">${b.phone}</p>` : ''}
-                    </div>
-                `).join('');
-            }
-        } else {
-            container.innerHTML = '<p class="text-gray-600">Contact us for more information.</p>';
-        }
-    } catch (error) {
-        container.innerHTML = '<p class="text-gray-600">Contact us for more information.</p>';
-    }
+    // Fallback message for GitHub Pages (no API)
+    container.innerHTML = `
+        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-3xl">🏢</div>
+        <div>
+            <p class="font-bold text-gray-900 text-lg">Walmart Realty</p>
+            <p class="text-gray-400 text-sm mt-0.5">Commercial Real Estate</p>
+        </div>
+        <a href="mailto:realestatedispositions@walmart.com" class="flex items-center gap-2 px-5 py-2.5 bg-[#0053e2] text-white rounded-xl font-semibold text-sm hover:bg-[#003eb0] transition-colors">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            Contact Us
+        </a>
+    `;
 }
 
 // LOI Documents available
 const loiDocuments = [
-    { id: 1, name: 'Building Lease', file: 'loi-documents/Building Lease .docx', description: 'For leasing building space', icon: '🏢' },
-    { id: 2, name: 'Building Sale', file: 'loi-documents/Building Sale LOI docx.docx', description: 'For purchasing a building', icon: '🏪' },
-    { id: 3, name: 'Building Sublease', file: 'loi-documents/Building Sublease LOI.docx', description: 'For subleasing building space', icon: '🔄' },
-    { id: 6, name: 'Large Tract Land Sale', file: 'loi-documents/Large Tract Land Sale LOI.docx', description: 'For purchasing large land tracts', icon: '🌾' },
-    { id: 7, name: 'Outlot Ground Lease', file: 'loi-documents/Outlot Ground Lease LOI.docx', description: 'For ground lease on outlot parcels', icon: '📍' },
-    { id: 8, name: 'Outlot Land Sale', file: 'loi-documents/Outlot Land Sale LOI .docx', description: 'For purchasing outlot parcels', icon: '🏞️' }
+    { id: 1, name: 'Building Lease', file: 'loi-documents/Building Lease .docx', description: 'For leasing building space' },
+    { id: 2, name: 'Building Sale', file: 'loi-documents/Building Sale LOI docx.docx', description: 'For purchasing a building' },
+    { id: 3, name: 'Building Sublease', file: 'loi-documents/Building Sublease LOI.docx', description: 'For subleasing building space' },
+    { id: 6, name: 'Large Tract Land Sale', file: 'loi-documents/Large Tract Land Sale LOI.docx', description: 'For purchasing large land tracts' },
+    { id: 7, name: 'Outlot Ground Lease', file: 'loi-documents/Outlot Ground Lease LOI.docx', description: 'For ground lease on outlot parcels' },
+    { id: 8, name: 'Outlot Land Sale', file: 'loi-documents/Outlot Land Sale LOI .docx', description: 'For purchasing outlot parcels' }
 ];
 
 // Current property for LOI
@@ -1199,7 +1572,7 @@ function openLOIModal(propertyId) {
     content.innerHTML = `
         <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
             <div>
-                <h2 id="loi-modal-title" class="text-xl font-bold text-gray-900">Submit Letter of Intent</h2>
+                <h2 id="loi-modal-title" class="text-2xl font-bold text-gray-900">Submit Letter of Intent</h2>
                 <p class="text-sm text-gray-600">${property.city}, ${property.state} - ${property.lotSize}</p>
             </div>
             <button onclick="closeLOIModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Close modal">
@@ -1214,14 +1587,14 @@ function openLOIModal(propertyId) {
             
             <div class="grid gap-3">
                 ${loiDocuments.map(loi => `
-                    <button onclick="openLOIForm(${loi.id})" 
-                            class="flex items-center gap-4 p-4 border-2 border-gray-200 rounded-xl hover:border-walmart-blue hover:bg-blue-50 transition-all text-left group">
-                        <div class="text-3xl">${loi.icon}</div>
+                    <button onclick="openLOIForm(${loi.id})"
+                            class="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl hover:border-[#0053e2] hover:shadow-md transition-all text-left group">
+
                         <div class="flex-1">
-                            <h3 class="font-semibold text-gray-900 group-hover:text-walmart-blue">${loi.name}</h3>
-                            <p class="text-sm text-gray-600">${loi.description}</p>
+                            <h3 class="font-semibold text-gray-900 group-hover:text-[#0053e2] transition-colors">${loi.name}</h3>
+                            <p class="text-sm text-gray-500">${loi.description}</p>
                         </div>
-                        <svg class="h-5 w-5 text-gray-400 group-hover:text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-5 w-5 text-gray-300 group-hover:text-[#0053e2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
                     </button>
@@ -1230,7 +1603,9 @@ function openLOIModal(propertyId) {
             
             <div class="mt-6 pt-6 border-t">
                 <p class="text-sm text-gray-500 text-center">
-                    Need help choosing? Contact us at <a href="mailto:realestatedispositions@walmart.com" class="text-walmart-blue hover:underline">realestatedispositions@walmart.com</a>
+                    Need help choosing? ${property.broker_email
+                        ? `Contact the broker at <a href="mailto:${property.broker_email}" class="text-[#0053e2] hover:underline">${property.broker_email}</a>`
+                        : `Contact us at <a href="mailto:realestatedispositions@walmart.com" class="text-[#0053e2] hover:underline">realestatedispositions@walmart.com</a>`}
                 </p>
             </div>
         </div>
@@ -1950,40 +2325,53 @@ ${data.additionalComments || 'None provided'}
                     company: data.company
                 }
             );
-            
-            showSuccessModal(data, loi, property);
+            showSuccessModal(data, loi, property, loiDetails, brokerEmail);
         } else {
-            // Fallback: Open email client with pre-filled data
-            const subject = `LOI Submission: ${loi.name} - ${property.city}, ${property.state}`;
-            const mailtoLink = `mailto:${brokerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(loiDetails)}`;
-            
-            // Open mailto
-            window.location.href = mailtoLink;
-            
-            // Show success after a delay
+            // Reliable submission: show full LOI in modal + open slim email
+            showSuccessModal(data, loi, property, loiDetails, brokerEmail);
+
+            // Open email with concise body (avoids mailto length limits)
+            const subject = encodeURIComponent(`LOI: ${loi.name} — ${property.city}, ${property.state}`);
+            const slimBody = encodeURIComponent(
+                `LOI Type: ${loi.name}\nProperty: ${property.city}, ${property.state}\n` +
+                `From: ${data.firstName} ${data.lastName} (${data.company})\n` +
+                `Email: ${data.email} | Phone: ${data.phone}\n\n` +
+                `[Full LOI details were displayed on-screen — please request from submitter if needed]`
+            );
+            // CC the dispositions team on every submission
+            const cc = encodeURIComponent('realestatedispositions@walmart.com');
             setTimeout(() => {
-                showSuccessModal(data, loi, property);
-            }, 500);
+                window.open(`mailto:${brokerEmail}?cc=${cc}&subject=${subject}&body=${slimBody}`, '_blank');
+            }, 300);
         }
     } catch (error) {
         console.error('Error submitting LOI:', error);
-        
-        // Fallback to mailto
-        const subject = `LOI Submission: ${loi.name} - ${property.city}, ${property.state}`;
-        const mailtoLink = `mailto:${brokerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(loiDetails)}`;
-        window.location.href = mailtoLink;
-        
-        setTimeout(() => {
-            showSuccessModal(data, loi, property);
-        }, 500);
+        showSuccessModal(data, loi, property, loiDetails, brokerEmail);
     }
 }
 
 // Show success modal after submission
-function showSuccessModal(data, loi, property) {
+function showSuccessModal(data, loi, property, loiDetails, brokerEmail) {
     const modal = document.getElementById('loi-form-modal');
     const content = document.getElementById('loi-form-content');
-    
+
+    const copyId = 'loi-copy-area-' + Date.now();
+
+    function copyLOI() {
+        const el = document.getElementById(copyId);
+        if (!el) return;
+        navigator.clipboard.writeText(el.value).then(() => {
+            const btn = document.getElementById('copy-loi-btn');
+            if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => { btn.textContent = '📋 Copy LOI Details'; }, 2000); }
+        }).catch(() => {
+            el.select();
+            document.execCommand('copy');
+        });
+    }
+    window._copyLOI = copyLOI;   // expose for onclick
+
+    const gmailLink = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(brokerEmail)}&cc=${encodeURIComponent('realestatedispositions@walmart.com')}&su=${encodeURIComponent(`LOI: ${loi.name} — ${property.city}, ${property.state}`)}`;
+
     content.innerHTML = `
         <div class="p-8 text-center">
             <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
@@ -1992,56 +2380,49 @@ function showSuccessModal(data, loi, property) {
                 </svg>
             </div>
             
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">LOI Submitted Successfully!</h2>
-            <p class="text-gray-600 mb-6">Your Letter of Intent has been sent to our broker team.</p>
-            
-            <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-                <h4 class="font-semibold text-gray-900 mb-3">Submission Summary</h4>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">LOI Type:</span>
-                        <span class="font-medium">${loi.name}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Property:</span>
-                        <span class="font-medium">${property.city}, ${property.state}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Submitted By:</span>
-                        <span class="font-medium">${data.firstName} ${data.lastName}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Company:</span>
-                        <span class="font-medium">${data.company}</span>
-                    </div>
-                    ${uploadedLOIFile ? `
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">Attached File:</span>
-                        <span class="font-medium text-green-600">✓ ${uploadedLOIFile.name}</span>
-                    </div>
-                    ` : ''}
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">LOI Submitted!</h2>
+            <p class="text-gray-600 mb-4">Your Letter of Intent has been prepared. Please complete the steps below.</p>
+
+            <!-- Broker email info -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-left">
+                <p class="text-sm font-semibold text-blue-900 mb-1">📧 Send this LOI to your broker:</p>
+                <p class="text-blue-800 font-mono text-sm break-all">${brokerEmail}</p>
+                <p class="text-xs text-blue-600 mt-1">CC: realestatedispositions@walmart.com</p>
+            </div>
+
+            <!-- LOI details to copy -->
+            <div class="mb-4 text-left">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-sm font-semibold text-gray-700">Full LOI Details — copy and paste into your email:</p>
+                    <button id="copy-loi-btn" onclick="window._copyLOI()" 
+                            class="text-xs bg-walmart-blue text-white px-3 py-1 rounded-lg hover:bg-walmart-dark transition-colors">
+                        📋 Copy LOI Details
+                    </button>
                 </div>
+                <textarea id="${copyId}" readonly rows="8"
+                    class="w-full text-xs font-mono border border-gray-200 rounded-lg p-3 bg-gray-50 resize-none"
+                    onclick="this.select()"
+                >${loiDetails ? loiDetails.replace(/</g, '&lt;') : ''}</textarea>
             </div>
-            
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p class="text-sm text-blue-800">
-                    <strong>What's Next?</strong><br>
-                    A broker will review your LOI and contact you within 1-2 business days at <strong>${data.email}</strong> or <strong>${data.phone}</strong>.
-                </p>
-            </div>
-            
-            <div class="flex flex-col sm:flex-row gap-3">
+
+            <!-- Email action buttons -->
+            <div class="flex flex-col gap-3 mb-4">
+                <a href="${gmailLink}" target="_blank" rel="noopener"
+                   class="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors">
+                    📧 Open Gmail to Send
+                </a>
                 <button onclick="closeAllModals()" 
-                        class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors">
-                    Back to Properties
+                        class="w-full bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    ← Back to Properties
                 </button>
-                <button onclick="window.print()" 
-                        class="flex-1 border-2 border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-                    </svg>
-                    Print Confirmation
-                </button>
+            </div>
+
+            <!-- What's next -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-left">
+                <p class="text-xs text-yellow-800">
+                    <strong>What’s Next?</strong> Copy the LOI details above, paste into an email to the broker,
+                    and send. A broker will respond within 1–2 business days at <strong>${data.email}</strong>.
+                </p>
             </div>
         </div>
     `;
@@ -2167,23 +2548,18 @@ function initMainMap() {
     const centerLat = lats.reduce((a, b) => a + b, 0) / lats.length;
     const centerLon = lons.reduce((a, b) => a + b, 0) / lons.length;
     
-    // Create map centered on all properties
-    mainMap = L.map('main-map').setView([centerLat, centerLon], 5);
+    // Create map centered on continental USA (zoom 5 = USA fills map nicely)
+    // Center point: near Lebanon, Kansas - geographic center of continental US
+    mainMap = L.map('main-map').setView([39.8, -98.5], 5);
     
-    // Add default satellite tile layer
-    currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri',
+    // Add default map tile layer (OpenStreetMap)
+    currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
         maxZoom: 19
     }).addTo(mainMap);
     
-    // Add markers for all properties
+    // Add markers for all properties (no fitBounds - keep zoom level 6)
     addPropertyMarkers(properties);
-    
-    // Fit bounds to show all markers
-    if (mainMapMarkers.length > 0) {
-        const group = L.featureGroup(mainMapMarkers);
-        mainMap.fitBounds(group.getBounds().pad(0.1));
-    }
 }
 
 // Add markers for properties
@@ -2191,43 +2567,63 @@ function addPropertyMarkers(propertiesToShow) {
     // Clear existing markers
     mainMapMarkers.forEach(marker => mainMap.removeLayer(marker));
     mainMapMarkers = [];
-    
-    // Create custom Walmart icon
-    const walmartIcon = L.divIcon({
-        className: 'custom-marker',
-        html: `<div style="background-color: #0071CE; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFC220">
-                    <circle cx="12" cy="12" r="4"/>
-                </svg>
-               </div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-        popupAnchor: [0, -16]
-    });
-    
+
+    // Build a marker icon — dark stores get #001e60, everything else original #0071CE
+    function makeIcon(property) {
+        const type = (property.type || property.property_type || '').toLowerCase();
+        const color = type === 'buildings' ? '#001e60' : '#0071CE';
+        return L.divIcon({
+            className: 'custom-marker',
+            html: `<div style="background-color: ${color}; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFC220">
+                        <circle cx="12" cy="12" r="4"/>
+                    </svg>
+                   </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -20]
+        });
+    }
+
     // Add markers for each property
     propertiesToShow.forEach(property => {
-        const marker = L.marker([property.lat, property.lon], { icon: walmartIcon })
+        const marker = L.marker([property.lat, property.lon], { icon: makeIcon(property) })
             .addTo(mainMap);
         
-        // Create popup content
+        // Build ESRI aerial image URL (free, no API key)
+        const delta = 0.004;
+        const bbox = `${property.lon - delta},${property.lat - delta},${property.lon + delta},${property.lat + delta}`;
+        const aerialUrl = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=${bbox}&bboxSR=4326&imageSR=4326&size=300,160&format=png&f=image`;
+        
+        const price = property.price ? `$${Number(property.price).toLocaleString()}` : 'Contact for Pricing';
+        const acres = property.size_acres ? `${property.size_acres} acres` : '';
+        const address = property.address ? `${property.address}, ` : '';
+        
+        // Create popup content with aerial image
         const popupContent = `
-            <div class="property-popup" style="min-width: 220px;">
-                <img src="${property.image}" alt="${property.title}" style="width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;">
-                <h4 style="font-weight: bold; margin-bottom: 4px; font-size: 14px;">${property.title}</h4>
-                <p style="color: #666; font-size: 12px; margin-bottom: 4px;">${property.city}, ${property.state}</p>
-                <p style="color: #0071CE; font-weight: bold; font-size: 14px; margin-bottom: 8px;">Contact for Pricing</p>
-                <p style="color: #666; font-size: 12px; margin-bottom: 8px;">${property.lotSize}</p>
-                <button onclick="openPropertyModal(${property.id})" style="background-color: #0071CE; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600;">View Details</button>
+            <div class="property-popup" style="min-width: 240px; font-family: sans-serif;">
+                <div style="position:relative; margin-bottom: 8px; border-radius: 8px; overflow: hidden; height: 160px; background: #e5e7eb;">
+                    <img 
+                        src="${aerialUrl}" 
+                        alt="Aerial view of ${property.city}, ${property.state}"
+                        style="width:100%; height:160px; object-fit:cover; display:block;"
+                        onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:160px;color:#9ca3af;font-size:12px;\'>Aerial view unavailable</div>'"
+                    />
+                    <div style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:2px 6px; border-radius:4px;">🛰 Aerial View</div>
+                </div>
+                <h4 style="font-weight:700; margin-bottom:2px; font-size:14px; color:#111;">${address}${property.city}, ${property.state}</h4>
+                ${acres ? `<p style="color:#6b7280; font-size:12px; margin-bottom:4px;">📐 ${acres}</p>` : ''}
+                <p style="color:#0053e2; font-weight:700; font-size:14px; margin-bottom:8px;">${price}</p>
+                <button onclick="openPropertyModal(${property.id})" style="background:#0053e2; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; width:100%; font-weight:600; font-size:13px;">View Details</button>
             </div>
         `;
         
         marker.bindPopup(popupContent, { 
-            maxWidth: 280,
-            autoPan: true,
-            autoPanPadding: [50, 50],
-            keepInView: true
+            maxWidth: 300,
+            autoPan: false,
+            keepInView: false
         });
+        
         mainMapMarkers.push(marker);
     });
 }
@@ -2245,9 +2641,9 @@ function toggleMapView(view) {
     }
     
     if (view === 'map') {
-        // Standard map view - using ESRI World Street Map (Walmart proxy friendly)
-        currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri',
+        // Standard map view
+        currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
             maxZoom: 19
         }).addTo(mainMap);
         
@@ -2272,36 +2668,57 @@ function updateMapMarkers() {
     }
 }
 
-// Populate state filter dropdown
+// Populate state filter checkbox panel
 function populateStateFilter() {
-    const stateFilter = document.getElementById('state-filter');
-    if (!stateFilter) return;
-    
-    // Get unique states from properties
-    const states = [...new Set(properties.map(p => p.state))].sort();
-    
-    // Clear existing options except the first one
-    stateFilter.innerHTML = '<option value="">All States</option>';
-    
-    // Add state options
-    states.forEach(state => {
-        const option = document.createElement('option');
-        option.value = state;
-        option.textContent = state;
-        stateFilter.appendChild(option);
-    });
+    const container = document.getElementById('state-checkboxes');
+    if (!container) return;
+    const states = [...new Set(properties.map(p => p.state).filter(Boolean))].sort();
+    container.innerHTML = states.map(state => `
+        <label class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-blue-50 cursor-pointer text-sm text-gray-700">
+            <input type="checkbox" value="${state}" onchange="toggleStateCheck(this.value,this.checked)"
+                   class="rounded border-gray-300 text-[#0053e2] focus:ring-[#0053e2]" ${selectedStates.has(state) ? 'checked' : ''}>
+            ${STATE_NAMES[state] || state} (${state})
+        </label>`).join('');
+}
+
+// Toggle a state from the filter dropdown panel
+function toggleStateCheck(state, checked) {
+    checked ? selectedStates.add(state) : selectedStates.delete(state);
+    updateFilterBadge('state-filter-badge', selectedStates.size);
+    updateCarouselButtonStyles();
+    renderStateChips();
+    filterProperties();
 }
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', async () => {
-    // Fetch properties from API first
-    await fetchPropertiesFromAPI();
+    // Show loading state immediately
+    showLoadingState();
     
-    renderProperties();
-    initMainMap();
+    try {
+        // Fetch properties from API first
+        await fetchPropertiesFromAPI();
+        
+        // Check if we actually got properties
+        if (properties.length === 0) {
+            console.error('No properties loaded from any source!');
+            showLoadError('No properties available. Please contact support.');
+            return;
+        }
+        
+        console.log(`✅ Successfully loaded ${properties.length} properties`);
+        filterProperties(); // runs sortProperties() first — puts featured at top
+        initMainMap();
+    } catch (error) {
+        console.error('Fatal error loading properties:', error);
+        showLoadError('An error occurred while loading properties.');
+        return;
+    }
+    
+    // Continue with rest of initialization
     updateSavedCount();
     populateStateFilter();
-    populateStatesCarousel();
+    populateStateCarousel();
     
     // Main search bar - Enter key support
     const searchInput = document.getElementById('search-input');
@@ -2341,14 +2758,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     // Add change listeners to all filter dropdowns
-    ['property-type', 'listing-type', 'state-filter', 'price-range', 'size-range'].forEach(id => {
+    ['property-type', 'listing-type', 'price-range', 'size-range'].forEach(id => {
         const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener('change', filterProperties);
-        }
+        if (element) element.addEventListener('change', filterProperties);
     });
-    
-    document.getElementById('sort').addEventListener('change', () => {
+
+    // Change listeners removed — multi-select panels handle their own updates
+    // Kept only for sort dropdown which is still a standard select
+    document.getElementById('sort')?.addEventListener('change', () => {
         sortProperties();
         renderProperties();
     });
@@ -2626,7 +3043,7 @@ function updateAutocomplete(term) {
     
     const termLower = term.toLowerCase();
     
-    // Find matching states (match both abbreviation and full name)
+    // Find matching states
     const stateMatches = [];
     const stateCounts = {};
     properties.forEach(p => {
@@ -2635,14 +3052,12 @@ function updateAutocomplete(term) {
     });
     
     Object.keys(stateCounts).forEach(state => {
-        const fullName = stateNames[state] || state;
-        // Match against abbreviation OR full state name
-        if (state.toLowerCase().includes(termLower) || 
-            fullName.toLowerCase().includes(termLower)) {
-            stateMatches.push({ state, fullName, count: stateCounts[state] });
+        const fullName = (STATE_NAMES[state] || '').toLowerCase();
+        if (state.toLowerCase().includes(termLower) || fullName.includes(termLower)) {
+            stateMatches.push({ state, count: stateCounts[state] });
         }
     });
-    stateMatches.sort((a, b) => a.fullName.localeCompare(b.fullName));
+    stateMatches.sort((a, b) => a.state.localeCompare(b.state));
     
     // Find matching cities
     const cityMatches = [];
@@ -2685,7 +3100,7 @@ function updateAutocomplete(term) {
                     <svg class="h-4 w-4 text-walmart-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                     </svg>
-                    <span class="font-medium text-gray-900">${item.fullName} <span class="text-gray-400">(${item.state})</span></span>
+                    <span class="font-medium text-gray-900">${item.state}</span>
                 </div>
                 <span class="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">${item.count} ${item.count === 1 ? 'property' : 'properties'}</span>
             </div>
@@ -2720,26 +3135,17 @@ function updateAutocomplete(term) {
 // Select a state from autocomplete
 function selectStateSearch(state) {
     const searchInput = document.getElementById('search-input');
-    const stateFilter = document.getElementById('state-filter');
-    
-    // Set state filter dropdown
-    stateFilter.value = state;
+    filterByStateIcon(state);
     searchInput.value = '';
-    
     hideAutocomplete();
-    filterProperties();
     saveRecentSearch(state);
 }
 
 // Select a city from autocomplete
 function selectCitySearch(city, state) {
     const searchInput = document.getElementById('search-input');
-    const stateFilter = document.getElementById('state-filter');
-    
-    // Set state filter and search for city
-    stateFilter.value = state;
+    if (state && !selectedStates.has(state)) filterByStateIcon(state);
     searchInput.value = city;
-    
     hideAutocomplete();
     performSearch();
     saveRecentSearch(`${city}, ${state}`);
