@@ -1224,33 +1224,60 @@ app.post('/api/admin/sync-github', authenticateToken, (req, res) => {
         fs.writeFileSync(propsFile, JSON.stringify(merged, null, 2), 'utf8');
         console.log(`[sync-github] Wrote ${merged.length} properties to properties.json`);
 
-        // Attempt git commit + push
+        // Attempt git commit + push to main
         try {
             execSync('git add properties.json', { cwd: repoRoot, stdio: 'pipe' });
-            // Also commit marketing materials so GitHub Pages can serve them
-            execSync('git add uploads/', { cwd: repoRoot, stdio: 'pipe' });
+            execSync('git add -f uploads/', { cwd: repoRoot, stdio: 'pipe' });
             execSync(
                 `git commit -m "Admin: Update ${merged.length} properties from admin panel" --no-verify`,
                 { cwd: repoRoot, stdio: 'pipe' }
             );
             execSync('git push', { cwd: repoRoot, stdio: 'pipe' });
-            logActivity(req.user.id, 'SYNC_GITHUB', 'properties', null, { count: merged.length });
-            res.json({
-                success: true,
-                message: `✅ Synced ${merged.length} properties to GitHub Pages! Live in ~60 seconds.`,
-                count: merged.length
-            });
+            console.log('[sync-github] Pushed to main');
         } catch (gitErr) {
-            // JSON written OK, but git push failed
             const gitMsg = gitErr.stderr?.toString() || gitErr.message || 'git error';
-            console.error('[sync-github] git error:', gitMsg);
-            res.json({
-                success: true,
-                warning: 'properties.json updated locally but git push failed. Run: git add properties.json && git push',
-                gitError: gitMsg,
-                count: merged.length
-            });
+            console.error('[sync-github] git push to main failed:', gitMsg);
         }
+
+        // Also sync properties.json + uploads to gh-pages (the branch GitHub Pages serves)
+        const ghPagesWorktree = path.join(os.tmpdir(), 'walmart-realty-gh-pages-sync');
+        try {
+            // Clean up any stale worktree
+            try { execSync(`git worktree remove --force "${ghPagesWorktree}"`, { cwd: repoRoot, stdio: 'pipe' }); } catch (_) {}
+            execSync('git fetch origin gh-pages', { cwd: repoRoot, stdio: 'pipe' });
+            execSync(`git worktree add "${ghPagesWorktree}" origin/gh-pages`, { cwd: repoRoot, stdio: 'pipe' });
+
+            // Copy updated files into the worktree
+            fs.copyFileSync(propsFile, path.join(ghPagesWorktree, 'properties.json'));
+            const uploadsSource = path.join(repoRoot, 'uploads');
+            const uploadsDest   = path.join(ghPagesWorktree, 'uploads');
+            if (!fs.existsSync(uploadsDest)) fs.mkdirSync(uploadsDest, { recursive: true });
+            for (const f of fs.readdirSync(uploadsSource)) {
+                const src = path.join(uploadsSource, f);
+                const dst = path.join(uploadsDest, f);
+                if (fs.statSync(src).isFile()) fs.copyFileSync(src, dst);
+            }
+
+            execSync('git add properties.json', { cwd: ghPagesWorktree, stdio: 'pipe' });
+            execSync('git add -f uploads/', { cwd: ghPagesWorktree, stdio: 'pipe' });
+            execSync(
+                `git commit -m "Sync: Update ${merged.length} properties from admin panel" --no-verify`,
+                { cwd: ghPagesWorktree, stdio: 'pipe' }
+            );
+            execSync('git push origin HEAD:gh-pages', { cwd: ghPagesWorktree, stdio: 'pipe' });
+            console.log('[sync-github] Synced properties.json + uploads to gh-pages ✅');
+        } catch (ghErr) {
+            console.error('[sync-github] gh-pages sync failed (non-fatal):', ghErr.stderr?.toString() || ghErr.message);
+        } finally {
+            try { execSync(`git worktree remove --force "${ghPagesWorktree}"`, { cwd: repoRoot, stdio: 'pipe' }); } catch (_) {}
+        }
+
+        logActivity(req.user.id, 'SYNC_GITHUB', 'properties', null, { count: merged.length });
+        res.json({
+            success: true,
+            message: `✅ Synced ${merged.length} properties to GitHub Pages! Live in ~60 seconds.`,
+            count: merged.length
+        });
     } catch (err) {
         console.error('[sync-github] error:', err);
         res.status(500).json({ error: 'Sync failed: ' + err.message });
