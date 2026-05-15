@@ -1597,12 +1597,13 @@
                         const phone   = getField(row, ['phone','phonenumber','cell','mobile']);
                         const company = getField(row, ['company','firm','brokerage','companyname']);
                         const states  = getField(row, ['states','state','territories','markets']);
+                        const cities  = getField(row, ['cities','city','managedcities','coveredcities','territory']);
 
                         if (!name || !email) {
                             if (name || email) errors.push(`Row ${i + 2}: missing name or email — skipped`);
                             continue;
                         }
-                        brokersList.push({ name, email, phone, company, states });
+                        brokersList.push({ name, email, phone, company, states, cities });
                     }
 
                     if (brokersList.length === 0) {
@@ -1650,9 +1651,16 @@
             }
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet([
-                ['name', 'email', 'phone', 'company', 'states']
+                // Column headers — all 6 fields supported by the importer
+                ['name', 'email', 'phone', 'company', 'states', 'cities'],
+                // Row 1 — state-wide broker (cities left blank = covers all cities in that state)
+                ['John Smith', 'john.smith@abcrealty.com', '555-123-4567', 'ABC Realty', 'TX', ''],
+                // Row 2 — city-specific broker (only appears for properties in those cities)
+                ['Jane Doe', 'jane.doe@xyzproperties.com', '555-987-6543', 'XYZ Properties', 'TX', 'Dallas,Fort Worth,Arlington'],
+                // Row 3 — broker covering multiple states, all cities
+                ['Mike Brown', 'mike.brown@realty.com', '555-456-7890', 'State Wide Realty', 'TX,OK,AR', ''],
             ]);
-            ws['!cols'] = [{wch:25},{wch:30},{wch:16},{wch:25},{wch:20}];
+            ws['!cols'] = [{wch:22},{wch:32},{wch:16},{wch:22},{wch:16},{wch:36}];
             XLSX.utils.book_append_sheet(wb, ws, 'Brokers');
             XLSX.writeFile(wb, 'walmart-realty-broker-template.xlsx');
             showToast('Template downloaded!');

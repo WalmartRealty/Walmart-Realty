@@ -258,8 +258,8 @@
             <!-- CSV Import Info -->
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
                 <h4 class="font-semibold text-blue-800 mb-2">📋 CSV Import Format</h4>
-                <p class="text-sm text-blue-700">Your CSV should have these columns: <code class="bg-blue-100 px-1 rounded">name, email, phone, company, states</code></p>
-                <p class="text-sm text-blue-700 mt-1">For multiple states, separate with commas: <code class="bg-blue-100 px-1 rounded">TX,OK,AR</code></p>
+                <p class="text-sm text-blue-700">Your CSV should have these columns: <code class="bg-blue-100 px-1 rounded">name, email, phone, company, states, cities</code></p>
+                <p class="text-sm text-blue-700 mt-1">For multiple states, separate with commas: <code class="bg-blue-100 px-1 rounded">TX,OK,AR</code>. Leave <code class="bg-blue-100 px-1 rounded">cities</code> blank to cover the entire state.</p>
             </div>
             
             <!-- Brokers Table -->
@@ -273,6 +273,7 @@
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Phone</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">States</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Cities / Territory</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
                                 <th class="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
                             </tr>
@@ -767,6 +768,16 @@
                     <input type="text" id="broker-states" required placeholder="TX,OK,AR"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue uppercase">
                 </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Managed Cities
+                        <span class="text-gray-400 font-normal">(optional — leave blank to cover entire state)</span>
+                    </label>
+                    <input type="text" id="broker-cities" placeholder="Dallas,Fort Worth,Arlington"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
+                    <p class="text-xs text-gray-400 mt-1">Separate cities with commas. If set, this broker only appears for properties in those cities.</p>
+                </div>
                 
                 <div class="flex items-center gap-2">
                     <input type="checkbox" id="broker-active" checked class="h-4 w-4 text-walmart-blue rounded">
@@ -1122,16 +1133,32 @@
             
             noBrokers.classList.add('hidden');
             
-            tbody.innerHTML = brokers.map(b => `
+            tbody.innerHTML = brokers.map(b => {
+                const initials = b.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
+                const avatar = b.photo
+                    ? `<img src="${b.photo}" alt="${b.name}" class="w-9 h-9 rounded-full object-cover object-top border border-gray-200 shrink-0">`
+                    : `<div class="w-9 h-9 rounded-full bg-walmart-blue flex items-center justify-center text-white text-xs font-bold shrink-0">${initials}</div>`;
+                return `
                 <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-gray-900">${b.name}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            ${avatar}
+                            <span class="font-medium text-gray-900">${b.name}</span>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 text-gray-600">${b.email}</td>
                     <td class="px-6 py-4 text-gray-600">${b.phone || '-'}</td>
                     <td class="px-6 py-4 text-gray-600">${b.company || '-'}</td>
                     <td class="px-6 py-4">
                         <div class="flex flex-wrap gap-1">
-                            ${b.states.split(',').map(s => `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">${s.trim()}</span>`).join('')}
+                            ${b.states.split(',').map(s => `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-mono">${s.trim()}</span>`).join('')}
                         </div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600 text-sm">
+                        ${b.cities
+                            ? `<div class="flex flex-wrap gap-1">${b.cities.split(',').map(c => `<span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded text-xs">${c.trim()}</span>`).join('')}</div>`
+                            : `<span class="text-gray-400 italic text-xs">Entire state</span>`
+                        }
                     </td>
                     <td class="px-6 py-4">
                         <span class="px-2 py-1 rounded-full text-xs font-medium ${b.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}">
@@ -1147,7 +1174,8 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
         
         function openBrokerModal(brokerId = null) {
@@ -1174,6 +1202,7 @@
             document.getElementById('broker-phone').value = broker.phone || '';
             document.getElementById('broker-company').value = broker.company || '';
             document.getElementById('broker-states').value = broker.states;
+            document.getElementById('broker-cities').value = broker.cities || '';
             document.getElementById('broker-active').checked = broker.is_active;
             
             document.getElementById('broker-modal').classList.remove('hidden');
@@ -1190,6 +1219,7 @@
                 phone: document.getElementById('broker-phone').value || null,
                 company: document.getElementById('broker-company').value || null,
                 states: document.getElementById('broker-states').value.toUpperCase(),
+                cities: document.getElementById('broker-cities').value || null,
                 is_active: document.getElementById('broker-active').checked
             };
             
@@ -1233,20 +1263,38 @@
             const file = event.target.files[0];
             if (!file) return;
             
+            // Parse a single RFC-4180 CSV line, respecting double-quoted fields
+            function parseCSVLine(line) {
+                const fields = [];
+                let cur = '', inQuote = false;
+                for (let i = 0; i < line.length; i++) {
+                    const ch = line[i];
+                    if (ch === '"') {
+                        // escaped quote inside a quoted field
+                        if (inQuote && line[i + 1] === '"') { cur += '"'; i++; }
+                        else { inQuote = !inQuote; }
+                    } else if (ch === ',' && !inQuote) {
+                        fields.push(cur.trim()); cur = '';
+                    } else {
+                        cur += ch;
+                    }
+                }
+                fields.push(cur.trim());
+                return fields;
+            }
+
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
                     const csv = e.target.result;
-                    const lines = csv.split('\n').filter(line => line.trim());
-                    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                    const lines = csv.split(/\r?\n/).filter(line => line.trim());
+                    const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
                     
                     const brokersList = [];
                     for (let i = 1; i < lines.length; i++) {
-                        const values = lines[i].split(',').map(v => v.trim());
+                        const values = parseCSVLine(lines[i]);
                         const broker = {};
-                        headers.forEach((h, idx) => {
-                            broker[h] = values[idx] || '';
-                        });
+                        headers.forEach((h, idx) => { broker[h] = values[idx] || ''; });
                         if (broker.name && broker.email && broker.states) {
                             brokersList.push(broker);
                         }
@@ -1278,7 +1326,21 @@
         }
         
         function downloadBrokerTemplate() {
-            const csv = 'name,email,phone,company,states\nJohn Smith,john@example.com,555-123-4567,ABC Realty,"TX,OK,AR"\nJane Doe,jane@example.com,555-987-6543,XYZ Properties,"CA,AZ,NV"';
+            // Columns: name, email, phone, company, states, cities
+            // - states: comma-separated state abbreviations (e.g. TX,OK,AR)
+            // - cities: comma-separated city names; leave blank to cover the entire state
+            const rows = [
+                ['name', 'email', 'phone', 'company', 'states', 'cities'],
+                // State-wide broker — cities is blank, covers all cities in TX
+                ['John Smith', 'john.smith@abcrealty.com', '555-123-4567', 'ABC Realty', 'TX', ''],
+                // City-specific broker — only appears for Dallas / Fort Worth / Arlington
+                ['Jane Doe', 'jane.doe@xyzproperties.com', '555-987-6543', 'XYZ Properties', 'TX', 'Dallas,Fort Worth,Arlington'],
+                // Multi-state broker — covers all cities in TX, OK, and AR
+                ['Mike Brown', 'mike.brown@realty.com', '555-456-7890', 'State Wide Realty', 'TX,OK,AR', ''],
+            ];
+            // RFC-4180 CSV — quote any field that contains a comma
+            const escape = v => (String(v).includes(',') ? `"${v}"` : v);
+            const csv = rows.map(r => r.map(escape).join(',')).join('\r\n');
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1288,6 +1350,7 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            showToast('Template downloaded!');
         }
         
         // ========== LOI SUBMISSIONS ==========
