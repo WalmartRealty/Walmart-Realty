@@ -1544,479 +1544,147 @@ async function loadBrokerContact(state, propertyId) {
         </div>`;
 }
 
-// LOI Documents available
-const loiDocuments = [
-    { id: 1, name: 'Building Lease', file: 'loi-documents/Building Lease .docx', description: 'For leasing building space' },
-    { id: 2, name: 'Building Sale', file: 'loi-documents/Building Sale LOI docx.docx', description: 'For purchasing a building' },
-    { id: 3, name: 'Building Sublease', file: 'loi-documents/Building Sublease LOI.docx', description: 'For subleasing building space' },
-    { id: 6, name: 'Large Tract Land Sale', file: 'loi-documents/Large Tract Land Sale LOI.docx', description: 'For purchasing large land tracts' },
-    { id: 7, name: 'Outlot Ground Lease', file: 'loi-documents/Outlot Ground Lease LOI.docx', description: 'For ground lease on outlot parcels' },
-    { id: 8, name: 'Outlot Land Sale', file: 'loi-documents/Outlot Land Sale LOI .docx', description: 'For purchasing outlot parcels' }
-];
-
 // Current property for LOI
 let currentLOIPropertyId = null;
 
-// Open LOI Modal
+// Auto-detect the most likely LOI type from property metadata
+function detectLOIType(property) {
+    if (!property) return 'General Inquiry';
+    const lt = (property.listingType || property.listing_type || '').toLowerCase();
+    const ty = (property.type || property.property_type || '').toLowerCase();
+    if (lt === 'lease' && ty.includes('build')) return 'Building Lease';
+    if (lt === 'lease') return 'Outlot Ground Lease';
+    if (ty.includes('build') && lt === 'sale') return 'Building Sale';
+    if (lt === 'sale') return 'Outlot Land Sale';
+    return 'General Inquiry';
+}
+
+// Open contact-as-LOI form directly (no type picker needed)
 function openLOIModal(propertyId) {
     currentLOIPropertyId = propertyId;
     const property = properties.find(p => p.id === propertyId);
-    const modal = document.getElementById('loi-modal');
-    const content = document.getElementById('loi-modal-content');
-    
-    content.innerHTML = `
-        <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-            <div>
-                <h2 id="loi-modal-title" class="text-2xl font-bold text-gray-900">Submit Letter of Intent</h2>
-                <p class="text-sm text-gray-600">${property.city}, ${property.state} - ${property.lotSize}</p>
-            </div>
-            <button onclick="closeLOIModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Close modal">
-                <svg class="h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-        
-        <div class="p-6">
-            <p class="text-gray-700 mb-6">Select the appropriate Letter of Intent document for your transaction:</p>
-            
-            <div class="grid gap-3">
-                ${loiDocuments.map(loi => `
-                    <button onclick="openLOIForm(${loi.id})"
-                            class="flex items-center gap-4 p-4 bg-white border border-gray-200 rounded-xl hover:border-[#0053e2] hover:shadow-md transition-all text-left group">
-
-                        <div class="flex-1">
-                            <h3 class="font-semibold text-gray-900 group-hover:text-[#0053e2] transition-colors">${loi.name}</h3>
-                            <p class="text-sm text-gray-500">${loi.description}</p>
-                        </div>
-                        <svg class="h-5 w-5 text-gray-300 group-hover:text-[#0053e2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
-                    </button>
-                `).join('')}
-            </div>
-            
-            <div class="mt-6 pt-6 border-t">
-                <p class="text-sm text-gray-500 text-center">
-                    Need help choosing? ${property.broker_email
-                        ? `Contact the broker at <a href="mailto:${property.broker_email}" class="text-[#0053e2] hover:underline">${property.broker_email}</a>`
-                        : `Contact us at <a href="mailto:realestatedispositions@walmart.com" class="text-[#0053e2] hover:underline">realestatedispositions@walmart.com</a>`}
-                </p>
-            </div>
-        </div>
-    `;
-    
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-}
-
-// Close LOI Modal
-function closeLOIModal() {
-    const modal = document.getElementById('loi-modal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-}
-
-// Get LOI-specific form fields
-function getLOIFormFields(loiId, property) {
-    const commonFields = `
-        <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Contact Information</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
-                <input type="text" name="firstName" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
-                <input type="text" name="lastName" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-            </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                <input type="email" name="email" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
-                <input type="tel" name="phone" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-            </div>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Company / Entity Name *</label>
-            <input type="text" name="company" required 
-                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Company Address *</label>
-            <input type="text" name="companyAddress" required 
-                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                   placeholder="Street, City, State, ZIP">
-        </div>
-    `;
-    
-    // LOI-specific fields based on type
-    const loiSpecificFields = {
-        1: `<!-- Building Lease -->
-            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 mt-6">Lease Terms</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Lease Rate ($/SF/Year) *</label>
-                    <input type="text" name="leaseRate" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., $15.00">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Lease Term (Years) *</label>
-                    <input type="text" name="leaseTerm" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., 10 years">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Desired Square Footage *</label>
-                    <input type="text" name="squareFootage" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Commencement Date *</label>
-                    <input type="date" name="commencementDate" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Intended Use *</label>
-                <input type="text" name="intendedUse" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                       placeholder="e.g., Retail, Restaurant, Office">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Renewal Options</label>
-                <input type="text" name="renewalOptions" 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                       placeholder="e.g., Two 5-year options">
-            </div>`,
-        
-        2: `<!-- Building Sale -->
-            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 mt-6">Purchase Terms</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Offer Price *</label>
-                    <input type="text" name="offerPrice" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., $1,500,000">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Earnest Money Deposit *</label>
-                    <input type="text" name="earnestMoney" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., $50,000">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Due Diligence Period (Days) *</label>
-                    <input type="number" name="dueDiligencePeriod" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., 45">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Closing Date *</label>
-                    <input type="date" name="closingDate" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Financing Type *</label>
-                <select name="financingType" required 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                    <option value="">Select financing type...</option>
-                    <option value="cash">All Cash</option>
-                    <option value="conventional">Conventional Financing</option>
-                    <option value="sba">SBA Loan</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Intended Use *</label>
-                <input type="text" name="intendedUse" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-            </div>`,
-        
-        3: `<!-- Building Sublease -->
-            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 mt-6">Sublease Terms</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Sublease Rate ($/SF/Year) *</label>
-                    <input type="text" name="subleaseRate" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Sublease Term *</label>
-                    <input type="text" name="subleaseTerm" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., 5 years">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Desired Square Footage *</label>
-                    <input type="text" name="squareFootage" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Start Date *</label>
-                    <input type="date" name="startDate" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Intended Use *</label>
-                <input type="text" name="intendedUse" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-            </div>`,
-        
-        6: `<!-- Large Tract Land Sale -->
-            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 mt-6">Purchase Terms</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Offer Price *</label>
-                    <input type="text" name="offerPrice" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Price Per Acre</label>
-                    <input type="text" name="pricePerAcre" 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Earnest Money Deposit *</label>
-                    <input type="text" name="earnestMoney" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Acreage *</label>
-                    <input type="text" name="acreage" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           value="${property.size_acres} acres">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Due Diligence Period (Days) *</label>
-                    <input type="number" name="dueDiligencePeriod" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., 90">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Closing Date *</label>
-                    <input type="date" name="closingDate" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Financing Type *</label>
-                <select name="financingType" required 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                    <option value="">Select...</option>
-                    <option value="cash">All Cash</option>
-                    <option value="conventional">Conventional Financing</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Development / Use *</label>
-                <textarea name="proposedUse" required rows="2"
-                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                          placeholder="Describe your intended development plans..."></textarea>
-            </div>`,
-        
-        7: `<!-- Outlot Ground Lease -->
-            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 mt-6">Ground Lease Terms</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Annual Rent *</label>
-                    <input type="text" name="annualRent" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Lease Term (Years) *</label>
-                    <input type="text" name="leaseTerm" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., 15 years">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Outlot Size (Acres) *</label>
-                    <input type="text" name="acreage" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           value="${property.size_acres} acres">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Commencement Date *</label>
-                    <input type="date" name="commencementDate" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Use / Tenant *</label>
-                <input type="text" name="proposedUse" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                       placeholder="e.g., Starbucks, Chick-fil-A, Bank">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Rent Escalations</label>
-                <input type="text" name="rentEscalations" 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                       placeholder="e.g., 10% every 5 years">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Renewal Options</label>
-                <input type="text" name="renewalOptions" 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                       placeholder="e.g., Four 5-year options">
-            </div>`,
-        
-        8: `<!-- Outlot Land Sale -->
-            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 mt-6">Purchase Terms</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Offer Price *</label>
-                    <input type="text" name="offerPrice" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Earnest Money Deposit *</label>
-                    <input type="text" name="earnestMoney" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Outlot Size (Acres) *</label>
-                    <input type="text" name="acreage" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           value="${property.size_acres} acres">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Due Diligence Period (Days) *</label>
-                    <input type="number" name="dueDiligencePeriod" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"
-                           placeholder="e.g., 45">
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Closing Date *</label>
-                    <input type="date" name="closingDate" required 
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Financing Type *</label>
-                    <select name="financingType" required 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-                        <option value="">Select...</option>
-                        <option value="cash">All Cash</option>
-                        <option value="conventional">Conventional Financing</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Use / Tenant *</label>
-                <input type="text" name="proposedUse" required 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue">
-            </div>`
-    };
-    
-    return commonFields + (loiSpecificFields[loiId] || '');
-}
-
-// Open LOI Form
-function openLOIForm(loiId) {
-    const loi = loiDocuments.find(l => l.id === loiId);
-    const property = properties.find(p => p.id === currentLOIPropertyId);
-    const modal = document.getElementById('loi-form-modal');
+    const modal   = document.getElementById('loi-form-modal');
     const content = document.getElementById('loi-form-content');
-    
+    const autoType = detectLOIType(property);
+
     content.innerHTML = `
         <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
             <div>
-                <h2 id="loi-form-title" class="text-xl font-bold text-gray-900">${loi.icon} ${loi.name} LOI</h2>
-                <p class="text-sm text-gray-600">${property.city}, ${property.state} - ${property.lotSize}</p>
+                <p class="text-xs font-semibold text-[#0053e2] uppercase tracking-wider">Letter of Intent</p>
+                <h2 class="text-xl font-bold text-gray-900">${property.city}, ${property.state}</h2>
+                <p class="text-sm text-gray-500">${property.lotSize || (property.size_acres + ' acres')} &mdash; ${property.type || property.property_type || ''}</p>
             </div>
-            <button onclick="closeLOIFormModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Close modal">
+            <button onclick="closeLOIFormModal()" class="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Close">
                 <svg class="h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
         </div>
-        
-        <form id="loi-submission-form" class="p-6 space-y-4" onsubmit="submitLOI(event, ${loiId})">
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <div class="flex items-start gap-3">
-                    <svg class="h-5 w-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <div>
-                        <p class="text-sm text-green-800 font-medium">Complete this form to submit your Letter of Intent</p>
-                        <p class="text-sm text-green-700">Your submission will be sent directly to our broker team for immediate review.</p>
-                    </div>
-                </div>
-            </div>
-            
-            ${getLOIFormFields(loiId, property)}
-            
-            <!-- Auto-fill notice — no upload needed -->
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6 flex items-start gap-3">
-                <svg class="h-5 w-5 text-blue-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+
+        <form id="loi-submission-form" class="p-6 space-y-4" onsubmit="submitLOI(event)">
+
+            <!-- Info banner -->
+            <div class="bg-[#0053e2]/5 border border-[#0053e2]/20 rounded-xl p-4 flex gap-3">
+                <svg class="h-5 w-5 text-[#0053e2] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
+                <p class="text-sm text-[#0053e2]">
+                    Fill in your contact information below and hit <strong>Submit LOI to Broker</strong>.
+                    Your details will be automatically submitted as a Letter of Intent — no document upload needed.
+                </p>
+            </div>
+
+            <!-- Contact fields -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <p class="text-sm font-semibold text-blue-900">Auto-fill enabled — no document upload needed</p>
-                    <p class="text-sm text-blue-700 mt-0.5">Your contact information and terms above will automatically populate the LOI and be sent directly to the broker team upon submission.</p>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="firstName" required autocomplete="given-name"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="lastName" required autocomplete="family-name"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
                 </div>
             </div>
-            
-            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 mt-6">Additional Information</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+                    <input type="email" name="email" required autocomplete="email"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone <span class="text-red-500">*</span></label>
+                    <input type="tel" name="phone" required autocomplete="tel"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
+                </div>
+            </div>
+
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Additional Comments or Contingencies</label>
-                <textarea name="additionalComments" rows="3" 
-                          placeholder="Any other terms, conditions, or questions..."
-                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-walmart-blue focus:border-walmart-blue"></textarea>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Company / Entity Name <span class="text-red-500">*</span></label>
+                <input type="text" name="company" required autocomplete="organization"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
             </div>
-            
-            <div class="bg-gray-50 rounded-lg p-4 mt-6">
-                <h4 class="font-medium text-gray-900 mb-2">Property Summary</h4>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                    <div><span class="text-gray-500">Location:</span><br><span class="font-medium">${property.city}, ${property.state}</span></div>
-                    <div><span class="text-gray-500">Size:</span><br><span class="font-medium">${property.lotSize}</span></div>
-                    <div><span class="text-gray-500">Type:</span><br><span class="font-medium">${property.type}</span></div>
-                    <div><span class="text-gray-500">LOI Type:</span><br><span class="font-medium">${loi.name}</span></div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Company Address</label>
+                <input type="text" name="companyAddress" autocomplete="street-address"
+                       placeholder="Street, City, State, ZIP"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Type of Transaction</label>
+                <select name="loiType"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
+                    <option value="${autoType}" selected>${autoType} (suggested)</option>
+                    <option value="Building Lease">Building Lease</option>
+                    <option value="Building Sale">Building Sale</option>
+                    <option value="Building Sublease">Building Sublease</option>
+                    <option value="Large Tract Land Sale">Large Tract Land Sale</option>
+                    <option value="Outlot Ground Lease">Outlot Ground Lease</option>
+                    <option value="Outlot Land Sale">Outlot Land Sale</option>
+                    <option value="General Inquiry">General Inquiry</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Additional Comments</label>
+                <textarea name="additionalComments" rows="3"
+                          placeholder="Any questions, contingencies, or notes for the broker…"
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]"></textarea>
+            </div>
+
+            <!-- Property summary -->
+            <div class="bg-gray-50 rounded-xl p-4">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Property</p>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                    <div><span class="text-gray-500">Location</span><br><strong>${property.city}, ${property.state}</strong></div>
+                    <div><span class="text-gray-500">Size</span><br><strong>${property.lotSize || (property.size_acres + ' ac')}</strong></div>
+                    <div><span class="text-gray-500">Type</span><br><strong>${property.type || property.property_type || 'N/A'}</strong></div>
+                    <div><span class="text-gray-500">Listing</span><br><strong>${property.listingType || property.listing_type || 'N/A'}</strong></div>
                 </div>
             </div>
-            
-            <div class="pt-4">
-                <button type="submit" id="loi-submit-btn"
-                        class="w-full bg-[#0053e2] hover:bg-[#003fa8] text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                    </svg>
-                    Submit LOI to Broker
-                </button>
-            </div>
+
+            <button type="submit" id="loi-submit-btn"
+                    class="w-full bg-[#0053e2] hover:bg-[#003fa8] text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-2 text-base">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
+                Submit LOI to Broker
+            </button>
         </form>
     `;
-    
+
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+}
+
+// Close LOI modal (loi-modal kept in HTML for backward compat)
+function closeLOIModal() {
+    document.getElementById('loi-modal')?.classList.add('hidden');
+    document.getElementById('loi-modal')?.classList.remove('flex');
 }
 
 // Close LOI Form Modal
@@ -2048,146 +1716,68 @@ function getBrokerEmail(state) {
     return brokerEmails[state] || brokerEmails.default;
 }
 
-// Submit LOI
-async function submitLOI(event, loiId) {
+// Submit LOI — contact info IS the LOI, no separate terms needed
+async function submitLOI(event) {
     event.preventDefault();
 
-    const form       = event.target;
-    const submitBtn  = document.getElementById('loi-submit-btn');
-    const loi        = loiDocuments.find(l => l.id === loiId);
-    const property   = properties.find(p => p.id === currentLOIPropertyId);
+    const form      = event.target;
+    const submitBtn = document.getElementById('loi-submit-btn');
+    const property  = properties.find(p => p.id === currentLOIPropertyId);
 
-    // Disable button and show loading spinner
+    // Collect form data
+    const raw = new FormData(form);
+    const d   = {};
+    raw.forEach((v, k) => { d[k] = v; });
+
+    // Lock the button
     submitBtn.disabled = true;
     submitBtn.innerHTML = `
         <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        Submitting...
+        Submitting…
     `;
 
-    // Collect form fields into a plain object
-    const rawData = new FormData(form);
-    const data = {};
-    rawData.forEach((value, key) => { data[key] = value; });
-    
-    // Build comprehensive LOI submission content
-    const submissionDate = new Date().toLocaleDateString('en-US', { 
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-    });
-    
-    const brokerEmail = getBrokerEmail(property.state);
-    
-    // Format the LOI data based on type
-    let loiDetails = '';
-    
-    // Common fields
-    loiDetails += `
-═══════════════════════════════════════════════════════════════
-                    LETTER OF INTENT SUBMISSION
-                         ${loi.name.toUpperCase()}
-═══════════════════════════════════════════════════════════════
+    const payload = new FormData();
+    payload.append('property_id',    currentLOIPropertyId || '');
+    payload.append('loi_type',       d.loiType);
+    payload.append('first_name',     d.firstName);
+    payload.append('last_name',      d.lastName);
+    payload.append('email',          d.email);
+    payload.append('phone',          d.phone);
+    payload.append('company',        d.company);
+    payload.append('company_address', d.companyAddress || '');
+    payload.append('form_data',      JSON.stringify({ ...d, property: property?.city + ', ' + property?.state }));
 
-Submission Date: ${submissionDate}
-
-───────────────────────────────────────────────────────────────
-PROPERTY INFORMATION
-───────────────────────────────────────────────────────────────
-Location:        ${property.city}, ${property.state}
-Property Size:   ${property.lotSize}
-Property Type:   ${property.type}
-Listing Price:   ${formatPrice(property.price, property.listingType)}
-LOI Type:        ${loi.name}
-
-───────────────────────────────────────────────────────────────
-BUYER/LESSEE INFORMATION  
-───────────────────────────────────────────────────────────────
-Name:            ${data.firstName} ${data.lastName}
-Company:         ${data.company}
-Address:         ${data.companyAddress || 'Not provided'}
-Email:           ${data.email}
-Phone:           ${data.phone}
-
-───────────────────────────────────────────────────────────────
-PROPOSED TERMS
-───────────────────────────────────────────────────────────────`;
-    
-    // Add LOI-specific details
-    if (data.offerPrice) loiDetails += `\nOffer Price:         ${data.offerPrice}`;
-    if (data.earnestMoney) loiDetails += `\nEarnest Money:       ${data.earnestMoney}`;
-    if (data.leaseRate) loiDetails += `\nLease Rate:          ${data.leaseRate}`;
-    if (data.subleaseRate) loiDetails += `\nSublease Rate:       ${data.subleaseRate}`;
-    if (data.annualRent) loiDetails += `\nAnnual Rent:         ${data.annualRent}`;
-    if (data.leaseTerm) loiDetails += `\nLease Term:          ${data.leaseTerm}`;
-    if (data.subleaseTerm) loiDetails += `\nSublease Term:       ${data.subleaseTerm}`;
-    if (data.squareFootage) loiDetails += `\nSquare Footage:      ${data.squareFootage}`;
-    if (data.acreage) loiDetails += `\nAcreage:             ${data.acreage}`;
-    if (data.pricePerAcre) loiDetails += `\nPrice Per Acre:      ${data.pricePerAcre}`;
-    if (data.dueDiligencePeriod) loiDetails += `\nDue Diligence:       ${data.dueDiligencePeriod} days`;
-    if (data.closingDate) loiDetails += `\nClosing Date:        ${data.closingDate}`;
-    if (data.commencementDate) loiDetails += `\nCommencement Date:   ${data.commencementDate}`;
-    if (data.startDate) loiDetails += `\nStart Date:          ${data.startDate}`;
-    if (data.financingType) loiDetails += `\nFinancing:           ${data.financingType}`;
-    if (data.intendedUse) loiDetails += `\nIntended Use:        ${data.intendedUse}`;
-    if (data.proposedUse) loiDetails += `\nProposed Use:        ${data.proposedUse}`;
-    if (data.rentEscalations) loiDetails += `\nRent Escalations:    ${data.rentEscalations}`;
-    if (data.renewalOptions) loiDetails += `\nRenewal Options:     ${data.renewalOptions}`;
-    
-
-    loiDetails += `\n\n───────────────────────────────────────────────────────────────
-ADDITIONAL COMMENTS
-───────────────────────────────────────────────────────────────
-${data.additionalComments || 'None provided'}
-
-═══════════════════════════════════════════════════════════════
-              Submitted via Walmart Real Estate Website
-                     https://realty.walmart.com
-═══════════════════════════════════════════════════════════════`;
-    
-    // ── 1. Try to POST to the backend (saves to DB + auto-emails broker) ─
     try {
-        const payload = new FormData();
-        payload.append('property_id',    String(property.id));
-        payload.append('loi_type',       loi.name);
-        payload.append('first_name',     data.firstName);
-        payload.append('last_name',      data.lastName);
-        payload.append('email',          data.email);
-        payload.append('phone',          data.phone);
-        payload.append('company',        data.company);
-        payload.append('company_address', data.companyAddress || '');
-        payload.append('form_data',      JSON.stringify(data));
-
         const res = await fetch(`${window.location.origin}/api/loi`, {
             method: 'POST',
             body: payload
         });
-
         if (res.ok) {
             const result = await res.json();
-            // Server handled DB save + broker email — show clean confirmation
-            showSuccessModalAPI(data, loi, property, result);
+            showSuccessModalAPI(d, d.loiType, property, result);
             return;
         }
-        // Non-2xx response — fall through to mailto fallback
         console.warn('LOI API returned', res.status, '— falling back to mailto');
-    } catch (fetchErr) {
-        // Server unreachable (static/GitHub Pages deploy) — fall through
-        console.warn('LOI API unreachable — falling back to mailto:', fetchErr.message);
+    } catch (err) {
+        console.warn('LOI API unreachable — falling back to mailto:', err.message);
     }
 
-    // ── 2. Mailto fallback (no backend available) ────────────────────────
-    showSuccessModal(data, loi, property, loiDetails, brokerEmail);
-    const subject = encodeURIComponent(`LOI: ${loi.name} — ${property.city}, ${property.state}`);
-    const slimBody = encodeURIComponent(
-        `LOI Type: ${loi.name}\nProperty: ${property.city}, ${property.state}\n` +
-        `From: ${data.firstName} ${data.lastName} (${data.company})\n` +
-        `Email: ${data.email} | Phone: ${data.phone}\n\n` +
-        `[Full LOI details shown on-screen — request from submitter if needed]`
+    // Mailto fallback for static / GitHub Pages deploys
+    const brokerEmail = getBrokerEmail(property?.state || '');
+    const subject = encodeURIComponent(`LOI: ${d.loiType} — ${property?.city}, ${property?.state}`);
+    const body = encodeURIComponent(
+        `LOI Type: ${d.loiType}\nProperty: ${property?.city}, ${property?.state}\n` +
+        `From: ${d.firstName} ${d.lastName} (${d.company})\n` +
+        `Email: ${d.email} | Phone: ${d.phone}\n\n` +
+        `Comments: ${d.additionalComments || 'None'}`
     );
     const cc = encodeURIComponent('realestatedispositions@walmart.com');
+    showSuccessModalAPI(d, d.loiType, property, { brokers_notified: [] });
     setTimeout(() => {
-        window.open(`mailto:${brokerEmail}?cc=${cc}&subject=${subject}&body=${slimBody}`, '_blank');
+        window.open(`mailto:${brokerEmail}?cc=${cc}&subject=${subject}&body=${body}`, '_blank');
     }, 300);
 }
 
@@ -2216,7 +1806,7 @@ function showSuccessModalAPI(data, loi, property, apiResult) {
             <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-6 text-left space-y-2">
                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Submission Summary</p>
                 <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-                    <span class="text-gray-500">LOI Type</span>      <span class="font-medium">${loi.name}</span>
+                    <span class="text-gray-500">LOI Type</span>      <span class="font-medium">${loi}</span>
                     <span class="text-gray-500">Property</span>      <span class="font-medium">${property.city}, ${property.state}</span>
                     <span class="text-gray-500">Submitted by</span>  <span class="font-medium">${data.firstName} ${data.lastName}</span>
                     <span class="text-gray-500">Company</span>       <span class="font-medium">${data.company}</span>
@@ -2751,49 +2341,77 @@ function updateContactPropertyDropdown() {
 // Handle contact form submission
 async function handleContactFormSubmit(e) {
     e.preventDefault();
-    
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
+
+    const form       = e.target;
+    const submitBtn  = form.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
-    
-    // Get form data
-    const formData = {
-        name: document.getElementById('contact-name').value.trim(),
-        email: document.getElementById('contact-email').value.trim(),
-        phone: document.getElementById('contact-phone').value.trim(),
-        company: document.getElementById('contact-company').value.trim(),
-        property_id: document.getElementById('contact-property').value || null,
-        message: document.getElementById('contact-message').value.trim()
-    };
-    
-    // Validation
-    if (!formData.name || !formData.email || !formData.message) {
+
+    // Gather values once — single source of truth
+    const fullName  = document.getElementById('contact-name').value.trim();
+    const email     = document.getElementById('contact-email').value.trim();
+    const phone     = document.getElementById('contact-phone').value.trim();
+    const company   = document.getElementById('contact-company').value.trim();
+    const propId    = document.getElementById('contact-property').value || null;
+    const message   = document.getElementById('contact-message').value.trim();
+
+    if (!fullName || !email || !message) {
         showToast('Please fill in all required fields');
         return;
     }
-    
-    // Disable button and show loading
+
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Submitting...';
-    
+    submitBtn.textContent = 'Submitting…';
+
+    // Split name into first / last for the LOI record
+    const nameParts = fullName.split(' ');
+    const firstName = nameParts[0]  || fullName;
+    const lastName  = nameParts.slice(1).join(' ') || '';
+
+    // Resolve property + auto-detect LOI type
+    const property = propId ? properties.find(p => String(p.id) === String(propId)) : null;
+    const loiType  = detectLOIType(property);
+
     try {
-        const response = await fetch('/api/contact', {
+        // ── 1. Contact inquiry (existing behaviour) ─────────────────────
+        const contactRes = await fetch('/api/contact', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
+            body: JSON.stringify({ name: fullName, email, phone, company, property_id: propId, message })
         });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            // Success!
-            showContactSuccess();
-            form.reset();
-        } else {
-            showToast(result.error || 'Failed to submit inquiry');
+        const contactResult = await contactRes.json();
+        if (!contactRes.ok) {
+            showToast(contactResult.error || 'Failed to submit inquiry');
+            return;
         }
+
+        // ── 2. Auto-generate LOI from the same contact data ─────────────
+        const loiPayload = new FormData();
+        loiPayload.append('property_id',     propId || '');
+        loiPayload.append('loi_type',        loiType);
+        loiPayload.append('first_name',      firstName);
+        loiPayload.append('last_name',       lastName);
+        loiPayload.append('email',           email);
+        loiPayload.append('phone',           phone);
+        loiPayload.append('company',         company);
+        loiPayload.append('company_address', '');
+        loiPayload.append('form_data', JSON.stringify({
+            firstName, lastName, email, phone, company,
+            loiType,
+            additionalComments: message,
+            property: property ? `${property.city}, ${property.state}` : 'General Inquiry',
+            source: 'contact-form'
+        }));
+
+        // Fire-and-forget — don't block UX on LOI save errors
+        fetch('/api/loi', { method: 'POST', body: loiPayload })
+            .catch(err => console.warn('LOI background save failed:', err.message));
+
+        // ── 3. Show success & reset ──────────────────────────────────────
+        showContactSuccess();
+        form.reset();
+
     } catch (error) {
-        console.error('Contact  error:', error);
+        console.error('Contact submit error:', error);
         showToast('Connection error. Please try again.');
     } finally {
         submitBtn.disabled = false;
