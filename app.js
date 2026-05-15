@@ -1974,53 +1974,14 @@ function openLOIForm(loiId) {
             
             ${getLOIFormFields(loiId, property)}
             
-            <h3 class="text-lg font-semibold text-gray-900 border-b pb-2 mt-6">Upload Your Completed LOI</h3>
-            <div class="mb-4">
-                <p class="text-sm text-gray-600 mb-3">If you've already filled out the LOI document, drag and drop it here or click to upload:</p>
-                
-                <div id="loi-dropzone" 
-                     class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer transition-all hover:border-walmart-blue hover:bg-blue-50"
-                     ondragover="handleDragOver(event)"
-                     ondragleave="handleDragLeave(event)"
-                     ondrop="handleFileDrop(event)"
-                     onclick="document.getElementById('loi-file-input').click()">
-                    
-                    <input type="file" id="loi-file-input" name="loiFile" class="hidden" 
-                           accept=".doc,.docx,.pdf" onchange="handleFileSelect(event)">
-                    
-                    <div id="dropzone-content">
-                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                        </svg>
-                        <p class="text-gray-700 font-medium">Drag & drop your LOI document here</p>
-                        <p class="text-gray-500 text-sm mt-1">or click to browse</p>
-                        <p class="text-gray-400 text-xs mt-2">Accepts: .doc, .docx, .pdf (max 10MB)</p>
-                    </div>
-                    
-                    <div id="dropzone-file-info" class="hidden">
-                        <svg class="mx-auto h-12 w-12 text-green-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <p class="text-green-700 font-medium" id="uploaded-file-name"></p>
-                        <p class="text-gray-500 text-sm mt-1" id="uploaded-file-size"></p>
-                        <button type="button" onclick="event.stopPropagation(); removeUploadedFile()" 
-                                class="mt-3 text-red-600 hover:text-red-800 text-sm font-medium">
-                            Remove file
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="flex items-center gap-2 mt-3">
-                    <a href="${loi.file}" download 
-                       class="text-walmart-blue hover:underline text-sm font-medium flex items-center gap-1"
-                       onclick="event.stopPropagation()">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                        </svg>
-                        Download blank ${loi.name} template
-                    </a>
+            <!-- Auto-fill notice — no upload needed -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6 flex items-start gap-3">
+                <svg class="h-5 w-5 text-blue-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <div>
+                    <p class="text-sm font-semibold text-blue-900">Auto-fill enabled — no document upload needed</p>
+                    <p class="text-sm text-blue-700 mt-0.5">Your contact information and terms above will automatically populate the LOI and be sent directly to the broker team upon submission.</p>
                 </div>
             </div>
             
@@ -2042,21 +2003,14 @@ function openLOIForm(loiId) {
                 </div>
             </div>
             
-            <div class="flex flex-col sm:flex-row gap-3 pt-4">
+            <div class="pt-4">
                 <button type="submit" id="loi-submit-btn"
-                        class="flex-1 bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        class="w-full bg-[#0053e2] hover:bg-[#003fa8] text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                     </svg>
                     Submit LOI to Broker
                 </button>
-                <a href="${loi.file}" download 
-                   class="sm:w-auto border-2 border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    Download Template
-                </a>
             </div>
         </form>
     `;
@@ -2072,111 +2026,6 @@ function closeLOIFormModal() {
     modal.classList.remove('flex');
 }
 
-// Uploaded LOI file storage
-let uploadedLOIFile = null;
-
-// Drag and drop handlers
-function handleDragOver(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    const dropzone = document.getElementById('loi-dropzone');
-    dropzone.classList.add('border-walmart-blue', 'bg-blue-50', 'scale-[1.02]');
-    dropzone.classList.remove('border-gray-300');
-}
-
-function handleDragLeave(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    const dropzone = document.getElementById('loi-dropzone');
-    dropzone.classList.remove('border-walmart-blue', 'bg-blue-50', 'scale-[1.02]');
-    dropzone.classList.add('border-gray-300');
-}
-
-function handleFileDrop(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    const dropzone = document.getElementById('loi-dropzone');
-    dropzone.classList.remove('border-walmart-blue', 'bg-blue-50', 'scale-[1.02]');
-    dropzone.classList.add('border-gray-300');
-    
-    const files = event.dataTransfer.files;
-    if (files.length > 0) {
-        processUploadedFile(files[0]);
-    }
-}
-
-function handleFileSelect(event) {
-    const files = event.target.files;
-    if (files.length > 0) {
-        processUploadedFile(files[0]);
-    }
-}
-
-function processUploadedFile(file) {
-    // Validate file type
-    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    const validExtensions = ['.pdf', '.doc', '.docx'];
-    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-    
-    if (!validExtensions.includes(fileExtension)) {
-        showToast('Please upload a .doc, .docx, or .pdf file');
-        return;
-    }
-    
-    // Validate file size (10MB max)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-        showToast('File size must be less than 10MB');
-        return;
-    }
-    
-    // Store the file
-    uploadedLOIFile = file;
-    
-    // Update UI
-    const dropzoneContent = document.getElementById('dropzone-content');
-    const fileInfo = document.getElementById('dropzone-file-info');
-    const fileName = document.getElementById('uploaded-file-name');
-    const fileSize = document.getElementById('uploaded-file-size');
-    
-    dropzoneContent.classList.add('hidden');
-    fileInfo.classList.remove('hidden');
-    
-    fileName.textContent = file.name;
-    fileSize.textContent = formatFileSize(file.size);
-    
-    // Update dropzone styling
-    const dropzone = document.getElementById('loi-dropzone');
-    dropzone.classList.add('border-green-500', 'bg-green-50');
-    dropzone.classList.remove('border-gray-300');
-    
-    showToast('File uploaded successfully!');
-}
-
-function removeUploadedFile() {
-    uploadedLOIFile = null;
-    
-    // Reset file input
-    const fileInput = document.getElementById('loi-file-input');
-    if (fileInput) fileInput.value = '';
-    
-    // Update UI
-    const dropzoneContent = document.getElementById('dropzone-content');
-    const fileInfo = document.getElementById('dropzone-file-info');
-    
-    if (dropzoneContent) dropzoneContent.classList.remove('hidden');
-    if (fileInfo) fileInfo.classList.add('hidden');
-    
-    // Reset dropzone styling
-    const dropzone = document.getElementById('loi-dropzone');
-    if (dropzone) {
-        dropzone.classList.remove('border-green-500', 'bg-green-50');
-        dropzone.classList.add('border-gray-300');
-    }
-    
-    showToast('File removed');
-}
 
 function formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';
@@ -2202,13 +2051,13 @@ function getBrokerEmail(state) {
 // Submit LOI
 async function submitLOI(event, loiId) {
     event.preventDefault();
-    
-    const form = event.target;
-    const submitBtn = document.getElementById('loi-submit-btn');
-    const loi = loiDocuments.find(l => l.id === loiId);
-    const property = properties.find(p => p.id === currentLOIPropertyId);
-    
-    // Disable button and show loading
+
+    const form       = event.target;
+    const submitBtn  = document.getElementById('loi-submit-btn');
+    const loi        = loiDocuments.find(l => l.id === loiId);
+    const property   = properties.find(p => p.id === currentLOIPropertyId);
+
+    // Disable button and show loading spinner
     submitBtn.disabled = true;
     submitBtn.innerHTML = `
         <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -2217,13 +2066,11 @@ async function submitLOI(event, loiId) {
         </svg>
         Submitting...
     `;
-    
-    // Collect all form data
-    const formData = new FormData(form);
+
+    // Collect form fields into a plain object
+    const rawData = new FormData(form);
     const data = {};
-    formData.forEach((value, key) => {
-        data[key] = value;
-    });
+    rawData.forEach((value, key) => { data[key] = value; });
     
     // Build comprehensive LOI submission content
     const submissionDate = new Date().toLocaleDateString('en-US', { 
@@ -2287,12 +2134,7 @@ PROPOSED TERMS
     if (data.rentEscalations) loiDetails += `\nRent Escalations:    ${data.rentEscalations}`;
     if (data.renewalOptions) loiDetails += `\nRenewal Options:     ${data.renewalOptions}`;
     
-    // Add uploaded file info
-    if (uploadedLOIFile) {
-        loiDetails += `\n\nATTACHED LOI DOCUMENT:  ${uploadedLOIFile.name} (${formatFileSize(uploadedLOIFile.size)})`;
-        loiDetails += `\n** Please note: The attached LOI document was uploaded but may need to be sent separately. **`;
-    }
-    
+
     loiDetails += `\n\n───────────────────────────────────────────────────────────────
 ADDITIONAL COMMENTS
 ───────────────────────────────────────────────────────────────
@@ -2303,49 +2145,111 @@ ${data.additionalComments || 'None provided'}
                      https://realty.walmart.com
 ═══════════════════════════════════════════════════════════════`;
     
+    // ── 1. Try to POST to the backend (saves to DB + auto-emails broker) ─
     try {
-        // Try EmailJS first if configured
-        if (typeof emailjs !== 'undefined' && window.EMAILJS_PUBLIC_KEY) {
-            await emailjs.send(
-                window.EMAILJS_SERVICE_ID,
-                window.EMAILJS_TEMPLATE_ID,
-                {
-                    to_email: brokerEmail,
-                    from_name: `${data.firstName} ${data.lastName}`,
-                    from_email: data.email,
-                    subject: `LOI Submission: ${loi.name} - ${property.city}, ${property.state}`,
-                    message: loiDetails,
-                    property_location: `${property.city}, ${property.state}`,
-                    loi_type: loi.name,
-                    company: data.company
-                }
-            );
-            showSuccessModal(data, loi, property, loiDetails, brokerEmail);
-        } else {
-            // Reliable submission: show full LOI in modal + open slim email
-            showSuccessModal(data, loi, property, loiDetails, brokerEmail);
+        const payload = new FormData();
+        payload.append('property_id',    String(property.id));
+        payload.append('loi_type',       loi.name);
+        payload.append('first_name',     data.firstName);
+        payload.append('last_name',      data.lastName);
+        payload.append('email',          data.email);
+        payload.append('phone',          data.phone);
+        payload.append('company',        data.company);
+        payload.append('company_address', data.companyAddress || '');
+        payload.append('form_data',      JSON.stringify(data));
 
-            // Open email with concise body (avoids mailto length limits)
-            const subject = encodeURIComponent(`LOI: ${loi.name} — ${property.city}, ${property.state}`);
-            const slimBody = encodeURIComponent(
-                `LOI Type: ${loi.name}\nProperty: ${property.city}, ${property.state}\n` +
-                `From: ${data.firstName} ${data.lastName} (${data.company})\n` +
-                `Email: ${data.email} | Phone: ${data.phone}\n\n` +
-                `[Full LOI details were displayed on-screen — please request from submitter if needed]`
-            );
-            // CC the dispositions team on every submission
-            const cc = encodeURIComponent('realestatedispositions@walmart.com');
-            setTimeout(() => {
-                window.open(`mailto:${brokerEmail}?cc=${cc}&subject=${subject}&body=${slimBody}`, '_blank');
-            }, 300);
+        const res = await fetch(`${window.location.origin}/api/loi`, {
+            method: 'POST',
+            body: payload
+        });
+
+        if (res.ok) {
+            const result = await res.json();
+            // Server handled DB save + broker email — show clean confirmation
+            showSuccessModalAPI(data, loi, property, result);
+            return;
         }
-    } catch (error) {
-        console.error('Error submitting LOI:', error);
-        showSuccessModal(data, loi, property, loiDetails, brokerEmail);
+        // Non-2xx response — fall through to mailto fallback
+        console.warn('LOI API returned', res.status, '— falling back to mailto');
+    } catch (fetchErr) {
+        // Server unreachable (static/GitHub Pages deploy) — fall through
+        console.warn('LOI API unreachable — falling back to mailto:', fetchErr.message);
     }
+
+    // ── 2. Mailto fallback (no backend available) ────────────────────────
+    showSuccessModal(data, loi, property, loiDetails, brokerEmail);
+    const subject = encodeURIComponent(`LOI: ${loi.name} — ${property.city}, ${property.state}`);
+    const slimBody = encodeURIComponent(
+        `LOI Type: ${loi.name}\nProperty: ${property.city}, ${property.state}\n` +
+        `From: ${data.firstName} ${data.lastName} (${data.company})\n` +
+        `Email: ${data.email} | Phone: ${data.phone}\n\n` +
+        `[Full LOI details shown on-screen — request from submitter if needed]`
+    );
+    const cc = encodeURIComponent('realestatedispositions@walmart.com');
+    setTimeout(() => {
+        window.open(`mailto:${brokerEmail}?cc=${cc}&subject=${subject}&body=${slimBody}`, '_blank');
+    }, 300);
 }
 
-// Show success modal after submission
+// ─── Success modal: backend submission (server saved + emailed broker) ────────
+function showSuccessModalAPI(data, loi, property, apiResult) {
+    const modal   = document.getElementById('loi-form-modal');
+    const content = document.getElementById('loi-form-content');
+
+    const brokersNotified = (apiResult.brokers_notified || []);
+    const brokerList = brokersNotified.length
+        ? brokersNotified.map(b => `<li class="text-sm text-green-800">✅ ${b.name} &lt;${b.email}&gt;</li>`).join('')
+        : `<li class="text-sm text-green-800">✅ realestatedispositions@walmart.com</li>`;
+
+    content.innerHTML = `
+        <div class="p-8 text-center">
+            <div class="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                <svg class="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">LOI Submitted!</h2>
+            <p class="text-gray-500 mb-6">Your Letter of Intent for <strong>${property.city}, ${property.state}</strong> has been received and is now live in the admin dashboard.</p>
+
+            <!-- What was sent -->
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-6 text-left space-y-2">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Submission Summary</p>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <span class="text-gray-500">LOI Type</span>      <span class="font-medium">${loi.name}</span>
+                    <span class="text-gray-500">Property</span>      <span class="font-medium">${property.city}, ${property.state}</span>
+                    <span class="text-gray-500">Submitted by</span>  <span class="font-medium">${data.firstName} ${data.lastName}</span>
+                    <span class="text-gray-500">Company</span>       <span class="font-medium">${data.company}</span>
+                    <span class="text-gray-500">Reply to</span>      <span class="font-medium">${data.email}</span>
+                </div>
+            </div>
+
+            <!-- Broker notifications -->
+            <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-left">
+                <p class="text-xs font-semibold text-green-700 uppercase tracking-wide mb-2">📧 Broker notification sent to</p>
+                <ul class="space-y-1">${brokerList}</ul>
+            </div>
+
+            <!-- What’s next -->
+            <div class="bg-[#ffc220]/10 border border-[#ffc220]/40 rounded-xl p-4 mb-6 text-left">
+                <p class="text-sm text-gray-700">
+                    <strong>What’s Next?</strong> A broker will review your LOI and respond to
+                    <strong>${data.email}</strong> within 1–2 business days.
+                </p>
+            </div>
+
+            <button onclick="closeAllModals()"
+                    class="w-full bg-[#0053e2] hover:bg-[#003fa8] text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                ← Back to Properties
+            </button>
+        </div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+// ─── Success modal: mailto fallback (no backend available) ───────────────────
 function showSuccessModal(data, loi, property, loiDetails, brokerEmail) {
     const modal = document.getElementById('loi-form-modal');
     const content = document.getElementById('loi-form-content');
@@ -2423,12 +2327,7 @@ function showSuccessModal(data, loi, property, loiDetails, brokerEmail) {
     `;
 }
 
-// Close all modals
-function closeAllModals() {
-    uploadedLOIFile = null; // Reset uploaded file
-    closeLOIFormModal();
-    closeLOIModal();
-    closePropertyModal();
+// ─── closeAllModals ───────────────────────────────────────────────────────────
 }
 
 // Saved properties management (localStorage-based, no login required)

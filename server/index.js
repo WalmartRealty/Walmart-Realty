@@ -177,7 +177,12 @@ const upload = multer({
 // Initialize Database
 const db = new Database(path.join(__dirname, 'walmart-realty.db'));
 
-// Create tables
+// ── Safe migrations: add columns that may be missing from older DB files ──
+const loiCols = db.prepare('PRAGMA table_info(loi_submissions)').all().map(c => c.name);
+if (!loiCols.includes('form_data')) {
+    db.exec('ALTER TABLE loi_submissions ADD COLUMN form_data TEXT');
+    console.log('[MIGRATION] Added form_data column to loi_submissions');
+}
 db.exec(`
     CREATE TABLE IF NOT EXISTS properties (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -713,9 +718,11 @@ app.post('/api/loi', upload.single('document'), async (req, res) => {
     }
     
     const result = db.prepare(`
-        INSERT INTO loi_submissions (property_id, loi_type, first_name, last_name, email, phone, company, company_address, form_data, document_path)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(property_id, loi_type, first_name, last_name, email, phone, company, company_address, form_data, documentPath);
+        INSERT INTO loi_submissions
+            (property_id, loi_type, first_name, last_name, email, phone,
+             company, company_address, form_data)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(property_id, loi_type, first_name, last_name, email, phone, company, company_address, form_data);
     
     // Send email notifications to brokers
     let emailResults = [];
