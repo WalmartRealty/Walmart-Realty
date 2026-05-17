@@ -892,13 +892,37 @@ app.get('/api/brokers/state/:state', (req, res) => {
     res.json(citySpecific.length > 0 ? citySpecific : stateWide);
 });
 
-// Get brokers for a specific property — respects city > state priority
+// Get brokers for a specific property
+// Priority: brokers table (city-specific) → brokers table (state-wide) → legacy embedded field
 app.get('/api/brokers/property/:propertyId', (req, res) => {
     const { propertyId } = req.params;
     const property = db.prepare('SELECT city, state, broker_name, broker_email, broker_phone FROM properties WHERE id = ?').get(propertyId);
     if (!property) return res.status(404).json({ error: 'Property not found' });
-    
-    // Level 1: property has a directly embedded broker — return it wrapped as an array
+
+    // Level 1 & 2: brokers table is the authoritative source — always checked first
+    if (property.state) {
+        const allStatebrokers = db.prepare(`
+            SELECT * FROM brokers WHERE is_active = 1 AND states LIKE ?
+        `).all(`%${property.state.toUpperCase()}%`);
+
+        const cityNorm = (property.city || '').trim().toLowerCase();
+
+        // Level 1: city-specific brokers
+        const cityBrokers = allStatebrokers
+            .filter(b => b.cities && b.cities.split(',').map(c => c.trim().toLowerCase()).includes(cityNorm))
+            .map(b => ({ ...b, territory: 'city' }));
+
+        if (cityBrokers.length > 0) return res.json(cityBrokers);
+
+        // Level 2: state-wide brokers (no city filter set)
+        const stateBrokers = allStatebrokers
+            .filter(b => !b.cities || b.cities.trim() === '')
+            .map(b => ({ ...b, territory: 'state' }));
+
+        if (stateBrokers.length > 0) return res.json(stateBrokers);
+    }
+
+    // Level 3: legacy fallback — broker fields embedded directly on the property record
     if (property.broker_name) {
         return res.json([{
             id: null,
@@ -910,26 +934,8 @@ app.get('/api/brokers/property/:propertyId', (req, res) => {
             territory: 'property'
         }]);
     }
-    
-    const allStatebrokers = db.prepare(`
-        SELECT * FROM brokers WHERE is_active = 1 AND states LIKE ?
-    `).all(`%${property.state.toUpperCase()}%`);
-    
-    const cityNorm = (property.city || '').trim().toLowerCase();
-    
-    // Level 2: city-specific brokers
-    const cityBrokers = allStatebrokers
-        .filter(b => b.cities && b.cities.split(',').map(c => c.trim().toLowerCase()).includes(cityNorm))
-        .map(b => ({ ...b, territory: 'city' }));
-    
-    if (cityBrokers.length > 0) return res.json(cityBrokers);
-    
-    // Level 3: state-wide brokers (no cities set)
-    const stateBrokers = allStatebrokers
-        .filter(b => !b.cities || b.cities.trim() === '')
-        .map(b => ({ ...b, territory: 'state' }));
-    
-    res.json(stateBrokers);
+
+    res.json([]);
 });
 
 // Add single broker (admin only)
