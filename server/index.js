@@ -769,13 +769,13 @@ app.get('/api/loi', authenticateToken, (req, res) => {
 // Update LOI status (admin only)
 app.patch('/api/loi/:id/status', authenticateToken, (req, res) => {
     const { id } = req.params;
-    const { status, broker_notes } = req.body;
-    
-    db.prepare('UPDATE loi_submissions SET status = ?, broker_notes = ? WHERE id = ?')
-        .run(status, broker_notes, id);
-    
+    const { status, notes } = req.body;
+
+    db.prepare('UPDATE loi_submissions SET status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+        .run(status, notes || null, id);
+
     logActivity(req.user.id, 'LOI_STATUS_UPDATE', 'loi', id, { status });
-    
+
     res.json({ message: 'LOI status updated' });
 });
 

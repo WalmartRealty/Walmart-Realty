@@ -1164,6 +1164,11 @@
                 }
             });
             
+            // Refresh data when switching tabs
+            if (tab === 'loi') {
+                loadLOISubmissions();
+            }
+
             // Load inquiries data when switching to inquiries tab
             if (tab === 'inquiries') {
                 loadInquiries();
@@ -1712,12 +1717,125 @@
         
         function getLoiStatusClass(status) {
             const classes = {
-                pending: 'bg-yellow-100 text-yellow-800',
+                pending:  'bg-yellow-100 text-yellow-800',
                 reviewed: 'bg-blue-100 text-blue-800',
                 accepted: 'bg-green-100 text-green-800',
                 rejected: 'bg-red-100 text-red-800'
             };
             return classes[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function viewLOI(id) {
+            const loi = loiSubmissions.find(l => l.id === id);
+            if (!loi) return;
+
+            // Parse any extra form fields stored in form_data JSON
+            let extras = {};
+            try { extras = JSON.parse(loi.form_data || '{}'); } catch (_) {}
+
+            // Build extra-fields rows (skip fields already shown in the main grid)
+            const skip = new Set(['firstName','lastName','email','phone','company',
+                                   'companyAddress','loiType','property','source']);
+            const extraRows = Object.entries(extras)
+                .filter(([k]) => !skip.has(k) && extras[k])
+                .map(([k, v]) => `
+                    <div class="flex gap-2">
+                        <span class="text-gray-500 capitalize min-w-[120px]">${k.replace(/([A-Z])/g,' $1').trim()}:</span>
+                        <span class="font-medium text-gray-900">${v}</span>
+                    </div>`).join('');
+
+            document.getElementById('loi-modal-content').innerHTML = `
+                <!-- Header -->
+                <div class="flex items-start justify-between p-6 border-b">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">LOI #${loi.id} — ${loi.city || ''}, ${loi.state || ''}</h2>
+                        <p class="text-sm text-gray-500 mt-1">${loi.loi_type} &nbsp;·&nbsp; Submitted ${new Date(loi.created_at).toLocaleString()}</p>
+                    </div>
+                    <button onclick="document.getElementById('loi-detail-modal').classList.add('hidden')" class="p-2 rounded-full hover:bg-gray-100">
+                        <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="p-6 space-y-6 overflow-y-auto max-h-[65vh]">
+                    <!-- Submitter Info -->
+                    <div class="bg-gray-50 rounded-xl p-5">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Submitter</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            <div class="flex gap-2"><span class="text-gray-500 min-w-[80px]">Name:</span><span class="font-medium">${loi.first_name} ${loi.last_name}</span></div>
+                            <div class="flex gap-2"><span class="text-gray-500 min-w-[80px]">Company:</span><span class="font-medium">${loi.company || '—'}</span></div>
+                            <div class="flex gap-2"><span class="text-gray-500 min-w-[80px]">Email:</span><a href="mailto:${loi.email}" class="text-[#0053e2] hover:underline font-medium">${loi.email}</a></div>
+                            <div class="flex gap-2"><span class="text-gray-500 min-w-[80px]">Phone:</span><a href="tel:${loi.phone}" class="text-[#0053e2] hover:underline font-medium">${loi.phone || '—'}</a></div>
+                            ${loi.company_address ? `<div class="flex gap-2 col-span-full"><span class="text-gray-500 min-w-[80px]">Address:</span><span class="font-medium">${loi.company_address}</span></div>` : ''}
+                        </div>
+                    </div>
+
+                    <!-- LOI Details -->
+                    ${extraRows ? `
+                    <div class="bg-blue-50 rounded-xl p-5">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">LOI Details</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">${extraRows}</div>
+                    </div>` : ''}
+
+                    <!-- Status + Notes -->
+                    <div class="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Update Status</h3>
+                        <div class="flex items-center gap-3">
+                            <label class="text-sm text-gray-600 min-w-[50px]">Status</label>
+                            <select id="loi-status-${loi.id}" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0053e2]">
+                                ${['pending','reviewed','accepted','rejected'].map(s =>
+                                    `<option value="${s}" ${loi.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600 block mb-1">Internal Notes</label>
+                            <textarea id="loi-notes-${loi.id}" rows="3"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0053e2] resize-none"
+                                placeholder="Add internal notes…">${loi.notes || ''}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-2xl">
+                    <a href="mailto:${loi.email}?subject=Re: Your LOI for ${loi.city}, ${loi.state}&body=Hi ${loi.first_name},%0D%0A%0D%0AThank you for submitting your Letter of Intent for the property in ${loi.city}, ${loi.state}.%0D%0A%0D%0A"
+                       class="flex items-center gap-2 px-4 py-2 border-2 border-[#0053e2] text-[#0053e2] rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        Reply to ${loi.first_name}
+                    </a>
+                    <button onclick="saveLOIStatus(${loi.id})"
+                        class="flex items-center gap-2 px-5 py-2 bg-[#0053e2] hover:bg-[#003eb0] text-white rounded-lg font-semibold text-sm transition-colors">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Save
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('loi-detail-modal').classList.remove('hidden');
+        }
+
+        async function saveLOIStatus(id) {
+            const status = document.getElementById(`loi-status-${id}`).value;
+            const notes  = document.getElementById(`loi-notes-${id}`).value;
+            try {
+                const res = await fetch(`${API_BASE}/api/loi/${id}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ status, notes })
+                });
+                if (!res.ok) throw new Error(await res.text());
+                // Update local cache so the table reflects the change immediately
+                const loi = loiSubmissions.find(l => l.id === id);
+                if (loi) { loi.status = status; loi.notes = notes; }
+                renderLOITable();
+                document.getElementById('loi-detail-modal').classList.add('hidden');
+                showToast('LOI status updated ✅');
+            } catch (err) {
+                showToast('Failed to save: ' + err.message);
+            }
         }
         
         // ========== INQUIRIES ==========
@@ -2589,5 +2707,12 @@
         // Initialize
         checkAuth();
     </script>
+    <!-- LOI Detail Modal -->
+    <div id="loi-detail-modal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl" id="loi-modal-content">
+            <!-- Populated by viewLOI() -->
+        </div>
+    </div>
+
 </body>
 </html>
