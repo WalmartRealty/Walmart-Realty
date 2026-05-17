@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: walmart-realty-server
+    env: node
+    # "starter" = $7/mo — always on (no sleep), required for persistent disk.
+    # The free tier spins down after 15 min of inactivity (bad for a trade show).
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    # Render injects PORT automatically; the server already reads process.env.PORT.
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render auto-generates a cryptographically secure random value.
+      - key: JWT_SECRET
+        generateValue: true
+      # Persistent disk paths — must match the disk.mountPath below.
+      - key: DATABASE_PATH
+        value: /var/data/walmart-realty.db
+      - key: UPLOADS_DIR
+        value: /var/data/uploads
+      # Allow the GitHub Pages frontend to call this server.
+      - key: ALLOWED_ORIGINS
+        value: https://walmartrealty.github.io
+      # SMTP — fill these in via the Render dashboard (Environment tab).
+      # Never put real credentials in this file.
+      - key: SMTP_HOST
+        value: smtp.office365.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false   # set manually in Render dashboard
+      - key: SMTP_PASS
+        sync: false   # set manually in Render dashboard
+      - key: SMTP_FROM
+        sync: false   # set manually in Render dashboard
+      # Admin credentials — set via Render dashboard, not here.
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+    # 1 GB persistent disk — survives deploys and restarts.
+    # SQLite DB + uploaded files live here.
+    disk:
+      name: walmart-realty-data
+      mountPath: /var/data
+      sizeGB: 1

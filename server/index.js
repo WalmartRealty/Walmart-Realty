@@ -116,9 +116,13 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
+// UPLOADS_DIR — resolves to a persistent volume path in cloud deploys
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'uploads');
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
 // Static file serving
 app.use(express.static(path.join(__dirname, '..')));
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 // ============= FILE UPLOAD SECURITY =============
 
@@ -137,12 +141,7 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 // File upload configuration with security
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, '..', 'uploads');
-        // Ensure upload directory exists
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
+        cb(null, UPLOADS_DIR);
     },
     filename: (req, file, cb) => {
         // Sanitize filename - remove path traversal attempts
@@ -175,7 +174,13 @@ const upload = multer({
 });
 
 // Initialize Database
-const db = new Database(path.join(__dirname, 'walmart-realty.db'));
+// DATABASE_PATH env var lets Render (or any cloud host) point to a persistent disk.
+const DB_PATH = process.env.DATABASE_PATH || path.join(__dirname, 'walmart-realty.db');
+if (process.env.DATABASE_PATH) {
+    // Ensure the directory exists (e.g. /var/data/ on Render)
+    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+}
+const db = new Database(DB_PATH);
 
 // ── Safe migrations: add columns that may be missing from older DB files ──
 const loiCols = db.prepare('PRAGMA table_info(loi_submissions)').all().map(c => c.name);
