@@ -1539,7 +1539,8 @@ async function loadBrokerContact(state, propertyId) {
     // Priority 2: brokers.json (committed to repo, works on GitHub Pages)
     try {
         if (!_brokersJsonCache) {
-            const res = await fetch('/brokers.json', { cache: 'no-store' });
+            // Relative path works on both localhost AND GitHub Pages subdirectory
+            const res = await fetch('brokers.json', { cache: 'no-store' });
             if (res.ok) _brokersJsonCache = await res.json();
         }
         if (_brokersJsonCache) {
