@@ -1884,11 +1884,44 @@ async function submitLOI(event) {
         ? _resolveBrokersFromList(_brokersJsonCache, property?.state || '', property?.city || '')
         : [];
 
-    // Build the to: list — real broker emails, or dispositions as last resort
+    // ── Internal territory routing (Disposition Alignment Map) ───────────────
+    // Source: Disposition Alignment Map.pptx — last updated May 2026
+    const BRETT = 'brett.moncrief@walmart.com';
+    const AMY   = 'amy.corritori@walmart.com';
     const DISPOSITIONS = 'realestatedispositions@walmart.com';
-    const toAddresses  = fallbackBrokers.length
+
+    const BRETT_STATES = new Set([
+        // West + Pacific Northwest
+        'AK','AZ','CA','CO','HI','ID','MT','NM','NV','OR','UT','WA','WY',
+        // Midwest + Great Plains
+        'IA','IL','KS','MI','MN','MO','ND','NE','OH','OK','SD','WI',
+        // South Central
+        'AR','LA'
+    ]);
+    const AMY_STATES = new Set([
+        // Southeast
+        'AL','FL','GA','MS','SC','TN',
+        // Mid-Atlantic + Northeast
+        'CT','DE','IN','KY','MA','MD','ME','NC','NH','NJ','NY','PA','RI','VA','VT','WV',
+        // South
+        'TX'
+    ]);
+
+    const propState    = (property?.state || '').trim().toUpperCase();
+    const internalTo   = AMY_STATES.has(propState) ? AMY
+                       : BRETT_STATES.has(propState) ? BRETT
+                       : DISPOSITIONS; // fallback for territories not on map
+
+    // TO: broker (if found) — else the territory manager directly
+    // CC: always the territory manager + shared dispositions inbox
+    const toAddresses = fallbackBrokers.length
         ? fallbackBrokers.map(b => b.email).join(',')
-        : DISPOSITIONS;
+        : internalTo;
+
+    const ccList = [...new Set([
+        internalTo,
+        DISPOSITIONS
+    ])].join(',');
 
     const subject = encodeURIComponent(`LOI: ${d.loiType} — ${property?.city}, ${property?.state}`);
     const body = encodeURIComponent(
@@ -1901,12 +1934,11 @@ async function submitLOI(event) {
         `Comments: ${d.additionalComments || 'None'}\n\n` +
         `-- Submitted via Walmart Realty --`
     );
-    // Always CC dispositions so admin sees every LOI even in static mode
-    const cc = encodeURIComponent(DISPOSITIONS);
+    const cc = encodeURIComponent(ccList);
 
     const brokersNotified = fallbackBrokers.length
         ? fallbackBrokers.map(b => ({ name: b.name, email: b.email }))
-        : [{ name: 'Walmart Realty', email: DISPOSITIONS }];
+        : [{ name: 'Walmart Realty', email: internalTo }];
 
     showSuccessModalAPI(d, d.loiType, property, { brokers_notified: brokersNotified });
     setTimeout(() => {
