@@ -724,24 +724,24 @@ app.post('/api/loi', upload.single('document'), async (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(property_id, loi_type, first_name, last_name, email, phone, company, company_address, form_data);
     
-    // Send email notifications to brokers
+    // Send email notifications to brokers (+ always CC dispositions)
     let emailResults = [];
-    if (brokers.length > 0) {
-        try {
-            emailResults = await sendLOINotification({
-                brokers,
-                property,
-                loiData: { loi_type, form_data },
-                submitterInfo: {
-                    name: `${first_name} ${last_name}`,
-                    email,
-                    phone,
-                    company
-                }
-            });
-        } catch (err) {
-            console.error('Failed to send email notifications:', err);
-        }
+    const DISPOSITIONS = 'realestatedispositions@walmart.com';
+    const emailTargets = brokers.length > 0 ? brokers : [{ name: 'Walmart Realty', email: DISPOSITIONS }];
+    try {
+        emailResults = await sendLOINotification({
+            brokers: emailTargets,
+            property,
+            loiData: { loi_type, form_data },
+            submitterInfo: {
+                name: `${first_name} ${last_name}`,
+                email,
+                phone,
+                company
+            }
+        });
+    } catch (err) {
+        console.error('Failed to send email notifications:', err);
     }
     
     // Return broker info so frontend can show who will receive the LOI

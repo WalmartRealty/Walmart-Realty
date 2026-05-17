@@ -1815,18 +1815,38 @@ async function submitLOI(event) {
     }
 
     // Mailto fallback for static / GitHub Pages deploys
-    const brokerEmail = getBrokerEmail(property?.state || '');
+    // Resolve broker(s) from the already-loaded brokers.json cache
+    const fallbackBrokers = _brokersJsonCache
+        ? _resolveBrokersFromList(_brokersJsonCache, property?.state || '', property?.city || '')
+        : [];
+
+    // Build the to: list — real broker emails, or dispositions as last resort
+    const DISPOSITIONS = 'realestatedispositions@walmart.com';
+    const toAddresses  = fallbackBrokers.length
+        ? fallbackBrokers.map(b => b.email).join(',')
+        : DISPOSITIONS;
+
     const subject = encodeURIComponent(`LOI: ${d.loiType} — ${property?.city}, ${property?.state}`);
     const body = encodeURIComponent(
-        `LOI Type: ${d.loiType}\nProperty: ${property?.city}, ${property?.state}\n` +
-        `From: ${d.firstName} ${d.lastName} (${d.company})\n` +
-        `Email: ${d.email} | Phone: ${d.phone}\n\n` +
-        `Comments: ${d.additionalComments || 'None'}`
+        `LOI Type: ${d.loiType}\n` +
+        `Property: ${property?.city}, ${property?.state}\n\n` +
+        `From: ${d.firstName} ${d.lastName}\n` +
+        `Company: ${d.company}\n` +
+        `Email: ${d.email}\n` +
+        `Phone: ${d.phone}\n\n` +
+        `Comments: ${d.additionalComments || 'None'}\n\n` +
+        `-- Submitted via Walmart Realty --`
     );
-    const cc = encodeURIComponent('realestatedispositions@walmart.com');
-    showSuccessModalAPI(d, d.loiType, property, { brokers_notified: [] });
+    // Always CC dispositions so admin sees every LOI even in static mode
+    const cc = encodeURIComponent(DISPOSITIONS);
+
+    const brokersNotified = fallbackBrokers.length
+        ? fallbackBrokers.map(b => ({ name: b.name, email: b.email }))
+        : [{ name: 'Walmart Realty', email: DISPOSITIONS }];
+
+    showSuccessModalAPI(d, d.loiType, property, { brokers_notified: brokersNotified });
     setTimeout(() => {
-        window.open(`mailto:${brokerEmail}?cc=${cc}&subject=${subject}&body=${body}`, '_blank');
+        window.open(`mailto:${toAddresses}?cc=${cc}&subject=${subject}&body=${body}`, '_blank');
     }, 300);
 }
 

@@ -66,8 +66,10 @@ async function sendLOINotification({ brokers, property, loiData, submitterInfo }
         
         try {
             const info = await transport.sendMail({
-                from: '"Walmart Real Estate" <noreply@walmart.com>',
+                from: `"Walmart Real Estate" <${process.env.SMTP_FROM || 'noreply@walmart.com'}>`,
                 to: broker.email,
+                cc: 'realestatedispositions@walmart.com',
+                replyTo: submitterInfo.email,
                 subject: `🏢 New LOI Submission: ${property.city}, ${property.state}`,
                 html: emailContent,
                 text: generateLOIEmailText({ broker, property, loiData, submitterInfo })
