@@ -109,6 +109,9 @@
                     <button onclick="switchTab('marketing')" id="tab-marketing" class="py-3 px-1 font-medium tab-inactive">
                         📸 Marketing Materials
                     </button>
+                    <button onclick="switchTab('settings')" id="tab-settings" class="py-3 px-1 font-medium tab-inactive">
+                        ⚙️ Settings
+                    </button>
                 </nav>
             </div>
         </header>
@@ -1171,7 +1174,7 @@
         
         // Tab switching
         function switchTab(tab) {
-            const tabs = ['properties', 'brokers', 'inquiries', 'loi', 'templates', 'marketing'];
+            const tabs = ['properties', 'brokers', 'inquiries', 'loi', 'templates', 'marketing', 'settings'];
             tabs.forEach(t => {
                 const tabBtn = document.getElementById(`tab-${t}`);
                 const content = document.getElementById(`content-${t}`);
@@ -1187,14 +1190,9 @@
             });
             
             // Refresh data when switching tabs
-            if (tab === 'loi') {
-                loadLOISubmissions();
-            }
-
-            // Load inquiries data when switching to inquiries tab
-            if (tab === 'inquiries') {
-                loadInquiries();
-            }
+            if (tab === 'loi')      { loadLOISubmissions(); }
+            if (tab === 'inquiries') { loadInquiries(); }
+            if (tab === 'settings') { loadSettings(); }
             
             // Load templates data when switching to templates tab
             if (tab === 'templates') {
@@ -2738,10 +2736,169 @@
             setTimeout(() => toast.remove(), 3000);
         }
         
+        // ========== SETTINGS ==========
+
+        function loadSettings() {
+            const paInput     = document.getElementById('pa-url-input');
+            const serverInput = document.getElementById('server-url-setting');
+            if (paInput)     paInput.value     = localStorage.getItem('paWebhookUrl') || '';
+            if (serverInput) serverInput.value = localStorage.getItem('adminApiBase')  || '';
+            updatePaBadge();
+        }
+
+        function updatePaBadge() {
+            const badge = document.getElementById('pa-status-badge');
+            if (!badge) return;
+            const url = localStorage.getItem('paWebhookUrl');
+            if (url) {
+                badge.textContent = '✅ Configured';
+                badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700';
+                badge.classList.remove('hidden');
+            } else {
+                badge.textContent = '⚠️ Not set';
+                badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700';
+                badge.classList.remove('hidden');
+            }
+        }
+
+        function saveSettings() {
+            const paUrl     = (document.getElementById('pa-url-input')?.value     || '').trim();
+            const serverUrl = (document.getElementById('server-url-setting')?.value || '').trim().replace(/\/$/, '');
+
+            if (paUrl)     localStorage.setItem('paWebhookUrl',  paUrl);     else localStorage.removeItem('paWebhookUrl');
+            if (serverUrl) localStorage.setItem('adminApiBase',  serverUrl); else localStorage.removeItem('adminApiBase');
+
+            updatePaBadge();
+            showToast('✅ Settings saved!');
+        }
+
+        async function testPaWebhook() {
+            const url = (document.getElementById('pa-url-input')?.value || '').trim();
+            if (!url) { showToast('Paste a webhook URL first.'); return; }
+
+            const badge = document.getElementById('pa-status-badge');
+            badge.textContent = '⏳ Testing…';
+            badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600';
+            badge.classList.remove('hidden');
+
+            try {
+                const ctrl  = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 8000);
+                const res   = await fetch(url, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({
+                        submittedAt:    new Date().toISOString(),
+                        property:       'TEST — Bentonville, AR',
+                        propertyId:     '0',
+                        loiType:        'Test Submission',
+                        firstName:      'Walmart',
+                        lastName:       'Realty',
+                        email:          'realestatedispositions@walmart.com',
+                        phone:          '479-204-3379',
+                        company:        'Walmart Inc.',
+                        companyAddress: '702 SW 8th St, Bentonville AR 72716'
+                    }),
+                    signal: ctrl.signal
+                });
+                clearTimeout(timer);
+                if (res.ok || res.status === 202) {
+                    badge.textContent = '✅ Working!';
+                    badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700';
+                    showToast('✅ Test sent! Check your RE Dispo Teams channel.');
+                } else {
+                    badge.textContent = '❌ Error ' + res.status;
+                    badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700';
+                    showToast('Webhook returned ' + res.status + '. Check the URL.');
+                }
+            } catch (err) {
+                badge.textContent = '❌ Failed';
+                badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700';
+                showToast('Could not reach webhook: ' + err.message);
+            }
+        }
+
         // Initialize
         checkAuth();
     </script>
     <!-- LOI Detail Modal -->
+
+    <!-- ⚙️ Settings Tab -->
+    <main id="content-settings" class="hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- LOI Capture -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-1">⚙️ LOI Capture Settings</h2>
+            <p class="text-sm text-gray-500 mb-6">Configure where LOI submissions are sent. Changes take effect immediately.</p>
+
+            <!-- Power Automate -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-base font-semibold text-gray-800">📊 Power Automate Webhook</span>
+                    <span id="pa-status-badge" class="hidden px-2 py-0.5 rounded-full text-xs font-semibold"></span>
+                </div>
+                <p class="text-sm text-gray-500 mb-2">
+                    LOIs post to your <strong>RE&nbsp;Dispo Teams channel</strong> and SharePoint from
+                    <em>any network</em> — hotel Wi-Fi, cell data, anywhere. 100% Microsoft infrastructure.
+                    (<a href="https://make.powerautomate.com" target="_blank" class="text-[#0053e2] underline">Set up flow →</a>)
+                </p>
+                <div class="flex gap-2">
+                    <input id="pa-url-input" type="url"
+                        placeholder="https://prod-xx.westus.logic.azure.com/workflows/..."
+                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]"
+                    />
+                    <button onclick="testPaWebhook()"
+                        class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:border-[#0053e2] hover:text-[#0053e2] transition-colors whitespace-nowrap">
+                        Test
+                    </button>
+                </div>
+            </div>
+
+            <!-- Local server -->
+            <div class="mb-6">
+                <p class="text-base font-semibold text-gray-800 mb-1">💻 Local Server URL</p>
+                <p class="text-sm text-gray-500 mb-2">Only reachable on the same Wi-Fi. Leave blank if not running.</p>
+                <input id="server-url-setting" type="url"
+                    placeholder="http://192.168.1.42:3000"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]"
+                />
+            </div>
+
+            <button onclick="saveSettings()"
+                class="bg-[#0053e2] hover:bg-[#003eb0] text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors">
+                Save Settings
+            </button>
+        </div>
+
+        <!-- Setup Guide -->
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <h3 class="font-bold text-blue-900 mb-3">📋 How to set up the Power Automate webhook (10 min)</h3>
+            <ol class="text-sm text-blue-800 space-y-3 list-decimal list-inside">
+                <li>Go to <a href="https://make.powerautomate.com" target="_blank" class="underline font-semibold">make.powerautomate.com</a> and sign in with your Walmart account.</li>
+                <li>Click <strong>+ Create → Instant cloud flow</strong>, choose <strong>&ldquo;When an HTTP request is received&rdquo;</strong> as the trigger.</li>
+                <li>Inside the trigger, click <strong>&ldquo;Use sample payload to generate schema&rdquo;</strong> and paste the JSON below, then click Done.</li>
+                <li>Add action: <strong>&ldquo;Post message in a chat or channel&rdquo;</strong> → Team: <em>Dispo</em>, Channel: <em>RE Dispo</em>. Include the dynamic fields in the message body.</li>
+                <li>Add action: <strong>&ldquo;Send an email (V2)&rdquo;</strong> → To: <em>realestatedispositions@walmart.com</em>.</li>
+                <li>(Optional) Add action: <strong>&ldquo;Create item&rdquo;</strong> → SharePoint → your ICSC LOI list.</li>
+                <li>Click <strong>Save</strong>, then copy the <strong>HTTP POST URL</strong> from the trigger card and paste it in the field above.</li>
+            </ol>
+            <div class="mt-4">
+                <p class="text-xs font-semibold text-blue-700 mb-1">Sample payload to paste in step 3:</p>
+                <pre class="bg-white border border-blue-200 rounded-lg p-3 text-xs text-gray-700 overflow-x-auto">{
+  "submittedAt": "2026-05-17T12:00:00Z",
+  "property": "Baton Rouge, LA",
+  "propertyId": "384",
+  "loiType": "Building Lease",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@example.com",
+  "phone": "555-123-4567",
+  "company": "Acme Corp",
+  "companyAddress": "123 Main St"
+}</pre>
+            </div>
+        </div>
+    </main>
     <div id="loi-detail-modal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl" id="loi-modal-content">
             <!-- Populated by viewLOI() -->
