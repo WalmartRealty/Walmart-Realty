@@ -1025,9 +1025,13 @@ function openPropertyModal(id) {
     const mapsLink = `https://www.google.com/maps/@${property.lat},${property.lon},500m/data=!3m1!1e3`;
     
     content.innerHTML = `
+        <!-- Mobile drag handle -->
+        <div class="flex justify-center pt-3 pb-1 sm:hidden">
+            <div class="w-10 h-1 rounded-full bg-gray-300"></div>
+        </div>
         <div class="relative">
             <!-- Interactive Map Container -->
-            <div id="property-map" class="w-full h-64 md:h-80 bg-gray-200 z-0"></div>
+            <div id="property-map" class="w-full h-52 sm:h-64 md:h-80 bg-gray-200 z-0"></div>
             <button onclick="closePropertyModal()" 
                     class="absolute top-4 right-4 p-2 bg-white/90 rounded-full hover:bg-white transition-colors focus-visible z-10"
                     aria-label="Close modal">
@@ -1040,14 +1044,14 @@ function openPropertyModal(id) {
                 ${property.listingType === 'lease' ? '<span class="px-4 py-2 rounded-full text-sm font-semibold" style="background:#a9ddf7;color:#001e60">For Lease</span>' : property.listingType === 'ground_lease' ? '<span class="px-4 py-2 rounded-full text-sm font-semibold" style="background:#a9ddf7;color:#001e60">Ground Lease</span>' : ''}
             </div>
             <a href="${mapsLink}" target="_blank" rel="noopener noreferrer" 
-               class="absolute bottom-4 right-4 px-4 py-2 rounded-full text-sm font-semibold bg-white text-gray-800 hover:bg-gray-100 transition-colors z-10 flex items-center gap-2">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               class="absolute bottom-4 right-4 px-3 py-2 rounded-full text-sm font-semibold bg-white text-gray-800 hover:bg-gray-100 transition-colors z-10 flex items-center gap-2">
+                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                 </svg>
-                Open in Google Maps
+                <span class="hidden sm:inline">Open in Google Maps</span>
             </a>
         </div>
-        <div class="p-6 md:p-8">
+        <div class="p-4 sm:p-6 md:p-8">
             <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
                 <div>
                     <h2 id="modal-title" class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">${property.title}</h2>
@@ -1058,25 +1062,25 @@ function openPropertyModal(id) {
                         </svg>
                         ${property.city}, ${property.state} ${property.zip}
                     </p>
-                    <p class="text-gray-400 text-sm mt-1">Coordinates: ${property.lat}, ${property.lon}</p>
+                    <p class="text-gray-400 text-sm mt-1 hidden sm:block">Coordinates: ${property.lat}, ${property.lon}</p>
                 </div>
                 <div class="text-right">
                     ${isSold ? '' : `<p class="text-2xl font-bold text-walmart-blue">${formatPrice(property.price, property.listingType)}</p>`}
                 </div>
             </div>
             
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="bg-gray-100 rounded-2xl shadow-md p-4 text-center">
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div class="bg-gray-100 rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 text-center">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Lot Size</p>
-                    <p class="text-xl font-bold text-gray-900 leading-tight">${property.lotSize}</p>
+                    <p class="text-base sm:text-xl font-bold text-gray-900 leading-tight">${property.lotSize}</p>
                 </div>
-                <div class="bg-gray-100 rounded-2xl shadow-md p-4 text-center">
+                <div class="bg-gray-100 rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 text-center">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">State</p>
-                    <p class="text-xl font-bold text-gray-900 leading-tight">${property.state}</p>
+                    <p class="text-base sm:text-xl font-bold text-gray-900 leading-tight">${property.state}</p>
                 </div>
-                <div class="bg-gray-100 rounded-2xl shadow-md p-4 text-center">
+                <div class="bg-gray-100 rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 text-center">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Type</p>
-                    <p class="text-xl font-bold text-[#0053e2] leading-tight">${property.type === 'retail' ? 'Retail' : 'Land'}</p>
+                    <p class="text-base sm:text-xl font-bold text-[#0053e2] leading-tight">${property.type === 'retail' ? 'Retail' : 'Land'}</p>
                 </div>
             </div>
 
@@ -1103,7 +1107,7 @@ function openPropertyModal(id) {
                         <h3 class="text-white font-bold text-base tracking-wide uppercase">Broker Contact</h3>
                     </div>
                     <div id="broker-contact-container" class="divide-y divide-gray-100 min-h-[80px]">
-                        <div class="animate-pulse text-gray-400 text-sm">Loading contact info…</div>
+                        <div class="flex items-center justify-center py-6 animate-pulse text-gray-400 text-sm">Loading contact info…</div>
                     </div>
                 </div>
             </div>
