@@ -1488,12 +1488,41 @@ function brokerCardHtml(b) {
         </div>`;
 }
 
+// Cache for brokers.json — fetched once, reused for every property open
+let _brokersJsonCache = null;
+
+/** Resolve brokers for a property from a static brokers array (same logic as the server). */
+function _resolveBrokersFromList(allBrokers, stateCode, cityName) {
+    const stateUpper = (stateCode || '').toUpperCase();
+    const cityNorm   = (cityName  || '').trim().toLowerCase();
+
+    const stateMatches = allBrokers.filter(
+        b => b.is_active && b.states && b.states.toUpperCase().includes(stateUpper)
+    );
+
+    // Level 1: city-specific
+    const cityBrokers = stateMatches.filter(
+        b => b.cities && b.cities.split(',').map(c => c.trim().toLowerCase()).includes(cityNorm)
+    );
+    if (cityBrokers.length > 0) return cityBrokers;
+
+    // Level 2: state-wide (no city list)
+    const stateBrokers = stateMatches.filter(b => !b.cities || b.cities.trim() === '');
+    if (stateBrokers.length > 0) return stateBrokers;
+
+    // Level 3: any broker covering this state
+    return stateMatches;
+}
+
 // Load broker contact info for a property — handles 1–N brokers
 async function loadBrokerContact(state, propertyId) {
     const container = document.getElementById('broker-contact-container');
     if (!container) return;
 
-    // Try the API first (local server)
+    const property = properties.find(p => p.id === propertyId || p.id === parseInt(propertyId));
+    const cityName  = property?.city || '';
+
+    // Priority 1: live API (local server / hosted backend)
     try {
         const res = await fetch(`/api/brokers/property/${propertyId}`);
         if (res.ok) {
@@ -1504,11 +1533,25 @@ async function loadBrokerContact(state, propertyId) {
             }
         }
     } catch (_) {
-        // API not available — static/GitHub Pages mode, fall through
+        // API not available — GitHub Pages / static mode, fall through
     }
 
-    // Static fallback: use broker fields embedded directly on the property object
-    const property = properties.find(p => p.id === propertyId || p.id === parseInt(propertyId));
+    // Priority 2: brokers.json (committed to repo, works on GitHub Pages)
+    try {
+        if (!_brokersJsonCache) {
+            const res = await fetch('/brokers.json', { cache: 'no-store' });
+            if (res.ok) _brokersJsonCache = await res.json();
+        }
+        if (_brokersJsonCache) {
+            const matched = _resolveBrokersFromList(_brokersJsonCache, state, cityName);
+            if (matched.length > 0) {
+                container.innerHTML = matched.map(brokerCardHtml).join('');
+                return;
+            }
+        }
+    } catch (_) { /* brokers.json not available */ }
+
+    // Priority 3: legacy embedded broker fields on the property record
     if (property && property.broker_name) {
         container.innerHTML = brokerCardHtml({
             name: property.broker_name,
@@ -1531,7 +1574,7 @@ async function loadBrokerContact(state, propertyId) {
         return;
     }
 
-    // Final fallback — Walmart Realty contact
+    // Final fallback — Walmart Realty generic contact
     const emailIcon = `<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`;
     container.innerHTML = `
         <div class="flex items-center gap-4 py-4 px-5">
@@ -1917,8 +1960,7 @@ function showSuccessModal(data, loi, property, loiDetails, brokerEmail) {
     `;
 }
 
-// ─── closeAllModals ───────────────────────────────────────────────────────────
-}
+
 
 // Saved properties management (localStorage-based, no login required)
 function getSavedProperties() {
