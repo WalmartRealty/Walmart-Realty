@@ -1799,8 +1799,12 @@ async function submitLOI(event) {
     payload.append('company_address', d.companyAddress || '');
     payload.append('form_data',      JSON.stringify({ ...d, property: property?.city + ', ' + property?.state }));
 
+    // Use the admin-configured server URL when available (same key admin.html saves).
+    // This lets GitHub Pages submissions reach the local ICSC laptop server.
+    const serverBase = localStorage.getItem('adminApiBase') || window.location.origin;
+
     try {
-        const res = await fetch(`${window.location.origin}/api/loi`, {
+        const res = await fetch(`${serverBase}/api/loi`, {
             method: 'POST',
             body: payload
         });

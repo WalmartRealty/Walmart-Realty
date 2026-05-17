@@ -1674,16 +1674,22 @@
         // ========== LOI SUBMISSIONS ==========
         
         async function loadLOISubmissions() {
+            const tbody = document.getElementById('loi-table-body');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">Loading submissions…</td></tr>';
             try {
                 const response = await fetch(`${API_BASE}/api/loi`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
+                if (response.status === 401) { handleLogout(); return; }
                 if (response.ok) {
                     loiSubmissions = await response.json();
                     renderLOITable();
+                } else {
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-red-500">⚠️ Server error ${response.status} — try refreshing</td></tr>`;
                 }
             } catch (error) {
                 console.error('Failed to load LOI submissions:', error);
+                if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-red-500">⚠️ Could not reach server. Check that the admin server is running.</td></tr>';
             }
         }
         
@@ -1798,7 +1804,7 @@
 
                 <!-- Footer Actions -->
                 <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-2xl">
-                    <a href="mailto:${loi.email}?subject=Re: Your LOI for ${loi.city}, ${loi.state}&body=Hi ${loi.first_name},%0D%0A%0D%0AThank you for submitting your Letter of Intent for the property in ${loi.city}, ${loi.state}.%0D%0A%0D%0A"
+                    <a href="mailto:${loi.email}?subject=${encodeURIComponent('Re: Your LOI for ' + (loi.city||'') + ', ' + (loi.state||''))}&body=${encodeURIComponent('Hi ' + loi.first_name + ',\n\nThank you for submitting your Letter of Intent for the property in ' + (loi.city||'') + ', ' + (loi.state||'') + '.\n\n')}"
                        class="flex items-center gap-2 px-4 py-2 border-2 border-[#0053e2] text-[#0053e2] rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         Reply to ${loi.first_name}
@@ -1843,17 +1849,23 @@
         let inquiries = [];
         
         async function loadInquiries() {
+            const tbody = document.getElementById('inquiries-table-body');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">Loading inquiries…</td></tr>';
             try {
                 const response = await fetch(`${API_BASE}/api/contact`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
+                if (response.status === 401) { handleLogout(); return; }
                 if (response.ok) {
                     inquiries = await response.json();
                     updateInquiryStats();
                     renderInquiriesTable();
+                } else {
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-12 text-center text-red-500">⚠️ Server error ${response.status} — try refreshing</td></tr>`;
                 }
             } catch (error) {
                 console.error('Failed to load inquiries:', error);
+                if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-red-500">⚠️ Could not reach server. Check that the admin server is running.</td></tr>';
             }
         }
         
