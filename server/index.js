@@ -863,6 +863,20 @@ app.delete('/api/contact/:id', authenticateToken, (req, res) => {
 
 // ============= BROKER ROUTES =============
 
+/** Write the active brokers table to brokers.json so GitHub Pages can serve it. */
+function syncBrokersJson() {
+    try {
+        const brokers = db.prepare(
+            'SELECT id, name, email, phone, company, states, cities, photo, is_active FROM brokers WHERE is_active = 1 ORDER BY name ASC'
+        ).all();
+        const dest = path.join(__dirname, '..', 'brokers.json');
+        fs.writeFileSync(dest, JSON.stringify(brokers, null, 2), 'utf8');
+        console.log(`[brokers] Synced ${brokers.length} brokers → brokers.json`);
+    } catch (err) {
+        console.error('[brokers] Failed to write brokers.json:', err.message);
+    }
+}
+
 // Get all brokers (admin only)
 app.get('/api/brokers', authenticateToken, (req, res) => {
     const brokers = db.prepare('SELECT * FROM brokers ORDER BY name ASC').all();
@@ -961,7 +975,7 @@ app.post('/api/brokers', authenticateToken, (req, res) => {
     `).run(name, email, phone, company, states.toUpperCase(), normCities || null);
     
     logActivity(req.user.id, 'CREATE', 'broker', result.lastInsertRowid, { name, email });
-    
+    syncBrokersJson();
     res.status(201).json({ id: result.lastInsertRowid, message: 'Broker added successfully' });
 });
 
@@ -1009,7 +1023,7 @@ app.post('/api/brokers/import', authenticateToken, (req, res) => {
     insertMany(brokers);
     
     logActivity(req.user.id, 'BULK_IMPORT', 'broker', null, { imported, errors: errors.length });
-    
+    syncBrokersJson();
     res.json({ 
         message: `Imported ${imported} brokers`, 
         imported, 
@@ -1042,6 +1056,7 @@ app.post('/api/brokers/:id/photo', authenticateToken, upload.single('photo'), (r
     const photoUrl = `/uploads/${req.file.filename}`;
     db.prepare('UPDATE brokers SET photo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(photoUrl, id);
     logActivity(req.user.id, 'UPDATE', 'broker', id, { photo: photoUrl });
+    syncBrokersJson();
     res.json({ photo: photoUrl, message: 'Photo uploaded successfully' });
 });
 
@@ -1057,7 +1072,7 @@ app.put('/api/brokers/:id', authenticateToken, (req, res) => {
     `).run(name, email, phone, company, states?.toUpperCase(), normCities || null, is_active ? 1 : 0, id);
     
     logActivity(req.user.id, 'UPDATE', 'broker', id, { name, email });
-    
+    syncBrokersJson();
     res.json({ message: 'Broker updated successfully' });
 });
 
@@ -1066,6 +1081,7 @@ app.delete('/api/brokers/:id', authenticateToken, (req, res) => {
     const { id } = req.params;
     db.prepare('DELETE FROM brokers WHERE id = ?').run(id);
     logActivity(req.user.id, 'DELETE', 'broker', id, {});
+    syncBrokersJson();
     res.json({ message: 'Broker deleted successfully' });
 });
 
@@ -1317,9 +1333,17 @@ app.post('/api/admin/sync-github', authenticateToken, (req, res) => {
         fs.writeFileSync(propsFile, JSON.stringify(merged, null, 2), 'utf8');
         console.log(`[sync-github] Wrote ${merged.length} properties to properties.json`);
 
+        // ── Write brokers.json alongside properties.json ──────────────────────
+        const brokersFile = path.join(repoRoot, 'brokers.json');
+        const brokerRows = db.prepare(
+            'SELECT id, name, email, phone, company, states, cities, photo, is_active FROM brokers WHERE is_active = 1 ORDER BY name ASC'
+        ).all();
+        fs.writeFileSync(brokersFile, JSON.stringify(brokerRows, null, 2), 'utf8');
+        console.log(`[sync-github] Wrote ${brokerRows.length} brokers to brokers.json`);
+
         // Attempt git commit + push to main
         try {
-            execSync('git add properties.json', { cwd: repoRoot, stdio: 'pipe' });
+            execSync('git add properties.json brokers.json', { cwd: repoRoot, stdio: 'pipe' });
             execSync('git add -f uploads/', { cwd: repoRoot, stdio: 'pipe' });
             execSync(
                 `git commit -m "Admin: Update ${merged.length} properties from admin panel" --no-verify`,
@@ -1342,6 +1366,7 @@ app.post('/api/admin/sync-github', authenticateToken, (req, res) => {
 
             // Copy updated files into the worktree
             fs.copyFileSync(propsFile, path.join(ghPagesWorktree, 'properties.json'));
+            fs.copyFileSync(brokersFile, path.join(ghPagesWorktree, 'brokers.json'));
             const uploadsSource = path.join(repoRoot, 'uploads');
             const uploadsDest   = path.join(ghPagesWorktree, 'uploads');
             if (!fs.existsSync(uploadsDest)) fs.mkdirSync(uploadsDest, { recursive: true });
@@ -1351,7 +1376,7 @@ app.post('/api/admin/sync-github', authenticateToken, (req, res) => {
                 if (fs.statSync(src).isFile()) fs.copyFileSync(src, dst);
             }
 
-            execSync('git add properties.json', { cwd: ghPagesWorktree, stdio: 'pipe' });
+            execSync('git add properties.json brokers.json', { cwd: ghPagesWorktree, stdio: 'pipe' });
             execSync('git add -f uploads/', { cwd: ghPagesWorktree, stdio: 'pipe' });
             execSync(
                 `git commit -m "Sync: Update ${merged.length} properties from admin panel" --no-verify`,
