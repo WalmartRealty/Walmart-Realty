@@ -103,6 +103,9 @@
                     <button onclick="switchTab('loi')" id="tab-loi" class="py-3 px-1 font-medium tab-inactive">
                         📄 LOI Submissions
                     </button>
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3 px-1 font-medium tab-inactive">
+                        📊 LOI Dashboard
+                    </button>
                     <button onclick="switchTab('templates')" id="tab-templates" class="py-3 px-1 font-medium tab-inactive">
                         📝 LOI Templates
                     </button>
@@ -1174,7 +1177,7 @@
         
         // Tab switching
         function switchTab(tab) {
-            const tabs = ['properties', 'brokers', 'inquiries', 'loi', 'templates', 'marketing', 'settings'];
+            const tabs = ['properties', 'brokers', 'inquiries', 'loi', 'dashboard', 'templates', 'marketing', 'settings'];
             tabs.forEach(t => {
                 const tabBtn = document.getElementById(`tab-${t}`);
                 const content = document.getElementById(`content-${t}`);
@@ -1190,9 +1193,10 @@
             });
             
             // Refresh data when switching tabs
-            if (tab === 'loi')      { loadLOISubmissions(); }
+            if (tab === 'loi')       { loadLOISubmissions(); }
+            if (tab === 'dashboard') { loadDashboard(); }
             if (tab === 'inquiries') { loadInquiries(); }
-            if (tab === 'settings') { loadSettings(); }
+            if (tab === 'settings')  { loadSettings(); }
             
             // Load templates data when switching to templates tab
             if (tab === 'templates') {
@@ -2736,6 +2740,142 @@
             setTimeout(() => toast.remove(), 3000);
         }
         
+        // ========== LOI DASHBOARD ==========
+
+        // Territory map mirrors app.js — source: Disposition Alignment Map.pptx
+        const DASH_BRETT_STATES = new Set([
+            'AK','AR','AZ','CA','CO','HI','IA','ID','IL','KS','LA',
+            'MI','MN','MO','MT','ND','NE','NM','NV','OH','OK','OR','SD','UT','WA','WI','WY'
+        ]);
+        const DASH_AMY_STATES = new Set([
+            'AL','CT','DE','FL','GA','IN','KY','MA','MD','ME','MS',
+            'NC','NH','NJ','NY','PA','RI','SC','TN','TX','VA','VT','WV'
+        ]);
+
+        function dashTerritory(state) {
+            const s = (state || '').trim().toUpperCase();
+            if (DASH_BRETT_STATES.has(s)) return 'brett';
+            if (DASH_AMY_STATES.has(s))  return 'amy';
+            return 'other';
+        }
+
+        let _dashData    = [];   // full enriched LOI list
+        let _dashFilter  = 'all';
+
+        async function loadDashboard() {
+            document.getElementById('dash-offline-notice').classList.add('hidden');
+            document.getElementById('dash-table-body').innerHTML =
+                '<tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">Loading…</td></tr>';
+
+            let raw = [];
+            try {
+                const res = await fetch(`${API_BASE}/api/loi`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (res.status === 401) { handleLogout(); return; }
+                if (res.ok) raw = await res.json();
+                else throw new Error('Server error ' + res.status);
+            } catch {
+                document.getElementById('dash-offline-notice').classList.remove('hidden');
+                document.getElementById('dash-table-body').innerHTML =
+                    '<tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">No server connection — see notice below.</td></tr>';
+                return;
+            }
+
+            // Enrich with territory
+            _dashData = raw.map(l => ({ ...l, territory: dashTerritory(l.state) }));
+            renderDashboardStats();
+            renderDashboardTable();
+            renderStateBreakdowns();
+        }
+
+        function renderDashboardStats() {
+            const brett   = _dashData.filter(l => l.territory === 'brett');
+            const amy     = _dashData.filter(l => l.territory === 'amy');
+            const pending = _dashData.filter(l => (l.status || '').toLowerCase() === 'pending');
+
+            document.getElementById('dash-total').textContent   = _dashData.length;
+            document.getElementById('dash-brett').textContent   = brett.length;
+            document.getElementById('dash-amy').textContent     = amy.length;
+            document.getElementById('dash-pending').textContent = pending.length;
+        }
+
+        function filterDashboard(who) {
+            _dashFilter = who;
+            // Update filter tab styles
+            ['all','brett','amy'].forEach(f => {
+                const btn = document.getElementById(`dfilter-${f}`);
+                if (f === who) {
+                    btn.className = 'py-3 px-4 text-sm font-semibold border-b-2 border-[#0053e2] text-[#0053e2] -mb-px';
+                } else {
+                    btn.className = 'py-3 px-4 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent -mb-px';
+                }
+            });
+            renderDashboardTable();
+        }
+
+        function renderDashboardTable() {
+            const tbody = document.getElementById('dash-table-body');
+            const empty = document.getElementById('dash-empty');
+            const rows  = _dashFilter === 'all'
+                ? _dashData
+                : _dashData.filter(l => l.territory === _dashFilter);
+
+            if (!rows.length) {
+                tbody.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+
+            const territoryBadge = t =>
+                t === 'brett' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Brett</span>'
+                : t === 'amy' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-[#e8edf8] text-[#001A60]">Amy</span>'
+                :                '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">Other</span>';
+
+            tbody.innerHTML = rows.map(l => `
+                <tr class="hover:bg-gray-50 border-t border-gray-100">
+                    <td class="px-5 py-3 text-gray-500 whitespace-nowrap">${new Date(l.created_at).toLocaleDateString()}</td>
+                    <td class="px-5 py-3 text-gray-900 font-medium">${l.city || 'N/A'}, ${l.state || ''}</td>
+                    <td class="px-5 py-3">${territoryBadge(l.territory)}</td>
+                    <td class="px-5 py-3 text-gray-900">${l.first_name} ${l.last_name}</td>
+                    <td class="px-5 py-3 text-gray-600">${l.company || '-'}</td>
+                    <td class="px-5 py-3 text-gray-600">${l.loi_type}</td>
+                    <td class="px-5 py-3">
+                        <span class="px-2 py-0.5 rounded-full text-xs font-medium ${getLoiStatusClass(l.status)}">${l.status}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderStateBreakdowns() {
+            const countByState = (territory) => {
+                const counts = {};
+                _dashData.filter(l => l.territory === territory)
+                    .forEach(l => { const s = l.state || 'Unknown'; counts[s] = (counts[s] || 0) + 1; });
+                return Object.entries(counts).sort((a,b) => b[1] - a[1]);
+            };
+
+            const renderBars = (pairs, color) => {
+                if (!pairs.length) return '<p class="text-gray-400 text-sm">No submissions yet</p>';
+                const max = pairs[0][1];
+                return pairs.map(([state, count]) => `
+                    <div class="flex items-center gap-3">
+                        <span class="w-7 text-xs font-bold text-gray-700">${state}</span>
+                        <div class="flex-1 bg-gray-100 rounded-full h-2">
+                            <div class="h-2 rounded-full" style="width:${Math.round(count/max*100)}%;background:${color}"></div>
+                        </div>
+                        <span class="text-xs font-semibold text-gray-600 w-4 text-right">${count}</span>
+                    </div>
+                `).join('');
+            };
+
+            document.getElementById('dash-brett-states').innerHTML =
+                renderBars(countByState('brett'), '#0053e2');
+            document.getElementById('dash-amy-states').innerHTML =
+                renderBars(countByState('amy'), '#001A60');
+        }
+
         // ========== SETTINGS ==========
 
         function loadSettings() {
@@ -2822,6 +2962,106 @@
         checkAuth();
     </script>
     <!-- LOI Detail Modal -->
+
+    <!-- 📊 LOI Dashboard Tab -->
+    <main id="content-dashboard" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Header -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">📊 LOI Dashboard</h2>
+                <p class="text-sm text-gray-500 mt-0.5">Real-time tracking by territory &mdash; sourced from the local server DB.</p>
+            </div>
+            <button onclick="loadDashboard()" class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:border-[#0053e2] hover:text-[#0053e2] transition-colors">
+                🔄 Refresh
+            </button>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#0053e2]">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total LOIs</p>
+                <p id="dash-total" class="text-3xl font-bold text-gray-900 mt-1">-</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#6eb8d4]">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Brett Moncrief</p>
+                <p id="dash-brett" class="text-3xl font-bold text-[#0053e2] mt-1">-</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#001A60]">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Amy Corritori</p>
+                <p id="dash-amy" class="text-3xl font-bold text-[#001A60] mt-1">-</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#ffc220]">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Pending Review</p>
+                <p id="dash-pending" class="text-3xl font-bold text-[#995213] mt-1">-</p>
+            </div>
+        </div>
+
+        <!-- Territory Filter Tabs -->
+        <div class="bg-white rounded-xl shadow-sm">
+            <div class="flex border-b border-gray-200 px-4">
+                <button onclick="filterDashboard('all')" id="dfilter-all"
+                    class="py-3 px-4 text-sm font-semibold border-b-2 border-[#0053e2] text-[#0053e2] -mb-px">
+                    All LOIs
+                </button>
+                <button onclick="filterDashboard('brett')" id="dfilter-brett"
+                    class="py-3 px-4 text-sm font-medium text-gray-500 hover:00 border-b-2 border-transparent -mb-px">
+                    Brett Moncrief
+                </button>
+                <button onclick="filterDashboard('amy')" id="dfilter-amy"
+                    class="py-3 px-4 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent -mb-px">
+                    Amy Corritori
+                </button>
+            </div>
+
+            <!-- LOI Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 text-left">
+                            <th class="px-5 py-3 font-semibold text-gray-600">Date</th>
+                            <th class="px-5 py-3 font-semibold text-gray-600">Property</th>
+                            <th class="px-5 py-3 font-semibold text-gray-600">Territory</th>
+                            <th class="px-5 py-3 font-semibold text-gray-600">Submitter</th>
+                            <th class="px-5 py-3 font-semibold text-gray-600">Company</th>
+                            <th class="px-5 py-3 font-semibold text-gray-600">LOI Type</th>
+                            <th class="px-5 py-3 font-semibold text-gray-600">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dash-table-body">
+                        <tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">Loading…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty state -->
+            <div id="dash-empty" class="hidden py-16 text-center">
+                <div class="text-5xl mb-3">📋</div>
+                <p class="text-gray-500 font-medium">No LOI submissions yet</p>
+                <p class="text-gray-400 text-sm mt-1">Submissions will appear here once brokers start filling out the form.</p>
+            </div>
+        </div>
+
+        <!-- State Breakdown -->
+        <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-white rounded-xl shadow-sm p-5">
+                <h3 class="font-bold text-gray-900 mb-4">Brett &mdash; By State</h3>
+                <div id="dash-brett-states" class="space-y-2 text-sm text-gray-500">-</div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-5">
+                <h3 class="font-bold text-gray-900 mb-4">Amy &mdash; By State</h3>
+                <div id="dash-amy-states" class="space-y-2 text-sm text-gray-500">-</div>
+            </div>
+        </div>
+
+        <!-- Server offline notice -->
+        <div id="dash-offline-notice" class="hidden bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800">
+            <strong>⚠️ Server offline</strong> &mdash; Dashboard data comes from the local server database.
+            Run <code class="bg-yellow-100 px-1 rounded">./start-icsc.sh</code> on the event laptop to see live data.
+            Emails sent via the LOI form are still being delivered to Brett &amp; Amy regardless.
+        </div>
+
+    </main>
 
     <!-- ⚙️ Settings Tab -->
     <main id="content-settings" class="hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
