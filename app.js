@@ -1470,27 +1470,21 @@ function brokerAvatarHtml(name, photoUrl, size = 'lg') {
     return `<div class="${dim} rounded-full bg-[#0053e2] flex items-center justify-center text-white ${text} font-bold shadow shrink-0">${initials}</div>`;
 }
 
-// Render a single broker contact card — shows name, company, visible phone/email + action buttons
+// Render a single broker contact card — avatar, name, company + working Call/Email buttons
 function brokerCardHtml(b) {
     const phoneClean = (b.phone || '').replace(/[^0-9+]/g, '');
     const phoneIcon = `<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>`;
     const emailIcon = `<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`;
     return `
-        <div class="flex items-start gap-4 py-5 px-6 border-b border-gray-100 last:border-0">
+        <div class="flex items-center gap-4 py-5 px-6 border-b border-gray-100 last:border-0">
             ${brokerAvatarHtml(b.name, b.photo || null)}
             <div class="flex-1 min-w-0">
                 <p class="font-bold text-gray-900 text-base leading-tight">${b.name}</p>
                 <p class="text-gray-500 text-sm mt-0.5">${b.company || 'Walmart Realty'}</p>
-                ${b.phone ? `<a href="tel:${phoneClean}" class="flex items-center gap-2 mt-2.5 text-sm font-medium text-gray-700 hover:text-[#0053e2] transition-colors">
-                    <span class="text-[#0053e2]">${phoneIcon}</span>${b.phone}
-                </a>` : ''}
-                ${b.email ? `<a href="mailto:${b.email}" class="flex items-center gap-2 mt-1.5 text-sm text-gray-600 hover:text-[#0053e2] transition-colors">
-                    <span class="text-[#0053e2]">${emailIcon}</span><span class="truncate">${b.email}</span>
-                </a>` : ''}
             </div>
-            <div class="flex flex-col gap-2 shrink-0">
-                ${b.phone ? `<a href="tel:${phoneClean}" title="Call ${b.name}" class="flex items-center justify-center gap-1.5 px-4 py-2 bg-[#0053e2] text-white rounded-lg font-semibold text-sm hover:bg-[#003eb0] transition-colors">${phoneIcon}<span>Call</span></a>` : ''}
-                ${b.email ? `<a href="mailto:${b.email}" title="Email ${b.name}" class="flex items-center justify-center gap-1.5 px-4 py-2 border-2 border-[#0053e2] text-[#0053e2] rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors">${emailIcon}<span>Email</span></a>` : ''}
+            <div class="flex items-center gap-2 shrink-0">
+                ${b.phone ? `<a href="tel:${phoneClean}" title="Call ${b.name}" class="flex items-center gap-1.5 px-4 py-2 bg-[#0053e2] text-white rounded-lg font-semibold text-sm hover:bg-[#003eb0] transition-colors">${phoneIcon}<span>Call</span></a>` : ''}
+                ${b.email ? `<a href="mailto:${b.email}" title="Email ${b.name}" class="flex items-center gap-1.5 px-4 py-2 border-2 border-[#0053e2] text-[#0053e2] rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors">${emailIcon}<span>Email</span></a>` : ''}
             </div>
         </div>`;
 }
