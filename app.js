@@ -1799,6 +1799,53 @@ async function submitLOI(event) {
     payload.append('company_address', d.companyAddress || '');
     payload.append('form_data',      JSON.stringify({ ...d, property: property?.city + ', ' + property?.state }));
 
+    // ── 1. Power Automate webhook ──────────────────────────────────────────
+    // Works from ANY network (hotel Wi-Fi, cell, conference floor) because it
+    // POSTs directly to Microsoft's infrastructure — zero external hosting.
+    // Set the URL once in the admin panel and it's saved for all devices.
+    const paUrl = localStorage.getItem('paWebhookUrl');
+    if (paUrl) {
+        const loiPayload = {
+            submittedAt:    new Date().toISOString(),
+            property:       (property?.city || '') + ', ' + (property?.state || ''),
+            propertyId:     String(currentLOIPropertyId || ''),
+            loiType:        d.loiType || '',
+            firstName:      d.firstName || '',
+            lastName:       d.lastName  || '',
+            email:          d.email     || '',
+            phone:          d.phone     || '',
+            company:        d.company   || '',
+            companyAddress: d.companyAddress || '',
+            // spread any extra form fields (lease rate, terms, etc.)
+            ...Object.fromEntries(
+                Object.entries(d).filter(([k]) =>
+                    !['loiType','firstName','lastName','email','phone','company','companyAddress'].includes(k)
+                )
+            )
+        };
+        try {
+            // Power Automate HTTP triggers support CORS — a normal fetch works.
+            // We fire-and-don't-block: await but with a 6-second timeout so a slow
+            // cloud round-trip never stalls the user's success modal.
+            const ctrl   = new AbortController();
+            const timer  = setTimeout(() => ctrl.abort(), 6000);
+            const paRes  = await fetch(paUrl, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(loiPayload),
+                signal:  ctrl.signal
+            });
+            clearTimeout(timer);
+            if (paRes.ok || paRes.status === 202) {
+                console.log('✅ LOI sent to Power Automate / Teams');
+            }
+        } catch (paErr) {
+            // Don't block the user — log and continue to server / mailto fallback
+            console.warn('Power Automate webhook failed:', paErr.message);
+        }
+    }
+
+    // ── 2. Local / cloud backend server ─────────────────────────────────────
     // Use the admin-configured server URL when available (same key admin.html saves).
     // This lets GitHub Pages submissions reach the local ICSC laptop server.
     const serverBase = localStorage.getItem('adminApiBase') || window.location.origin;
@@ -1813,9 +1860,22 @@ async function submitLOI(event) {
             showSuccessModalAPI(d, d.loiType, property, result);
             return;
         }
-        console.warn('LOI API returned', res.status, '— falling back to mailto');
+        console.warn('LOI API returned', res.status, '— continuing');
     } catch (err) {
-        console.warn('LOI API unreachable — falling back to mailto:', err.message);
+        console.warn('LOI API unreachable:', err.message);
+    }
+
+    // ── 3. If Power Automate already captured it, show success without mailto ───
+    if (paUrl) {
+        // PA webhook fired above — the submission is in Teams/SharePoint.
+        // Show the success modal without forcing the user to send a manual email.
+        const fallbackBrokersPA = _brokersJsonCache
+            ? _resolveBrokersFromList(_brokersJsonCache, property?.state || '', property?.city || '')
+            : [];
+        showSuccessModalAPI(d, d.loiType, property, {
+            brokers_notified: fallbackBrokersPA.map(b => ({ name: b.name, email: b.email }))
+        });
+        return;
     }
 
     // Mailto fallback for static / GitHub Pages deploys

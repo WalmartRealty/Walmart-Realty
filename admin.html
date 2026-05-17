@@ -983,36 +983,54 @@
             overlay.innerHTML = `
                 <div style="position:fixed;inset:0;background:rgba(0,0,53,0.92);z-index:9999;
                             display:flex;align-items:center;justify-content:center;">
-                    <div style="background:white;border-radius:12px;padding:36px;max-width:460px;
+                    <div style="background:white;border-radius:12px;padding:36px;max-width:500px;
                                 width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
                         <div style="text-align:center;margin-bottom:24px;">
                             <div style="font-size:48px;margin-bottom:8px">🏪</div>
                             <h2 style="color:#0053e2;font-size:22px;font-weight:700;margin:0 0 8px">
-                                Connect to Backend Server
+                                ICSC Event Setup
                             </h2>
                             <p style="color:#666;font-size:14px;margin:0;">
-                                The admin panel needs the local server URL.<br>
-                                Run <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">start-icsc.sh</code>
-                                on the laptop and enter the IP shown.
+                                Configure how LOI submissions are captured.
+                                At least one option is required.
                             </p>
                         </div>
+
+                        <p style="font-size:12px;font-weight:700;color:#0053e2;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em">
+                            💻 Local server (same WiFi only)
+                        </p>
                         <input id="server-url-input" type="url"
-                            placeholder="e.g. http://192.168.1.42:3000"
-                            value="http://localhost:3000"
+                            placeholder="e.g. http://192.168.1.42:3000 — leave blank if not running"
+                            value="${localStorage.getItem('adminApiBase') || ''}"
                             style="width:100%;border:2px solid #ddd;border-radius:8px;
-                                   padding:12px;font-size:15px;box-sizing:border-box;
-                                   margin-bottom:16px;outline:none;"
+                                   padding:12px;font-size:14px;box-sizing:border-box;
+                                   margin-bottom:20px;outline:none;"
                             onfocus="this.style.borderColor='#0053e2'"
                             onblur="this.style.borderColor='#ddd'"
                         />
+
+                        <p style="font-size:12px;font-weight:700;color:#2a8703;margin:0 0 4px;text-transform:uppercase;letter-spacing:.05em">
+                            ✅ Power Automate webhook (works from ANY network)
+                        </p>
+                        <p style="font-size:12px;color:#666;margin:0 0 6px;">LOIs post to your RE Dispo Teams channel + SharePoint instantly.</p>
+                        <input id="pa-webhook-input" type="url"
+                            placeholder="https://prod-xx.westus.logic.azure.com/workflows/..."
+                            value="${localStorage.getItem('paWebhookUrl') || ''}"
+                            style="width:100%;border:2px solid #ddd;border-radius:8px;
+                                   padding:12px;font-size:14px;box-sizing:border-box;
+                                   margin-bottom:20px;outline:none;"
+                            onfocus="this.style.borderColor='#2a8703'"
+                            onblur="this.style.borderColor='#ddd'"
+                        />
+
                         <button onclick="applyServerConfig()"
                             style="width:100%;background:#0053e2;color:white;border:none;
                                    border-radius:8px;padding:14px;font-size:16px;
                                    font-weight:600;cursor:pointer;">
-                            Connect →
+                            Save &amp; Continue →
                         </button>
                         <p style="text-align:center;color:#999;font-size:12px;margin:12px 0 0">
-                            This setting is saved in your browser.
+                            Settings are saved in your browser.
                         </p>
                     </div>
                 </div>
@@ -1021,13 +1039,17 @@
         }
 
         function applyServerConfig() {
-            const input = document.getElementById('server-url-input');
-            const url = input.value.trim().replace(/\/$/, '');
-            if (!url.startsWith('http')) {
-                input.style.borderColor = 'red';
+            const serverInput = document.getElementById('server-url-input');
+            const paInput    = document.getElementById('pa-webhook-input');
+            const serverUrl  = (serverInput?.value || '').trim().replace(/\/$/, '');
+            const paUrl      = (paInput?.value    || '').trim();
+
+            if (serverUrl && !serverUrl.startsWith('http')) {
+                serverInput.style.borderColor = 'red';
                 return;
             }
-            localStorage.setItem('adminApiBase', url);
+            if (serverUrl) localStorage.setItem('adminApiBase', serverUrl);
+            if (paUrl)     localStorage.setItem('paWebhookUrl', paUrl);
             window.location.reload();
         }
 
