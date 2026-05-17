@@ -899,27 +899,33 @@ app.get('/api/brokers/property/:propertyId', (req, res) => {
     const property = db.prepare('SELECT city, state, broker_name, broker_email, broker_phone FROM properties WHERE id = ?').get(propertyId);
     if (!property) return res.status(404).json({ error: 'Property not found' });
 
-    // Level 1 & 2: brokers table is the authoritative source — always checked first
+    // Levels 1–3: brokers table is the authoritative source — always checked first
     if (property.state) {
-        const allStatebrokers = db.prepare(`
+        const allStateBrokers = db.prepare(`
             SELECT * FROM brokers WHERE is_active = 1 AND states LIKE ?
         `).all(`%${property.state.toUpperCase()}%`);
 
         const cityNorm = (property.city || '').trim().toLowerCase();
 
-        // Level 1: city-specific brokers
-        const cityBrokers = allStatebrokers
+        // Level 1: city-specific brokers (exact city match)
+        const cityBrokers = allStateBrokers
             .filter(b => b.cities && b.cities.split(',').map(c => c.trim().toLowerCase()).includes(cityNorm))
             .map(b => ({ ...b, territory: 'city' }));
 
         if (cityBrokers.length > 0) return res.json(cityBrokers);
 
-        // Level 2: state-wide brokers (no city filter set)
-        const stateBrokers = allStatebrokers
+        // Level 2: state-wide brokers (no city filter set — covers the whole state)
+        const stateBrokers = allStateBrokers
             .filter(b => !b.cities || b.cities.trim() === '')
             .map(b => ({ ...b, territory: 'state' }));
 
         if (stateBrokers.length > 0) return res.json(stateBrokers);
+
+        // Level 3: any broker assigned to this state (city lists are priority hints,
+        // not hard restrictions — every state property deserves a broker contact)
+        if (allStateBrokers.length > 0) {
+            return res.json(allStateBrokers.map(b => ({ ...b, territory: 'state' })));
+        }
     }
 
     // Level 3: legacy fallback — broker fields embedded directly on the property record
