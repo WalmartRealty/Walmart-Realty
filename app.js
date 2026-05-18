@@ -722,11 +722,11 @@ function createPropertyCard(property) {
 
             <!-- Full-width HD aerial — 2x2 mosaic of zoom-16 tiles (512px source) -->
             <div class="relative w-full h-48 bg-gray-200 overflow-hidden">
-                <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 pointer-events-none" aria-hidden="true">
-                    <img src="${t00}" class="w-full h-full object-cover" loading="lazy" draggable="false">
-                    <img src="${t01}" class="w-full h-full object-cover" loading="lazy" draggable="false">
-                    <img src="${t10}" class="w-full h-full object-cover" loading="lazy" draggable="false">
-                    <img src="${t11}" class="w-full h-full object-cover" loading="lazy" draggable="false">
+                <div class="absolute inset-0 grid grid-cols-2 grid-rows-2" style="gap:0;line-height:0" aria-hidden="true" pointer-events-none>
+                    <img src="${t00}" style="width:100%;height:100%;display:block;object-fit:fill" loading="lazy" draggable="false">
+                    <img src="${t01}" style="width:100%;height:100%;display:block;object-fit:fill" loading="lazy" draggable="false">
+                    <img src="${t10}" style="width:100%;height:100%;display:block;object-fit:fill" loading="lazy" draggable="false">
+                    <img src="${t11}" style="width:100%;height:100%;display:block;object-fit:fill" loading="lazy" draggable="false">
                 </div>
 
                 <!-- Spark logo — top left -->
