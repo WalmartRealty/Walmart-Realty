@@ -1194,7 +1194,7 @@
             
             // Refresh data when switching tabs
             if (tab === 'loi')       { loadLOISubmissions(); }
-            if (tab === 'dashboard') { loadDashboard(); }
+            if (tab === 'dashboard') { startDashboardPolling(); } else { stopDashboardPolling(); }
             if (tab === 'inquiries') { loadInquiries(); }
             if (tab === 'settings')  { loadSettings(); }
             
@@ -2761,11 +2761,20 @@
 
         let _dashData    = [];   // full enriched LOI list
         let _dashFilter  = 'all';
+        let _dashInterval = null;  // auto-refresh timer
+
+        function startDashboardPolling() {
+            loadDashboard();
+            _dashInterval = setInterval(loadDashboard, 30000); // every 30 s
+        }
+
+        function stopDashboardPolling() {
+            clearInterval(_dashInterval);
+            _dashInterval = null;
+        }
 
         async function loadDashboard() {
             document.getElementById('dash-offline-notice').classList.add('hidden');
-            document.getElementById('dash-table-body').innerHTML =
-                '<tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">Loading…</td></tr>';
 
             let raw = [];
             try {
@@ -2775,12 +2784,26 @@
                 if (res.status === 401) { handleLogout(); return; }
                 if (res.ok) raw = await res.json();
                 else throw new Error('Server error ' + res.status);
+
+                // Mark as live
+                const dot   = document.getElementById('dash-live-dot');
+                const label = document.getElementById('dash-live-label');
+                if (dot)   dot.classList.remove('hidden');
+                if (label) label.textContent = 'Live — auto-refreshes every 30s';
             } catch {
                 document.getElementById('dash-offline-notice').classList.remove('hidden');
                 document.getElementById('dash-table-body').innerHTML =
                     '<tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">No server connection — see notice below.</td></tr>';
+                const label = document.getElementById('dash-live-label');
+                if (label) label.textContent = '';
+                const dot = document.getElementById('dash-live-dot');
+                if (dot) dot.classList.add('hidden');
                 return;
             }
+
+            // Stamp last-updated time
+            const ts = document.getElementById('dash-last-updated');
+            if (ts) ts.textContent = 'Updated ' + new Date().toLocaleTimeString();
 
             // Enrich with territory
             _dashData = raw.map(l => ({ ...l, territory: dashTerritory(l.state) }));
@@ -2972,9 +2995,16 @@
                 <h2 class="text-2xl font-bold text-gray-900">📊 LOI Dashboard</h2>
                 <p class="text-sm text-gray-500 mt-0.5">Real-time tracking by territory &mdash; sourced from the local server DB.</p>
             </div>
-            <button onclick="loadDashboard()" class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:border-[#0053e2] hover:text-[#0053e2] transition-colors">
-                🔄 Refresh
-            </button>
+            <div class="flex items-center gap-3">
+                <span id="dash-last-updated" class="text-xs text-gray-400"></span>
+                <span class="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+                    <span id="dash-live-dot" class="hidden w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span id="dash-live-label"></span>
+                </span>
+                <button onclick="loadDashboard()" class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:border-[#0053e2] hover:text-[#0053e2] transition-colors">
+                    🔄 Refresh
+                </button>
+            </div>
         </div>
 
         <!-- Stat Cards -->
