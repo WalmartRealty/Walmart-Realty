@@ -712,13 +712,17 @@ function createPropertyCard(property) {
                  aria-label="View details for ${property.title}"
                  onkeydown="if(event.key==='Enter') openPropertyModal(${property.id})">
 
-            <!-- Full-width HD aerial — 2x2 mosaic of zoom-16 tiles (512px source) -->
+            <!-- Full-width HD aerial — square 2x2 mosaic, center-cropped into card -->
+            <!-- The 512x512 composite is scaled to full card width then clipped vertically -->
+            <!-- (same technique Zillow uses with photos: fill width, crop height) -->
             <div class="relative w-full h-48 bg-gray-200 overflow-hidden">
-                <div class="absolute inset-0 grid grid-cols-2 grid-rows-2" style="gap:0;line-height:0" aria-hidden="true" pointer-events-none>
-                    <img src="${t00}" style="width:100%;height:100%;display:block;object-fit:fill" loading="lazy" draggable="false">
-                    <img src="${t01}" style="width:100%;height:100%;display:block;object-fit:fill" loading="lazy" draggable="false">
-                    <img src="${t10}" style="width:100%;height:100%;display:block;object-fit:fill" loading="lazy" draggable="false">
-                    <img src="${t11}" style="width:100%;height:100%;display:block;object-fit:fill" loading="lazy" draggable="false">
+                <div style="position:absolute;width:100%;aspect-ratio:1/1;top:50%;transform:translateY(-50%);line-height:0" aria-hidden="true">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;width:100%;height:100%;gap:0">
+                        <img src="${t00}" style="width:100%;height:100%;display:block" loading="lazy" draggable="false">
+                        <img src="${t01}" style="width:100%;height:100%;display:block" loading="lazy" draggable="false">
+                        <img src="${t10}" style="width:100%;height:100%;display:block" loading="lazy" draggable="false">
+                        <img src="${t11}" style="width:100%;height:100%;display:block" loading="lazy" draggable="false">
+                    </div>
                 </div>
 
                 <!-- Spark logo — top left -->
