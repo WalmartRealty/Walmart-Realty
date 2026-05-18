@@ -210,7 +210,7 @@ function transformProperties(rawProps) {
                 : `Development-ready land parcel in ${p.city}, ${p.state}. ${p.size_acres} acres of commercial-zoned land ideal for retail, restaurant, or service businesses. Excellent location with strong demographics.`),
         features: p.features || (isRetail
             ? [`${p.size_acres} Acre Site`, 'Established Location', 'High Traffic Area', 'Utilities In Place', 'Signalized Access']
-            : [`${p.size_acres} Acres`, 'Commercial Zoning', 'Utilities Available', 'Pad-Ready', 'Strong Demographics']),
+            : [`${p.size_acres} Acres`, 'Utilities Available', 'Pad-Ready', 'Strong Demographics']),
         yearBuilt: null,
         lotSize: `${p.size_acres} acres`,
         zoning: p.zoning || 'Commercial',
@@ -281,7 +281,7 @@ async function fetchPropertiesFromAPI() {
                         broker_company: p.broker_company || '',
                         broker_photo: p.broker_photo || null,
                         zoning: p.zoning || 'Commercial',
-                        features: p.features || ['Commercial Zoning', 'Utilities Available'],
+                        features: p.features || ['Utilities Available'],
                         featured: p.featured === 1 || p.featured === true,
                         zip: getZipForState(p.state)
                     });
@@ -659,9 +659,8 @@ function openImageLightbox(imageUrl, imageName) {
 // Create property card HTML
 // Generate satellite map thumbnail URL from coordinates
 function getSatelliteThumbUrl(lat, lon) {
-    // Using ESRI World Imagery tile server - free, no API key needed
-    // Calculate tile coordinates for zoom level 15
-    const zoom = 15;
+    // Zoom 17 gives a crisp close-up aerial — perfect for full-width card images
+    const zoom = 17;
     const n = Math.pow(2, zoom);
     const x = Math.floor((lon + 180) / 360 * n);
     const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n);
@@ -670,57 +669,98 @@ function getSatelliteThumbUrl(lat, lon) {
 
 function createPropertyCard(property) {
     const satelliteUrl = getSatelliteThumbUrl(property.lat, property.lon);
-    const status = (property.status || 'available').toLowerCase();
-    const isSold = status === 'sold';
+    const status  = (property.status || 'available').toLowerCase();
+    const isSold  = status === 'sold';
+    const saved   = isPropertySaved(property.id);
+
+    // Listing-type badge — Zillow-style dark translucent pill
+    let listingBadge = '';
+    if (property.listingType === 'lease') {
+        listingBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-black/60 text-white backdrop-blur-sm">For Lease</span>`;
+    } else if (property.listingType === 'ground_lease') {
+        listingBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-black/60 text-white backdrop-blur-sm">Ground Lease</span>`;
+    } else if (property.listingType === 'sale' || !property.listingType) {
+        listingBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-black/60 text-white backdrop-blur-sm">For Sale</span>`;
+    }
+
+    // Status badge (only for non-available)
+    let statusBadge = '';
+    if (status === 'sold') {
+        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-600/90 text-white">Sold</span>`;
+    } else if (status === 'under-contract' || status === 'under_contract' || status === 'pending') {
+        statusBadge = `<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-400/90 text-yellow-900">Under Contract</span>`;
+    }
+
+    // Broker name — use resolved brokers cache, fall back to embedded field
+    let brokerName = '';
+    if (_brokersJsonCache) {
+        const matched = _resolveBrokersFromList(_brokersJsonCache, property.state, property.city);
+        if (matched.length > 0) brokerName = matched[0].name;
+    }
+    if (!brokerName && property.broker_name) brokerName = property.broker_name;
+
+    const brokerLine = brokerName
+        ? `<p class="text-xs text-gray-400 truncate">Broker: ${brokerName}</p>`
+        : `<p class="text-xs text-gray-400 truncate">Walmart Realty</p>`;
+
+    const acreage = property.size_acres ? `${parseFloat(property.size_acres).toLocaleString()} Acres` : '';
 
     return `
-        <article class="property-card bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-lg${isSold ? ' opacity-75' : ''}" 
+        <article class="property-card bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-xl hover:-translate-y-0.5${isSold ? ' opacity-75' : ''}"
                  onclick="openPropertyModal(${property.id})"
-                 tabindex="0"
-                 role="button"
+                 tabindex="0" role="button"
                  aria-label="View details for ${property.title}"
                  onkeydown="if(event.key==='Enter') openPropertyModal(${property.id})">
-            <div class="p-5 border-b border-gray-100">
-                <div class="flex items-start justify-between mb-3">
-                    <div class="flex items-center gap-3">
-                        <div class="h-14 w-14 rounded-xl overflow-hidden shadow-sm border-2 border-gray-200 flex-shrink-0">
-                            <img src="${satelliteUrl}" 
-                                 alt="Satellite view of ${property.city}, ${property.state}" 
-                                 class="h-full w-full object-cover"
-                                 loading="lazy"
-                                 onerror="this.parentElement.innerHTML='<div class=\'h-full w-full bg-gray-200 flex items-center justify-center text-gray-400\'><svg class=\'h-6 w-6\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z\'/><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M15 11a3 3 0 11-6 0 3 3 0 016 0z\'/></svg></div>'">
-                        </div>
-                        <div>
-                            <div class="flex gap-2 mb-1">
-                                ${getStatusBadge(status)}
-                                ${property.listingType === 'lease' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#a9ddf7;color:#001e60">For Lease</span>' : property.listingType === 'ground_lease' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#a9ddf7;color:#001e60">Ground Lease</span>' : ''}
-                            </div>
-                            <h4 class="text-lg font-bold text-gray-900 line-clamp-1">${property.city}, ${property.state}</h4>
-                        </div>
-                    </div>
-                    <img src="spark-logo.png" alt="Walmart" class="h-7 w-7 object-contain">
-                </div>
-                <p class="text-gray-600 text-sm flex items-center gap-1">
-                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+
+            <!-- Full-width aerial image -->
+            <div class="relative w-full h-48 bg-gray-200 overflow-hidden">
+                <img src="${satelliteUrl}"
+                     alt="Aerial view of ${property.city}, ${property.state}"
+                     class="absolute inset-0 w-full h-full object-cover"
+                     loading="lazy"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                <!-- fallback if tile fails -->
+                <div style="display:none" class="absolute inset-0 bg-gray-200 flex items-center justify-center text-gray-400">
+                    <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    ${property.lotSize} · ${property.zoning || 'Commercial'} Zoning
-                </p>
-            </div>
-            <div class="p-5 bg-gray-50">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-lg font-semibold text-walmart-blue">${isSold ? '' : 'View Details'}</p>
-                    </div>
-                    <button class="p-2 rounded-full hover:bg-white transition-colors focus-visible shadow-sm bg-white" 
-                            aria-label="${isPropertySaved(property.id) ? 'Remove from saved' : 'Save property'}"
-                            onclick="event.stopPropagation(); toggleSave(${property.id})">
-                        <svg data-heart-id="${property.id}" class="h-6 w-6 ${isPropertySaved(property.id) ? 'text-red-500' : 'text-gray-400'} hover:text-red-500 transition-colors" fill="${isPropertySaved(property.id) ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                    </button>
                 </div>
+
+                <!-- Spark logo — top left -->
+                <div class="absolute top-2.5 left-3 z-10">
+                    <img src="spark-logo.png" alt="Walmart" class="h-7 w-7 object-contain drop-shadow-md">
+                </div>
+
+                <!-- Heart / save — top right (Zillow-style) -->
+                <button class="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white transition-colors shadow-sm focus-visible"
+                        aria-label="${saved ? 'Remove from saved' : 'Save property'}"
+                        onclick="event.stopPropagation(); toggleSave(${property.id})">
+                    <svg data-heart-id="${property.id}" class="h-5 w-5 ${saved ? 'text-red-500' : 'text-gray-500'} hover:text-red-500 transition-colors"
+                         fill="${saved ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                </button>
+
+                <!-- Status + listing-type badges — bottom left -->
+                <div class="absolute bottom-2.5 left-3 z-10 flex gap-1.5">
+                    ${listingBadge}
+                    ${statusBadge}
+                </div>
+            </div>
+
+            <!-- Info section -->
+            <div class="px-4 pt-3 pb-2">
+                <p class="text-lg font-bold text-walmart-blue leading-tight">${isSold ? '<span class="text-red-600">Sold</span>' : formatPrice(property.price, property.listingType)}</p>
+                <p class="text-sm font-semibold text-gray-900 mt-0.5">${property.city}, ${property.state}</p>
+                ${acreage ? `<p class="text-xs text-gray-500 mt-0.5">${acreage}</p>` : ''}
+            </div>
+
+            <!-- Broker footer -->
+            <div class="px-4 pb-3 pt-1 border-t border-gray-100 mt-1">
+                ${brokerLine}
             </div>
         </article>
     `;
@@ -2448,7 +2488,13 @@ function toggleStateCheck(state, checked) {
 document.addEventListener('DOMContentLoaded', async () => {
     // Show loading state immediately
     showLoadingState();
-    
+
+    // Pre-fetch brokers.json so broker names are ready when cards render
+    try {
+        const br = await fetch('brokers.json', { cache: 'no-store' });
+        if (br.ok) _brokersJsonCache = await br.json();
+    } catch (_) { /* static file not available yet — fine */ }
+
     try {
         // Fetch properties from API first
         await fetchPropertiesFromAPI();
