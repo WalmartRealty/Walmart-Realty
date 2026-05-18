@@ -90,29 +90,29 @@
                     </div>
                 </div>
                 <!-- Tab Navigation -->
-                <nav class="flex gap-6 -mb-px">
-                    <button onclick="switchTab('properties')" id="tab-properties" class="py-3 px-1 font-medium tab-active">
-                        🏠 Properties
-                    </button>
-                    <button onclick="switchTab('brokers')" id="tab-brokers" class="py-3 px-1 font-medium tab-inactive">
-                        👥 Brokers
-                    </button>
-                    <button onclick="switchTab('inquiries')" id="tab-inquiries" class="py-3 px-1 font-medium tab-inactive">
-                        📬 Inquiries
-                    </button>
-                    <button onclick="switchTab('loi')" id="tab-loi" class="py-3 px-1 font-medium tab-inactive">
-                        📄 LOI Submissions
-                    </button>
-                    <button onclick="switchTab('templates')" id="tab-templates" class="py-3 px-1 font-medium tab-inactive">
-                        📝 LOI Templates
-                    </button>
-                    <button onclick="switchTab('marketing')" id="tab-marketing" class="py-3 px-1 font-medium tab-inactive">
-                        📸 Marketing Materials
-                    </button>
-                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3 px-1 font-medium tab-inactive">
+                <nav class="flex gap-6 -mb-px overflow-x-auto">
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3 px-1 font-medium tab-inactive whitespace-nowrap">
                         📊 LOI Dashboard
                     </button>
-                    <button onclick="switchTab('settings')" id="tab-settings" class="py-3 px-1 font-medium tab-inactive">
+                    <button onclick="switchTab('properties')" id="tab-properties" class="py-3 px-1 font-medium tab-active whitespace-nowrap">
+                        🏠 Properties
+                    </button>
+                    <button onclick="switchTab('brokers')" id="tab-brokers" class="py-3 px-1 font-medium tab-inactive whitespace-nowrap">
+                        👥 Brokers
+                    </button>
+                    <button onclick="switchTab('inquiries')" id="tab-inquiries" class="py-3 px-1 font-medium tab-inactive whitespace-nowrap">
+                        📬 Inquiries
+                    </button>
+                    <button onclick="switchTab('loi')" id="tab-loi" class="py-3 px-1 font-medium tab-inactive whitespace-nowrap">
+                        📄 LOI Submissions
+                    </button>
+                    <button onclick="switchTab('templates')" id="tab-templates" class="py-3 px-1 font-medium tab-inactive whitespace-nowrap">
+                        📝 LOI Templates
+                    </button>
+                    <button onclick="switchTab('marketing')" id="tab-marketing" class="py-3 px-1 font-medium tab-inactive whitespace-nowrap">
+                        📸 Marketing
+                    </button>
+                    <button onclick="switchTab('settings')" id="tab-settings" class="py-3 px-1 font-medium tab-inactive whitespace-nowrap">
                         ⚙️ Settings
                     </button>
                 </nav>
@@ -121,69 +121,51 @@
         
         <!-- Properties Tab Content -->
         <main id="content-properties" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white rounded-xl p-6 shadow-sm">
-                    <p class="text-gray-500 text-sm">Total Properties</p>
-                    <p class="text-3xl font-bold text-gray-900" id="stat-total">0</p>
+
+            <!-- Hero -->
+            <div style="background:linear-gradient(135deg,#0053e2 0%,#001A60 100%)" class="rounded-2xl px-6 py-7 mb-6">
+                <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">🏠 Property Portfolio</h2>
+                        <p class="text-blue-200 text-sm mt-0.5">Manage listings, publish to the public site, and export data.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="openAddModal()" class="flex items-center gap-2 px-4 py-2 bg-[#ffc220] hover:bg-[#e6af00] text-[#001A60] font-bold rounded-lg text-sm transition-colors">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                            Add Property
+                        </button>
+                        <button onclick="syncToGitHub()" id="sync-github-btn" class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-lg text-sm transition-colors">
+                            🚀 Publish
+                        </button>
+                        <button onclick="exportProperties()" class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-lg text-sm transition-colors">
+                            ↓ Export
+                        </button>
+                        <label class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-lg text-sm transition-colors cursor-pointer">
+                            ↑ Import
+                            <input type="file" accept=".xlsx,.xls,.csv" onchange="importPropertiesExcel(event)" class="hidden">
+                        </label>
+                    </div>
                 </div>
-                <div class="bg-white rounded-xl p-6 shadow-sm">
-                    <p class="text-gray-500 text-sm">For Sale</p>
-                    <p class="text-3xl font-bold text-green-600" id="stat-sale">0</p>
-                </div>
-                <div class="bg-white rounded-xl p-6 shadow-sm">
-                    <p class="text-gray-500 text-sm">For Lease</p>
-                    <p class="text-3xl font-bold text-blue-600" id="stat-lease">0</p>
-                </div>
-                <div class="bg-white rounded-xl p-6 shadow-sm">
-                    <p class="text-gray-500 text-sm">States</p>
-                    <p class="text-3xl font-bold text-purple-600" id="stat-states">0</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">Total</p>
+                        <p class="text-3xl font-black text-white mt-1" id="stat-total">0</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">For Sale</p>
+                        <p class="text-3xl font-black text-[#ffc220] mt-1" id="stat-sale">0</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">For Lease</p>
+                        <p class="text-3xl font-black text-[#ffc220] mt-1" id="stat-lease">0</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">States</p>
+                        <p class="text-3xl font-black text-white mt-1" id="stat-states">0</p>
+                    </div>
                 </div>
             </div>
-            
-            <!-- Action Buttons -->
-            <div class="flex flex-wrap gap-4 mb-6">
-                <button onclick="openAddModal()" 
-                        class="bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add New Property
-                </button>
-                <button onclick="syncToGitHub()" id="sync-github-btn"
-                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    🚀 Publish to GitHub Pages
-                </button>
-                <button onclick="exportProperties()" 
-                        class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                    </svg>
-                    Export Data
-                </button>
-                <button onclick="downloadPropertyTemplate()"
-                        class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    Download Template
-                </button>
-                <label class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 cursor-pointer">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    Import Excel / CSV
-                    <input type="file" accept=".xlsx,.xls,.csv" onchange="importPropertiesExcel(event)" class="hidden">
-                </label>
-                <button onclick="changeServerUrl()" title="Change backend server URL"
-                        class="border-2 border-gray-300 hover:b500 text-gray-500 hover:text-gray-700 font-semibold py-3 px-4 rounded-lg transition-colors flex items-center gap-1 text-sm">
-                    ⚙️ Server
-                </button>
-            </div>
-            
+
             <!-- Search & Filter -->
             <div class="bg-white rounded-xl p-4 shadow-sm mb-6">
                 <div class="flex flex-col md:flex-row gap-4">
@@ -253,52 +235,45 @@
         
         <!-- Brokers Tab Content -->
         <main id="content-brokers" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Broker Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div class="bg-white rounded-xl p-6 shadow-sm">
-                    <p class="text-gray-500 text-sm">Total Brokers</p>
-                    <p class="text-3xl font-bold text-gray-900" id="stat-brokers">0</p>
+
+            <!-- Hero -->
+            <div style="background:linear-gradient(135deg,#0053e2 0%,#001A60 100%)" class="rounded-2xl px-6 py-7 mb-6">
+                <div class="flex flex-wrap items-start justify-between gap-4 mb-5">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">👥 Broker Network</h2>
+                        <p class="text-blue-200 text-sm mt-0.5">Add brokers, import from Excel, and publish assignments to the site.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="openBrokerModal()" class="flex items-center gap-2 px-4 py-2 bg-[#ffc220] hover:bg-[#e6af00] text-[#001A60] font-bold rounded-lg text-sm transition-colors">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                            Add Broker
+                        </button>
+                        <label class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-lg text-sm transition-colors cursor-pointer">
+                            ↑ Import Excel
+                            <input type="file" accept=".xlsx,.xls,.csv" onchange="importBrokersExcel(event)" class="hidden">
+                        </label>
+                        <button onclick="downloadBrokerTemplate()" class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-lg text-sm transition-colors">
+                            ↓ Template
+                        </button>
+                        <button onclick="syncToGitHub()" class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-lg text-sm transition-colors">
+                            🚀 Publish
+                        </button>
+                    </div>
                 </div>
-                <div class="bg-white rounded-xl p-6 shadow-sm">
-                    <p class="text-gray-500 text-sm">Active Brokers</p>
-                    <p class="text-3xl font-bold text-green-600" id="stat-active-brokers">0</p>
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">Total Brokers</p>
+                        <p class="text-3xl font-black text-white mt-1" id="stat-brokers">0</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">Active</p>
+                        <p class="text-3xl font-black text-[#ffc220] mt-1" id="stat-active-brokers">0</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">States Covered</p>
+                        <p class="text-3xl font-black text-white mt-1" id="stat-broker-states">0</p>
+                    </div>
                 </div>
-                <div class="bg-white rounded-xl p-6 shadow-sm">
-                    <p class="text-gray-500 text-sm">States Covered</p>
-                    <p class="text-3xl font-bold text-purple-600" id="stat-broker-states">0</p>
-                </div>
-            </div>
-            
-            <!-- Broker Actions -->
-            <div class="flex flex-wrap gap-4 mb-6">
-                <button onclick="openBrokerModal()" 
-                        class="bg-walmart-blue hover:bg-walmart-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Add Broker
-                </button>
-                <label class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 cursor-pointer">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                    Import Excel / CSV
-                    <input type="file" accept=".xlsx,.xls,.csv" onchange="importBrokersExcel(event)" class="hidden">
-                </label>
-                <button onclick="downloadBrokerTemplate()" 
-                        class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    Download Template
-                </button>
-                <button onclick="syncToGitHub()"
-                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    🚀 Publish to GitHub Pages
-                </button>
             </div>
             
             <!-- CSV Import Info -->
@@ -342,23 +317,30 @@
         
         <!-- Inquiries Tab Content -->
         <main id="content-inquiries" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white rounded-xl p-6 shadow-sm">
-                    <p class="text-gray-500 text-sm">Total Inquiries</p>
-                    <p class="text-3xl font-bold text-gray-900" id="stat-inquiries-total">0</p>
+
+            <!-- Hero -->
+            <div style="background:linear-gradient(135deg,#0053e2 0%,#001A60 100%)" class="rounded-2xl px-6 py-7 mb-6">
+                <div class="mb-5">
+                    <h2 class="text-2xl font-bold text-white">📬 Contact Inquiries</h2>
+                    <p class="text-blue-200 text-sm mt-0.5">Inquiries submitted via the website contact form.</p>
                 </div>
-                <div class="bg-white rounded-xl p-6 shadow-sm">
-                    <p class="text-gray-500 text-sm">New</p>
-                    <p class="text-3xl font-bold text-blue-600" id="stat-inquiries-new">0</p>
-                </div>
-                <div class="bg-white rounded-xl p-6 shadow-sm">
-                    <p class="text-gray-500 text-sm">In Progress</p>
-                    <p class="text-3xl font-bold text-yellow-600" id="stat-inquiries-progress">0</p>
-                </div>
-                <div class="bg-white rounded-xl p-6 shadow-sm">
-                    <p class="text-gray-500 text-sm">Closed</p>
-                    <p class="text-3xl font-bold text-green-600" id="stat-inquiries-closed">0</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">Total</p>
+                        <p class="text-3xl font-black text-white mt-1" id="stat-inquiries-total">0</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">New</p>
+                        <p class="text-3xl font-black text-[#ffc220] mt-1" id="stat-inquiries-new">0</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">In Progress</p>
+                        <p class="text-3xl font-black text-white mt-1" id="stat-inquiries-progress">0</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">Closed</p>
+                        <p class="text-3xl font-black text-[#ffc220] mt-1" id="stat-inquiries-closed">0</p>
+                    </div>
                 </div>
             </div>
             
@@ -389,21 +371,24 @@
         
         <!-- LOI Submissions Tab Content -->
         <main id="content-loi" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="flex flex-wrap gap-4 mb-6">
-                <a href="#" onclick="window.open(API_BASE+'/api/admin/export-loi', '_blank'); return false;"
-                   class="border-2 border-gray-300 hover:border-walmart-blue text-gray-700 hover:text-walmart-blue font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                    </svg>
-                    Export CSV
-                </a>
-                <button onclick="syncToGitHub()"
-                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    🚀 Publish to GitHub Pages
-                </button>
+
+            <!-- Hero -->
+            <div style="background:linear-gradient(135deg,#0053e2 0%,#001A60 100%)" class="rounded-2xl px-6 py-7 mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">📄 LOI Submissions</h2>
+                        <p class="text-blue-200 text-sm mt-0.5">View, manage and export all Letters of Intent.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="#" onclick="window.open(API_BASE+'/api/admin/export-loi', '_blank'); return false;"
+                           class="flex items-center gap-2 px-4 py-2 bg-[#ffc220] hover:bg-[#e6af00] text-[#001A60] font-bold rounded-lg text-sm transition-colors">
+                            ↓ Export CSV
+                        </a>
+                        <button onclick="syncToGitHub()" class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-lg text-sm transition-colors">
+                            🚀 Publish
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="p-6 border-b">
@@ -432,14 +417,18 @@
         
         <!-- LOI Templates Tab Content -->
         <main id="content-templates" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="flex flex-wrap gap-4 mb-6">
-                <button onclick="syncToGitHub()"
-                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    🚀 Publish to GitHub Pages
-                </button>
+
+            <!-- Hero -->
+            <div style="background:linear-gradient(135deg,#0053e2 0%,#001A60 100%)" class="rounded-2xl px-6 py-7 mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">📝 LOI Templates</h2>
+                        <p class="text-blue-200 text-sm mt-0.5">Upload and manage Letter of Intent templates for each transaction type.</p>
+                    </div>
+                    <button onclick="syncToGitHub()" class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-lg text-sm transition-colors">
+                        🚀 Publish
+                    </button>
+                </div>
             </div>
             <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="p-6 border-b">
@@ -623,20 +612,19 @@
         
         <!-- Marketing Materials Tab Content -->
         <main id="content-marketing" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="bg-white rounded-xl shadow-sm p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-900">📸 Marketing Materials</h2>
-                        <p class="text-gray-500 mt-1">Upload PDF marketing materials - they'll automatically convert to viewable images</p>
+            <div class="bg-white rounded-2xl shadow-sm">
+                <div style="background:linear-gradient(135deg,#0053e2 0%,#001A60 100%)" class="rounded-t-2xl px-6 py-7">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">📸 Marketing Materials</h2>
+                            <p class="text-blue-200 text-sm mt-0.5">Upload PDFs &mdash; they convert to viewable images automatically.</p>
+                        </div>
+                        <button onclick="syncToGitHub()" class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-lg text-sm transition-colors">
+                            🚀 Publish
+                        </button>
                     </div>
-                    <button onclick="syncToGitHub()"
-                            class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center gap-2">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                        </svg>
-                        🚀 Publish to GitHub Pages
-                    </button>
                 </div>
+                <div class="p-6">
                 
                 <!-- Property Selector -->
                 <div class="mb-6">
@@ -1177,7 +1165,7 @@
         
         // Tab switching
         function switchTab(tab) {
-            const tabs = ['properties', 'brokers', 'inquiries', 'loi', 'dashboard', 'templates', 'marketing', 'settings'];
+            const tabs = ['dashboard','properties','brokers','inquiries','loi','templates','marketing','settings'];
             tabs.forEach(t => {
                 const tabBtn = document.getElementById(`tab-${t}`);
                 const content = document.getElementById(`content-${t}`);
@@ -3160,6 +3148,12 @@
 
     <!-- ⚙️ Settings Tab -->
     <main id="content-settings" class="hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Hero -->
+        <div style="background:linear-gradient(135deg,#0053e2 0%,#001A60 100%)" class="rounded-2xl px-6 py-7">
+            <h2 class="text-2xl font-bold text-white">⚙️ Settings</h2>
+            <p class="text-blue-200 text-sm mt-0.5">Configure LOI capture, server connection, and event setup.</p>
+        </div>
 
         <!-- LOI Capture -->
         <div class="bg-white rounded-xl shadow-sm p-6">
