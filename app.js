@@ -1475,20 +1475,34 @@ function brokerAvatarHtml(name, photoUrl, size = 'lg') {
 }
 
 // Render a single broker contact card — avatar, name, company + working Call/Email buttons
+// Programmatic mailto — creates a real <a> in the body and clicks it.
+// window.location.href='mailto:' silently fails when no mail client is registered;
+// this approach works across all browsers and mobile OSes.
+function openMailto(addr) {
+    var a = document.createElement('a');
+    a.href = 'mailto:' + addr;
+    a.rel  = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { document.body.removeChild(a); }, 200);
+}
+
 function brokerCardHtml(b) {
     const phoneClean = (b.phone || '').replace(/[^0-9+]/g, '');
     const phoneIcon = `<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>`;
     const emailIcon = `<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>`;
+    const safeEmail = (b.email || '').replace(/'/g, "&#39;");
     return `
-        <div class="flex items-center gap-4 py-5 px-6 border-b border-gray-100 last:border-0">
+        <div class="flex items-start gap-4 py-5 px-6 border-b border-gray-100 last:border-0">
             ${brokerAvatarHtml(b.name, b.photo || null)}
             <div class="flex-1 min-w-0">
                 <p class="font-bold text-gray-900 text-base leading-tight">${b.name}</p>
                 <p class="text-gray-500 text-sm mt-0.5">${b.company || 'Walmart Realty'}</p>
+                ${b.email ? `<p class="text-xs text-gray-400 mt-1 break-all">${b.email}</p>` : ''}
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-                ${b.phone ? `<button onclick="window.location.href='tel:${phoneClean}'" title="Call ${b.name}" class="flex items-center gap-1.5 px-4 py-2 bg-[#0053e2] text-white rounded-lg font-semibold text-sm hover:bg-[#003eb0] transition-colors">${phoneIcon}<span>Call</span></button>` : ''}
-                ${b.email ? `<button onclick="window.location.href='mailto:${b.email}'" title="Email ${b.name}" class="flex items-center gap-1.5 px-4 py-2 border-2 border-[#0053e2] text-[#0053e2] rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors">${emailIcon}<span>Email</span></button>` : ''}
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+                ${b.phone ? `<button onclick="window.location.href='tel:${phoneClean}'" title="Call ${b.name}" class="flex items-center justify-center gap-1.5 px-4 py-2 bg-[#0053e2] text-white rounded-lg font-semibold text-sm hover:bg-[#003eb0] transition-colors">${phoneIcon}<span>Call</span></button>` : ''}
+                ${b.email ? `<button onclick="openMailto('${safeEmail}')" title="Email ${b.name}" class="flex items-center justify-center gap-1.5 px-4 py-2 border-2 border-[#0053e2] text-[#0053e2] rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors">${emailIcon}<span>Email</span></button>` : ''}
             </div>
         </div>`;
 }
