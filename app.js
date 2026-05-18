@@ -2091,13 +2091,7 @@ function showSuccessModalAPI(data, loi, property, apiResult) {
                 </div>
             </div>
 
-            <!-- Broker notifications -->
-            <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-left">
-                <p class="text-xs font-semibold text-green-700 uppercase tracking-wide mb-2">📧 Broker notification sent to</p>
-                <ul class="space-y-1">${brokerList}</ul>
-            </div>
-
-            <!-- What’s next -->
+            <!-- What's next -->
             <div class="bg-[#ffc220]/10 border border-[#ffc220]/40 rounded-xl p-4 mb-6 text-left">
                 <p class="text-sm text-gray-700">
                     <strong>What’s Next?</strong> A broker will review your LOI and respond to
