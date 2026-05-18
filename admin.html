@@ -103,14 +103,14 @@
                     <button onclick="switchTab('loi')" id="tab-loi" class="py-3 px-1 font-medium tab-inactive">
                         📄 LOI Submissions
                     </button>
-                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3 px-1 font-medium tab-inactive">
-                        📊 LOI Dashboard
-                    </button>
                     <button onclick="switchTab('templates')" id="tab-templates" class="py-3 px-1 font-medium tab-inactive">
                         📝 LOI Templates
                     </button>
                     <button onclick="switchTab('marketing')" id="tab-marketing" class="py-3 px-1 font-medium tab-inactive">
                         📸 Marketing Materials
+                    </button>
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-3 px-1 font-medium tab-inactive">
+                        📊 LOI Dashboard
                     </button>
                     <button onclick="switchTab('settings')" id="tab-settings" class="py-3 px-1 font-medium tab-inactive">
                         ⚙️ Settings
@@ -2813,25 +2813,29 @@
         }
 
         function renderDashboardStats() {
+            const total   = _dashData.length;
             const brett   = _dashData.filter(l => l.territory === 'brett');
             const amy     = _dashData.filter(l => l.territory === 'amy');
             const pending = _dashData.filter(l => (l.status || '').toLowerCase() === 'pending');
 
-            document.getElementById('dash-total').textContent   = _dashData.length;
+            document.getElementById('dash-total').textContent   = total;
             document.getElementById('dash-brett').textContent   = brett.length;
             document.getElementById('dash-amy').textContent     = amy.length;
             document.getElementById('dash-pending').textContent = pending.length;
+
+            const pct = (n) => total ? Math.round(n / total * 100) + '%' : '—';
+            document.getElementById('dash-brett-pct').textContent = pct(brett.length);
+            document.getElementById('dash-amy-pct').textContent   = pct(amy.length);
         }
 
         function filterDashboard(who) {
             _dashFilter = who;
-            // Update filter tab styles
             ['all','brett','amy'].forEach(f => {
                 const btn = document.getElementById(`dfilter-${f}`);
                 if (f === who) {
-                    btn.className = 'py-3 px-4 text-sm font-semibold border-b-2 border-[#0053e2] text-[#0053e2] -mb-px';
+                    btn.className = 'px-4 py-1.5 bg-[#0053e2] text-white font-medium text-sm';
                 } else {
-                    btn.className = 'py-3 px-4 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent -mb-px';
+                    btn.className = 'px-4 py-1.5 text-gray-600 hover:bg-gray-50 font-medium text-sm';
                 }
             });
             renderDashboardTable();
@@ -2844,29 +2848,25 @@
                 ? _dashData
                 : _dashData.filter(l => l.territory === _dashFilter);
 
-            if (!rows.length) {
-                tbody.innerHTML = '';
-                empty.classList.remove('hidden');
-                return;
-            }
+            if (!rows.length) { tbody.innerHTML = ''; empty.classList.remove('hidden'); return; }
             empty.classList.add('hidden');
 
-            const territoryBadge = t =>
-                t === 'brett' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">Brett</span>'
-                : t === 'amy' ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-[#e8edf8] text-[#001A60]">Amy</span>'
-                :                '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">Other</span>';
+            const badge = t =>
+                t === 'brett'
+                    ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#0053e2] ring-1 ring-inset ring-blue-200"><span class="w-1.5 h-1.5 rounded-full bg-[#0053e2]"></span>Brett</span>'
+                    : t === 'amy'
+                    ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-[#001A60] ring-1 ring-inset ring-indigo-200"><span class="w-1.5 h-1.5 rounded-full bg-[#001A60]"></span>Amy</span>'
+                    : '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">Other</span>';
 
-            tbody.innerHTML = rows.map(l => `
-                <tr class="hover:bg-gray-50 border-t border-gray-100">
-                    <td class="px-5 py-3 text-gray-500 whitespace-nowrap">${new Date(l.created_at).toLocaleDateString()}</td>
-                    <td class="px-5 py-3 text-gray-900 font-medium">${l.city || 'N/A'}, ${l.state || ''}</td>
-                    <td class="px-5 py-3">${territoryBadge(l.territory)}</td>
-                    <td class="px-5 py-3 text-gray-900">${l.first_name} ${l.last_name}</td>
-                    <td class="px-5 py-3 text-gray-600">${l.company || '-'}</td>
-                    <td class="px-5 py-3 text-gray-600">${l.loi_type}</td>
-                    <td class="px-5 py-3">
-                        <span class="px-2 py-0.5 rounded-full text-xs font-medium ${getLoiStatusClass(l.status)}">${l.status}</span>
-                    </td>
+            tbody.innerHTML = rows.map((l, i) => `
+                <tr class="${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/60'} hover:bg-blue-50/40 transition-colors">
+                    <td class="px-6 py-3.5 text-gray-500 text-sm whitespace-nowrap">${new Date(l.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+                    <td class="px-6 py-3.5"><p class="font-semibold text-gray-900 text-sm">${l.city || 'N/A'}, ${l.state || ''}</p></td>
+                    <td class="px-6 py-3.5">${badge(l.territory)}</td>
+                    <td class="px-6 py-3.5"><p class="text-gray-900 font-medium text-sm">${l.first_name} ${l.last_name}</p><p class="text-gray-400 text-xs mt-0.5">${l.email || ''}</p></td>
+                    <td class="px-6 py-3.5 text-gray-600 text-sm">${l.company || '&mdash;'}</td>
+                    <td class="px-6 py-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">${l.loi_type}</span></td>
+                    <td class="px-6 py-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-medium ${getLoiStatusClass(l.status)}">${l.status}</span></td>
                 </tr>
             `).join('');
         }
@@ -2875,28 +2875,44 @@
             const countByState = (territory) => {
                 const counts = {};
                 _dashData.filter(l => l.territory === territory)
-                    .forEach(l => { const s = l.state || 'Unknown'; counts[s] = (counts[s] || 0) + 1; });
-                return Object.entries(counts).sort((a,b) => b[1] - a[1]);
+                    .forEach(l => { const s = l.state || '??'; counts[s] = (counts[s] || 0) + 1; });
+                return Object.entries(counts).sort((a, b) => b[1] - a[1]);
             };
 
             const renderBars = (pairs, color) => {
-                if (!pairs.length) return '<p class="text-gray-400 text-sm">No submissions yet</p>';
+                if (!pairs.length) return '<p class="text-gray-400 text-sm italic">No submissions yet</p>';
                 const max = pairs[0][1];
                 return pairs.map(([state, count]) => `
                     <div class="flex items-center gap-3">
-                        <span class="w-7 text-xs font-bold text-gray-700">${state}</span>
-                        <div class="flex-1 bg-gray-100 rounded-full h-2">
-                            <div class="h-2 rounded-full" style="width:${Math.round(count/max*100)}%;background:${color}"></div>
+                        <span class="w-8 text-xs font-bold text-gray-700 shrink-0">${state}</span>
+                        <div class="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                            <div class="h-2.5 rounded-full transition-all duration-500" style="width:${Math.round(count/max*100)}%;background:${color}"></div>
                         </div>
-                        <span class="text-xs font-semibold text-gray-600 w-4 text-right">${count}</span>
+                        <span class="text-xs font-bold w-5 text-right" style="color:${color}">${count}</span>
                     </div>
                 `).join('');
             };
 
-            document.getElementById('dash-brett-states').innerHTML =
-                renderBars(countByState('brett'), '#0053e2');
-            document.getElementById('dash-amy-states').innerHTML =
-                renderBars(countByState('amy'), '#001A60');
+            document.getElementById('dash-brett-states').innerHTML = renderBars(countByState('brett'), '#0053e2');
+            document.getElementById('dash-amy-states').innerHTML   = renderBars(countByState('amy'),   '#001A60');
+
+            // LOI type breakdown
+            const typeCounts = {};
+            _dashData.forEach(l => { const t = l.loi_type || 'Unknown'; typeCounts[t] = (typeCounts[t] || 0) + 1; });
+            const typePairs  = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]);
+            const typeColors = ['#0053e2','#001A60','#ffc220','#2a8703','#ea1100'];
+            const typeMax    = typePairs[0]?.[1] || 1;
+            document.getElementById('dash-loi-types').innerHTML = typePairs.length
+                ? typePairs.map(([type, count], i) => `
+                    <div class="flex items-center gap-4">
+                        <span class="w-44 text-sm font-medium text-gray-700 truncate shrink-0" title="${type}">${type}</span>
+                        <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                            <div class="h-3 rounded-full transition-all duration-500" style="width:${Math.round(count/typeMax*100)}%;background:${typeColors[i % typeColors.length]}"></div>
+                        </div>
+                        <span class="text-sm font-bold text-gray-700 w-6 text-right">${count}</span>
+                    </div>
+                `).join('')
+                : '<p class="text-gray-400 text-sm italic">No submissions yet</p>';
         }
 
         // ========== SETTINGS ==========
@@ -2987,110 +3003,159 @@
     <!-- LOI Detail Modal -->
 
     <!-- 📊 LOI Dashboard Tab -->
-    <main id="content-dashboard" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <main id="content-dashboard" class="hidden">
 
-        <!-- Header -->
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900">📊 LOI Dashboard</h2>
-                <p class="text-sm text-gray-500 mt-0.5">Real-time tracking by territory &mdash; sourced from the local server DB.</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <span id="dash-last-updated" class="text-xs text-gray-400"></span>
-                <span class="flex items-center gap-1.5 text-xs text-green-600 font-medium">
-                    <span id="dash-live-dot" class="hidden w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    <span id="dash-live-label"></span>
-                </span>
-                <button onclick="loadDashboard()" class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:border-[#0053e2] hover:text-[#0053e2] transition-colors">
-                    🔄 Refresh
-                </button>
+        <!-- Hero Header -->
+        <div style="background:linear-gradient(135deg,#0053e2 0%,#001A60 100%)" class="px-6 py-8">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white tracking-tight">📊 ICSC LOI Dashboard</h2>
+                        <p class="text-blue-200 text-sm mt-1">Territory tracking &mdash; Brett Moncrief &amp; Amy Corritori</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <span id="dash-live-dot" class="hidden w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span>
+                            <span id="dash-live-label" class="text-xs text-blue-200"></span>
+                        </div>
+                        <span id="dash-last-updated" class="text-xs text-blue-300"></span>
+                        <button onclick="loadDashboard()"
+                            class="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-sm font-medium text-white transition-colors">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stat Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-5 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">Total LOIs</p>
+                        <p id="dash-total" class="text-4xl font-black text-white mt-2">&#8212;</p>
+                        <p class="text-blue-300 text-xs mt-1">All territories</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-5 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">Brett Moncrief</p>
+                        <p id="dash-brett" class="text-4xl font-black text-[#ffc220] mt-2">&#8212;</p>
+                        <p class="text-blue-300 text-xs mt-1">West &amp; Midwest</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-5 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">Amy Corritori</p>
+                        <p id="dash-amy" class="text-4xl font-black text-[#ffc220] mt-2">&#8212;</p>
+                        <p class="text-blue-300 text-xs mt-1">South &amp; East</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur rounded-xl p-5 border border-white/20">
+                        <p class="text-xs font-semibold text-blue-200 uppercase tracking-widest">Pending Review</p>
+                        <p id="dash-pending" class="text-4xl font-black text-white mt-2">&#8212;</p>
+                        <p class="text-blue-300 text-xs mt-1">Awaiting action</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Stat Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#0053e2]">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total LOIs</p>
-                <p id="dash-total" class="text-3xl font-bold text-gray-900 mt-1">-</p>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#6eb8d4]">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Brett Moncrief</p>
-                <p id="dash-brett" class="text-3xl font-bold text-[#0053e2] mt-1">-</p>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#001A60]">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Amy Corritori</p>
-                <p id="dash-amy" class="text-3xl font-bold text-[#001A60] mt-1">-</p>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-[#ffc220]">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Pending Review</p>
-                <p id="dash-pending" class="text-3xl font-bold text-[#995213] mt-1">-</p>
-            </div>
-        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
-        <!-- Territory Filter Tabs -->
-        <div class="bg-white rounded-xl shadow-sm">
-            <div class="flex border-b border-gray-200 px-4">
-                <button onclick="filterDashboard('all')" id="dfilter-all"
-                    class="py-3 px-4 text-sm font-semibold border-b-2 border-[#0053e2] text-[#0053e2] -mb-px">
-                    All LOIs
-                </button>
-                <button onclick="filterDashboard('brett')" id="dfilter-brett"
-                    class="py-3 px-4 text-sm font-medium text-gray-500 hover:00 border-b-2 border-transparent -mb-px">
-                    Brett Moncrief
-                </button>
-                <button onclick="filterDashboard('amy')" id="dfilter-amy"
-                    class="py-3 px-4 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent -mb-px">
-                    Amy Corritori
-                </button>
+            <!-- Territory Cards -->
+            <div class="grid md:grid-cols-2 gap-5">
+
+                <!-- Brett -->
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                    <div style="background:linear-gradient(135deg,#0053e2,#003eb0)" class="px-6 py-4 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center text-white font-black text-lg">BM</div>
+                        <div>
+                            <p class="text-white font-bold text-base">Brett Moncrief</p>
+                            <p class="text-blue-200 text-xs">brett.moncrief@walmart.com</p>
+                        </div>
+                        <div class="ml-auto text-right">
+                            <p id="dash-brett-pct" class="text-3xl font-black text-white">&#8212;</p>
+                            <p class="text-blue-200 text-xs">of total</p>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">LOIs by State</p>
+                        <div id="dash-brett-states" class="space-y-2"><p class="text-gray-300 text-sm">No data yet</p></div>
+                    </div>
+                </div>
+
+                <!-- Amy -->
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                    <div style="background:linear-gradient(135deg,#001A60,#0a2d7a)" class="px-6 py-4 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center text-white font-black text-lg">AC</div>
+                        <div>
+                            <p class="text-white font-bold text-base">Amy Corritori</p>
+                            <p class="text-blue-200 text-xs">amy.corritori@walmart.com</p>
+                        </div>
+                        <div class="ml-auto text-right">
+                            <p id="dash-amy-pct" class="text-3xl font-black text-white">&#8212;</p>
+                            <p class="text-blue-200 text-xs">of total</p>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4">
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">LOIs by State</p>
+                        <div id="dash-amy-states" class="space-y-2"><p class="text-gray-300 text-sm">No data yet</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOI Type Breakdown -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 class="font-bold text-gray-900 mb-4">LOI Type Breakdown</h3>
+                <div id="dash-loi-types" class="space-y-3"><p class="text-gray-400 text-sm">No data yet</p></div>
             </div>
 
             <!-- LOI Table -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-gray-50 text-left">
-                            <th class="px-5 py-3 font-semibold text-gray-600">Date</th>
-                            <th class="px-5 py-3 font-semibold text-gray-600">Property</th>
-                            <th class="px-5 py-3 font-semibold text-gray-600">Territory</th>
-                            <th class="px-5 py-3 font-semibold text-gray-600">Submitter</th>
-                            <th class="px-5 py-3 font-semibold text-gray-600">Company</th>
-                            <th class="px-5 py-3 font-semibold text-gray-600">LOI Type</th>
-                            <th class="px-5 py-3 font-semibold text-gray-600">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dash-table-body">
-                        <tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">Loading…</td></tr>
-                    </tbody>
-                </table>
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+                <!-- Table header + filters -->
+                <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-gray-100">
+                    <h3 class="font-bold text-gray-900">All Submissions</h3>
+                    <div class="flex rounded-lg border border-gray-200 overflow-hidden text-sm font-medium">
+                        <button onclick="filterDashboard('all')"   id="dfilter-all"
+                            class="px-4 py-1.5 bg-[#0053e2] text-white">All</button>
+                        <button onclick="filterDashboard('brett')" id="dfilter-brett"
+                            class="px-4 py-1.5 text-gray-600 hover:bg-gray-50">Brett</button>
+                        <button onclick="filterDashboard('amy')"   id="dfilter-amy"
+                            class="px-4 py-1.5 text-gray-600 hover:bg-gray-50">Amy</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Property</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Territory</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Submitter</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Company</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">LOI Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dash-table-body" class="divide-y divide-gray-50">
+                            <tr><td colspan="7" class="px-6 py-16 text-center text-gray-400">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="dash-empty" class="hidden py-20 text-center">
+                    <div class="text-6xl mb-4">📋</div>
+                    <p class="text-gray-600 font-semibold text-lg">No LOI submissions yet</p>
+                    <p class="text-gray-400 text-sm mt-2">Once brokers fill out the form, submissions appear here automatically.</p>
+                </div>
             </div>
 
-            <!-- Empty state -->
-            <div id="dash-empty" class="hidden py-16 text-center">
-                <div class="text-5xl mb-3">📋</div>
-                <p class="text-gray-500 font-medium">No LOI submissions yet</p>
-                <p class="text-gray-400 text-sm mt-1">Submissions will appear here once brokers start filling out the form.</p>
+            <!-- Offline notice -->
+            <div id="dash-offline-notice" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-5">
+                <div class="flex gap-3">
+                    <span class="text-2xl">⚠️</span>
+                    <div>
+                        <p class="font-semibold text-amber-800">Server offline</p>
+                        <p class="text-amber-700 text-sm mt-0.5">Dashboard reads from the local server database. Run <code class="bg-amber-100 px-1.5 py-0.5 rounded font-mono">./start-icsc.sh</code> on the event laptop to see live data. LOI emails are still routing to Brett &amp; Amy regardless.</p>
+                    </div>
+                </div>
             </div>
+
         </div>
-
-        <!-- State Breakdown -->
-        <div class="grid md:grid-cols-2 gap-4">
-            <div class="bg-white rounded-xl shadow-sm p-5">
-                <h3 class="font-bold text-gray-900 mb-4">Brett &mdash; By State</h3>
-                <div id="dash-brett-states" class="space-y-2 text-sm text-gray-500">-</div>
-            </div>
-            <div class="bg-white rounded-xl shadow-sm p-5">
-                <h3 class="font-bold text-gray-900 mb-4">Amy &mdash; By State</h3>
-                <div id="dash-amy-states" class="space-y-2 text-sm text-gray-500">-</div>
-            </div>
-        </div>
-
-        <!-- Server offline notice -->
-        <div id="dash-offline-notice" class="hidden bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800">
-            <strong>⚠️ Server offline</strong> &mdash; Dashboard data comes from the local server database.
-            Run <code class="bg-yellow-100 px-1 rounded">./start-icsc.sh</code> on the event laptop to see live data.
-            Emails sent via the LOI form are still being delivered to Brett &amp; Amy regardless.
-        </div>
-
     </main>
 
     <!-- ⚙️ Settings Tab -->
