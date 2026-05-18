@@ -345,18 +345,10 @@ async function fetchPropertiesFromAPI() {
 
 // Format price for display
 function formatPrice(price, listingType) {
-    // Handle null/undefined prices
-    if (price === null || price === undefined) {
-        return 'Contact for Pricing';
-    }
-    if (listingType === 'lease' || listingType === 'ground_lease') {
-        if (price >= 1000000) return `$${(price / 1000000).toFixed(1)}M/yr`;
-        return `$${price.toLocaleString()}/yr`;
-    }
-    if (price >= 1000000) {
-        return `$${(price / 1000000).toFixed(1)}M`;
-    }
-    return `$${price.toLocaleString()}`;
+    if (price === null || price === undefined) return 'Contact for Pricing';
+    const fmt = `$${Math.round(price).toLocaleString('en-US')}`;
+    if (listingType === 'lease' || listingType === 'ground_lease') return `${fmt}/yr`;
+    return fmt;
 }
 
 // Format size for display
