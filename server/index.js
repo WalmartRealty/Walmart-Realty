@@ -780,8 +780,18 @@ app.patch('/api/loi/:id/status', authenticateToken, (req, res) => {
         .run(status, notes || null, id);
 
     logActivity(req.user.id, 'LOI_STATUS_UPDATE', 'loi', id, { status });
-
     res.json({ message: 'LOI status updated' });
+});
+
+// Delete a single LOI submission (admin only)
+app.delete('/api/loi/:id', authenticateToken, (req, res) => {
+    const { id } = req.params;
+    const existing = db.prepare('SELECT id FROM loi_submissions WHERE id = ?').get(id);
+    if (!existing) return res.status(404).json({ error: 'LOI not found' });
+
+    db.prepare('DELETE FROM loi_submissions WHERE id = ?').run(id);
+    logActivity(req.user.id, 'LOI_DELETE', 'loi', id, {});
+    res.json({ message: 'LOI deleted' });
 });
 
 // ============= CONTACT INQUIRY ROUTES =============

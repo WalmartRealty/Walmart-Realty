@@ -1671,8 +1671,12 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <button onclick="viewLOI(${loi.id})" class="text-walmart-blue hover:text-walmart-dark font-medium text-sm">
+                        <button onclick="viewLOI(${loi.id})" class="text-walmart-blue hover:text-walmart-dark font-medium text-sm mr-3">
                             View
+                        </button>
+                        <button onclick="deleteLOI(${loi.id}, '${(loi.first_name+' '+loi.last_name).replace(/'/g,"\\'")}')"
+                            class="text-red-500 hover:text-red-700 font-medium text-sm">
+                            Delete
                         </button>
                     </td>
                 </tr>
@@ -1806,6 +1810,57 @@
         
         let inquiries = [];
         
+        async function deleteLOI(id, name) {
+            // Custom styled confirm — cleaner than browser alert()
+            const confirmed = await showConfirmDialog(
+                'Delete LOI Submission',
+                `Are you sure you want to delete the LOI from <strong>${name}</strong>?<br><br>This cannot be undone.`,
+                'Delete',
+                'Cancel'
+            );
+            if (!confirmed) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/loi/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (res.ok) {
+                    showToast('✅ LOI deleted');
+                    loadLOISubmissions();
+                } else {
+                    showToast('⚠️ Could not delete — is the server running?', 'error');
+                }
+            } catch {
+                showToast('⚠️ Server unreachable', 'error');
+            }
+        }
+
+        // Reusable styled confirm dialog (replaces window.confirm)
+        function showConfirmDialog(title, bodyHtml, confirmLabel = 'Confirm', cancelLabel = 'Cancel') {
+            return new Promise(resolve => {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;';
+                overlay.innerHTML = `
+                    <div style="background:white;border-radius:16px;padding:32px;max-width:420px;width:90%;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+                            <span style="font-size:32px;">&#x26A0;&#xFE0F;</span>
+                            <h3 style="font-size:18px;font-weight:700;color:#111;margin:0;">${title}</h3>
+                        </div>
+                        <p style="color:#555;font-size:14px;line-height:1.6;margin:0 0 24px;">${bodyHtml}</p>
+                        <div style="display:flex;gap:10px;justify-content:flex-end;">
+                            <button id="dlg-cancel" style="padding:10px 20px;border:2px solid #e5e7eb;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer;background:white;color:#374151;">${cancelLabel}</button>
+                            <button id="dlg-confirm" style="padding:10px 20px;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;background:#ea1100;color:white;">${confirmLabel}</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+                overlay.querySelector('#dlg-cancel').onclick  = () => { overlay.remove(); resolve(false); };
+                overlay.querySelector('#dlg-confirm').onclick = () => { overlay.remove(); resolve(true);  };
+                overlay.onclick = e => { if (e.target === overlay) { overlay.remove(); resolve(false); } };
+            });
+        }
+
         // ========== LOI TEMPLATES ==========
         
         const loiTemplateNames = {
