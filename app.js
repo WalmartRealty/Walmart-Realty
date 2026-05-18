@@ -826,11 +826,14 @@ function renderProperties() {
         return;
     }
     
-    // Sort: available properties A→Z by state then city; sold always last
+    // Sort priority: 1) sold last  2) priced before unpriced  3) A→Z state  4) A→Z city
     const sorted = [...filteredProperties].sort((a, b) => {
         const aS = (a.status || '').toLowerCase() === 'sold' ? 1 : 0;
         const bS = (b.status || '').toLowerCase() === 'sold' ? 1 : 0;
         if (aS !== bS) return aS - bS;
+        const aP = (a.price && a.price > 0) ? 0 : 1;
+        const bP = (b.price && b.price > 0) ? 0 : 1;
+        if (aP !== bP) return aP - bP;
         const stateA = (a.state || '').toUpperCase();
         const stateB = (b.state || '').toUpperCase();
         if (stateA !== stateB) return stateA < stateB ? -1 : 1;
