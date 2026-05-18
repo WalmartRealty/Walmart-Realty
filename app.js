@@ -658,17 +658,25 @@ function openImageLightbox(imageUrl, imageName) {
 
 // Create property card HTML
 // Generate satellite map thumbnail URL from coordinates
-function getSatelliteThumbUrl(lat, lon) {
-    // Zoom 15 gives good context for large commercial parcels at full card width
-    const zoom = 15;
-    const n = Math.pow(2, zoom);
-    const x = Math.floor((lon + 180) / 360 * n);
-    const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n);
-    return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${y}/${x}`;
+// Returns 4 tile URLs (2x2 mosaic at zoom 16) centered on the property.
+// One zoom-16 tile = 256px. Four tiles = 512x512px source for the card image.
+// Subtracting 0.5 before floor ensures the property stays near the mosaic center.
+function getSatelliteTiles(lat, lon) {
+    const zoom = 16;
+    const n  = Math.pow(2, zoom);
+    const xf = (lon + 180) / 360 * n;
+    const yf = (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n;
+    const x  = Math.floor(xf - 0.5);
+    const y  = Math.floor(yf - 0.5);
+    const b  = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile';
+    return [
+        `${b}/${zoom}/${y}/${x}`,   `${b}/${zoom}/${y}/${x+1}`,
+        `${b}/${zoom}/${y+1}/${x}`, `${b}/${zoom}/${y+1}/${x+1}`
+    ];
 }
 
 function createPropertyCard(property) {
-    const satelliteUrl = getSatelliteThumbUrl(property.lat, property.lon);
+    const [t00, t01, t10, t11] = getSatelliteTiles(property.lat, property.lon);
     const status  = (property.status || 'available').toLowerCase();
     const isSold  = status === 'sold';
     const saved   = isPropertySaved(property.id);
@@ -712,20 +720,13 @@ function createPropertyCard(property) {
                  aria-label="View details for ${property.title}"
                  onkeydown="if(event.key==='Enter') openPropertyModal(${property.id})">
 
-            <!-- Full-width aerial image -->
+            <!-- Full-width HD aerial — 2x2 mosaic of zoom-16 tiles (512px source) -->
             <div class="relative w-full h-48 bg-gray-200 overflow-hidden">
-                <img src="${satelliteUrl}"
-                     alt="Aerial view of ${property.city}, ${property.state}"
-                     class="absolute inset-0 w-full h-full object-cover"
-                     loading="lazy"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                <!-- fallback if tile fails -->
-                <div style="display:none" class="absolute inset-0 bg-gray-200 flex items-center justify-center text-gray-400">
-                    <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
+                <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 pointer-events-none" aria-hidden="true">
+                    <img src="${t00}" class="w-full h-full object-cover" loading="lazy" draggable="false">
+                    <img src="${t01}" class="w-full h-full object-cover" loading="lazy" draggable="false">
+                    <img src="${t10}" class="w-full h-full object-cover" loading="lazy" draggable="false">
+                    <img src="${t11}" class="w-full h-full object-cover" loading="lazy" draggable="false">
                 </div>
 
                 <!-- Spark logo — top left -->
