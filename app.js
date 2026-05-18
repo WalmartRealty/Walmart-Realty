@@ -826,11 +826,17 @@ function renderProperties() {
         return;
     }
     
-    // Sold properties always go to the bottom
+    // Sort: available properties A→Z by state then city; sold always last
     const sorted = [...filteredProperties].sort((a, b) => {
         const aS = (a.status || '').toLowerCase() === 'sold' ? 1 : 0;
         const bS = (b.status || '').toLowerCase() === 'sold' ? 1 : 0;
-        return aS - bS;
+        if (aS !== bS) return aS - bS;
+        const stateA = (a.state || '').toUpperCase();
+        const stateB = (b.state || '').toUpperCase();
+        if (stateA !== stateB) return stateA < stateB ? -1 : 1;
+        const cityA = (a.city || '').toUpperCase();
+        const cityB = (b.city || '').toUpperCase();
+        return cityA < cityB ? -1 : cityA > cityB ? 1 : 0;
     });
     container.innerHTML = sorted.map(createPropertyCard).join('');
     
