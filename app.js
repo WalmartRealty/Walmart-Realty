@@ -1487,8 +1487,8 @@ function brokerCardHtml(b) {
                 <p class="text-gray-500 text-sm mt-0.5">${b.company || 'Walmart Realty'}</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-                ${b.phone ? `<a href="tel:${phoneClean}" title="Call ${b.name}" class="flex items-center gap-1.5 px-4 py-2 bg-[#0053e2] text-white rounded-lg font-semibold text-sm hover:bg-[#003eb0] transition-colors">${phoneIcon}<span>Call</span></a>` : ''}
-                ${b.email ? `<a href="mailto:${b.email}" title="Email ${b.name}" class="flex items-center gap-1.5 px-4 py-2 border-2 border-[#0053e2] text-[#0053e2] rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors">${emailIcon}<span>Email</span></a>` : ''}
+                ${b.phone ? `<button onclick="window.location.href='tel:${phoneClean}'" title="Call ${b.name}" class="flex items-center gap-1.5 px-4 py-2 bg-[#0053e2] text-white rounded-lg font-semibold text-sm hover:bg-[#003eb0] transition-colors">${phoneIcon}<span>Call</span></button>` : ''}
+                ${b.email ? `<button onclick="window.location.href='mailto:${b.email}'" title="Email ${b.name}" class="flex items-center gap-1.5 px-4 py-2 border-2 border-[#0053e2] text-[#0053e2] rounded-lg font-semibold text-sm hover:bg-blue-50 transition-colors">${emailIcon}<span>Email</span></button>` : ''}
             </div>
         </div>`;
 }
@@ -1616,6 +1616,14 @@ function openLOIModal(propertyId) {
     const content = document.getElementById('loi-form-content');
     const autoType = detectLOIType(property);
 
+    const sectionHdr = (label) =>
+        `<p class="text-xs font-bold text-[#0053e2] uppercase tracking-widest border-b border-[#0053e2]/20 pb-2 mb-3">${label}</p>`;
+    const field = (label, required = false) =>
+        `${label}${required ? ' <span class="text-red-500">*</span>' : ''}`;
+    const inp = `w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2] text-sm`;
+    const inpRO = `w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 text-sm`;
+    const sqftTotal = Math.round((property.size_acres || 0) * 43560);
+
     content.innerHTML = `
         <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
             <div>
@@ -1630,90 +1638,165 @@ function openLOIModal(propertyId) {
             </button>
         </div>
 
-        <form id="loi-submission-form" class="p-6 space-y-4" onsubmit="submitLOI(event)">
+        <form id="loi-submission-form" class="p-6 space-y-6" onsubmit="submitLOI(event)">
 
-            <!-- Info banner -->
-            <div class="bg-[#0053e2]/5 border border-[#0053e2]/20 rounded-xl p-4 flex gap-3">
-                <svg class="h-5 w-5 text-[#0053e2] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <p class="text-sm text-[#0053e2]">
-                    Fill in your contact information below and hit <strong>Submit LOI to Broker</strong>.
-                    Your details will be automatically submitted as a Letter of Intent — no document upload needed.
-                </p>
-            </div>
-
-            <!-- Contact fields -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span class="text-red-500">*</span></label>
-                    <input type="text" name="firstName" required autocomplete="given-name"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span class="text-red-500">*</span></label>
-                    <input type="text" name="lastName" required autocomplete="family-name"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
+            <!-- ── Property Summary (read-only) ── -->
+            <div>
+                ${sectionHdr('Property')}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Location</label>
+                        <input type="text" readonly value="${property.city}, ${property.state}" class="${inpRO}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Size</label>
+                        <input type="text" name="propertySize" readonly value="${property.lotSize || (property.size_acres + ' ac')}" class="${inpRO}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Type</label>
+                        <input type="text" readonly value="${property.type || property.property_type || 'N/A'}" class="${inpRO}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Listing</label>
+                        <input type="text" readonly value="${property.listingType || property.listing_type || 'N/A'}" class="${inpRO}">
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
-                    <input type="email" name="email" required autocomplete="email"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
+            <!-- ── Contact Information ── -->
+            <div>
+                ${sectionHdr('Contact Information')}
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">${field('First Name', true)}</label>
+                            <input type="text" name="firstName" required autocomplete="given-name" class="${inp}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">${field('Last Name', true)}</label>
+                            <input type="text" name="lastName" required autocomplete="family-name" class="${inp}">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">${field('Contact Phone', true)}</label>
+                            <input type="tel" name="phone" required autocomplete="tel" class="${inp}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">${field('Email', true)}</label>
+                            <input type="email" name="email" required autocomplete="email" class="${inp}">
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone <span class="text-red-500">*</span></label>
-                    <input type="tel" name="phone" required autocomplete="tel"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
+            </div>
+
+            <!-- ── Purchasing Entity ── -->
+            <div>
+                ${sectionHdr('Purchasing Entity')}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">${field('Entity', true)}</label>
+                        <input type="text" name="company" required autocomplete="organization" placeholder="Legal entity name" class="${inp}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Physical Address</label>
+                        <input type="text" name="physicalAddress" autocomplete="street-address" placeholder="Street address" class="${inp}">
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
+                            <input type="text" name="entityCity" autocomplete="address-level2" class="${inp}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
+                            <input type="text" name="entityState" autocomplete="address-level1" maxlength="2" placeholder="TX" class="${inp}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Zip</label>
+                            <input type="text" name="entityZip" autocomplete="postal-code" maxlength="10" class="${inp}">
+                        </div>
+                    </div>
                 </div>
             </div>
 
+            <!-- ── Transaction Terms ── -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Company / Entity Name <span class="text-red-500">*</span></label>
-                <input type="text" name="company" required autocomplete="organization"
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
+                ${sectionHdr('Transaction Terms')}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Type of Transaction</label>
+                        <select name="loiType" class="${inp}">
+                            <option value="${autoType}" selected>${autoType} (suggested)</option>
+                            <option value="Building Lease">Building Lease</option>
+                            <option value="Building Sale">Building Sale</option>
+                            <option value="Building Sublease">Building Sublease</option>
+                            <option value="Large Tract Land Sale">Large Tract Land Sale</option>
+                            <option value="Outlot Ground Lease">Outlot Ground Lease</option>
+                            <option value="Outlot Land Sale">Outlot Land Sale</option>
+                            <option value="General Inquiry">General Inquiry</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Purchase Price</label>
+                            <input type="text" name="purchasePrice" id="loi-purchase-price"
+                                   placeholder="$0.00"
+                                   oninput="(function(v){var sqft=${sqftTotal};var p=parseFloat(v.replace(/[^0-9.]/g,''))||0;var el=document.getElementById('loi-ppsf');el.value=sqft&&p?'$'+(p/sqft).toFixed(2)+'/sqft':'';})(this.value)"
+                                   class="${inp}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Price per Square Foot <span class="text-gray-400 font-normal text-xs">(auto-calculated)</span></label>
+                            <input type="text" id="loi-ppsf" name="pricePerSqFt" readonly placeholder="Calculated from purchase price" class="${inpRO}">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Escrow Deposit</label>
+                        <input type="text" name="escrowDeposit" placeholder="$0.00" class="${inp}">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Due Diligence Period</label>
+                            <input type="text" name="dueDiligencePeriod" value="90 Days" placeholder="e.g. 90 Days" class="${inp}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Permit Period</label>
+                            <input type="text" name="permitPeriod" value="90 Days" placeholder="e.g. 90 Days" class="${inp}">
+                        </div>
+                    </div>
+                </div>
             </div>
 
+            <!-- ── Proposed Use ── -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Company Address</label>
-                <input type="text" name="companyAddress" autocomplete="street-address"
-                       placeholder="Street, City, State, ZIP"
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
+                ${sectionHdr('Proposed Use')}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Use</label>
+                        <textarea name="proposedUse" rows="2" placeholder="Describe the intended use of the property…" class="${inp}"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Proposed User</label>
+                        <input type="text" name="proposedUser" placeholder="Name or entity that will occupy the property" class="${inp}">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Number of Buildings</label>
+                            <input type="number" name="proposedBuildings" min="1" placeholder="1" class="${inp}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Proposed Maximum Square Footage</label>
+                            <input type="text" name="proposedMaxSqFt" placeholder="e.g. 50,000 sqft" class="${inp}">
+                        </div>
+                    </div>
+                </div>
             </div>
 
+            <!-- ── Additional Comments ── -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Type of Transaction</label>
-                <select name="loiType"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]">
-                    <option value="${autoType}" selected>${autoType} (suggested)</option>
-                    <option value="Building Lease">Building Lease</option>
-                    <option value="Building Sale">Building Sale</option>
-                    <option value="Building Sublease">Building Sublease</option>
-                    <option value="Large Tract Land Sale">Large Tract Land Sale</option>
-                    <option value="Outlot Ground Lease">Outlot Ground Lease</option>
-                    <option value="Outlot Land Sale">Outlot Land Sale</option>
-                    <option value="General Inquiry">General Inquiry</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Additional Comments</label>
+                ${sectionHdr('Additional Comments')}
                 <textarea name="additionalComments" rows="3"
                           placeholder="Any questions, contingencies, or notes for the broker…"
-                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0053e2] focus:border-[#0053e2]"></textarea>
-            </div>
-
-            <!-- Property summary -->
-            <div class="bg-gray-50 rounded-xl p-4">
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Property</p>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-                    <div><span class="text-gray-500">Location</span><br><strong>${property.city}, ${property.state}</strong></div>
-                    <div><span class="text-gray-500">Size</span><br><strong>${property.lotSize || (property.size_acres + ' ac')}</strong></div>
-                    <div><span class="text-gray-500">Type</span><br><strong>${property.type || property.property_type || 'N/A'}</strong></div>
-                    <div><span class="text-gray-500">Listing</span><br><strong>${property.listingType || property.listing_type || 'N/A'}</strong></div>
-                </div>
+                          class="${inp}"></textarea>
             </div>
 
             <button type="submit" id="loi-submit-btn"
@@ -1789,15 +1872,15 @@ async function submitLOI(event) {
     `;
 
     const payload = new FormData();
-    payload.append('property_id',    currentLOIPropertyId || '');
-    payload.append('loi_type',       d.loiType);
-    payload.append('first_name',     d.firstName);
-    payload.append('last_name',      d.lastName);
-    payload.append('email',          d.email);
-    payload.append('phone',          d.phone);
-    payload.append('company',        d.company);
-    payload.append('company_address', d.companyAddress || '');
-    payload.append('form_data',      JSON.stringify({ ...d, property: property?.city + ', ' + property?.state }));
+    payload.append('property_id',      currentLOIPropertyId || '');
+    payload.append('loi_type',           d.loiType);
+    payload.append('first_name',         d.firstName);
+    payload.append('last_name',          d.lastName);
+    payload.append('email',              d.email);
+    payload.append('phone',              d.phone);
+    payload.append('company',            d.company);
+    payload.append('company_address',    `${d.physicalAddress || ''}, ${d.entityCity || ''}, ${d.entityState || ''} ${d.entityZip || ''}`.trim().replace(/^,\s*/, ''));
+    payload.append('form_data',          JSON.stringify({ ...d, property: property?.city + ', ' + property?.state }));
 
     // ── 1. Power Automate webhook ──────────────────────────────────────────
     // Works from ANY network (hotel Wi-Fi, cell, conference floor) because it
@@ -1926,11 +2009,26 @@ async function submitLOI(event) {
     const subject = encodeURIComponent(`LOI: ${d.loiType} — ${property?.city}, ${property?.state}`);
     const body = encodeURIComponent(
         `LOI Type: ${d.loiType}\n` +
-        `Property: ${property?.city}, ${property?.state}\n\n` +
-        `From: ${d.firstName} ${d.lastName}\n` +
-        `Company: ${d.company}\n` +
-        `Email: ${d.email}\n` +
-        `Phone: ${d.phone}\n\n` +
+        `Property: ${property?.city}, ${property?.state} | Size: ${d.propertySize || ''}\n\n` +
+        `--- CONTACT ---\n` +
+        `Name: ${d.firstName} ${d.lastName}\n` +
+        `Phone: ${d.phone}\n` +
+        `Email: ${d.email}\n\n` +
+        `--- PURCHASING ENTITY ---\n` +
+        `Entity: ${d.company}\n` +
+        `Physical Address: ${d.physicalAddress || ''}\n` +
+        `City / State / Zip: ${d.entityCity || ''}, ${d.entityState || ''} ${d.entityZip || ''}\n\n` +
+        `--- TRANSACTION TERMS ---\n` +
+        `Purchase Price: ${d.purchasePrice || 'N/A'}\n` +
+        `Price per Sq Ft: ${d.pricePerSqFt || 'N/A'}\n` +
+        `Escrow Deposit: ${d.escrowDeposit || 'N/A'}\n` +
+        `Due Diligence Period: ${d.dueDiligencePeriod || 'N/A'}\n` +
+        `Permit Period: ${d.permitPeriod || 'N/A'}\n\n` +
+        `--- PROPOSED USE ---\n` +
+        `Proposed Use: ${d.proposedUse || 'N/A'}\n` +
+        `Proposed User: ${d.proposedUser || 'N/A'}\n` +
+        `Proposed Number of Buildings: ${d.proposedBuildings || 'N/A'}\n` +
+        `Proposed Max Sq Ft: ${d.proposedMaxSqFt || 'N/A'}\n\n` +
         `Comments: ${d.additionalComments || 'None'}\n\n` +
         `-- Submitted via Walmart Realty --`
     );
