@@ -659,8 +659,8 @@ function openImageLightbox(imageUrl, imageName) {
 // Create property card HTML
 // Generate satellite map thumbnail URL from coordinates
 function getSatelliteThumbUrl(lat, lon) {
-    // Zoom 17 gives a crisp close-up aerial — perfect for full-width card images
-    const zoom = 17;
+    // Zoom 15 gives good context for large commercial parcels at full card width
+    const zoom = 15;
     const n = Math.pow(2, zoom);
     const x = Math.floor((lon + 180) / 360 * n);
     const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n);
